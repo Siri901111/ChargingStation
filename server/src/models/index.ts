@@ -1,0 +1,97 @@
+import User from './User.js';
+import Station from './Station.js';
+import Pile from './Pile.js';
+import Order from './Order.js';
+import Revenue from './Revenue.js';
+import Alarm from './Alarm.js';
+import Notice from './Notice.js';
+import Role from './Role.js';
+import Permission from './Permission.js';
+
+// ==================== 模型关联关系设置 ====================
+
+// Station (充电站) 关联关系
+// 一个充电站有多个充电桩
+Station.hasMany(Pile, {
+  foreignKey: 'station_id',
+  as: 'piles'
+});
+Pile.belongsTo(Station, {
+  foreignKey: 'station_id',
+  as: 'station'
+});
+
+// 一个充电站有多个订单
+Station.hasMany(Order, {
+  foreignKey: 'station_id',
+  as: 'orders'
+});
+Order.belongsTo(Station, {
+  foreignKey: 'station_id',
+  as: 'station'
+});
+
+// 一个充电站有多条营收记录
+Station.hasMany(Revenue, {
+  foreignKey: 'station_id',
+  as: 'revenues'
+});
+Revenue.belongsTo(Station, {
+  foreignKey: 'station_id',
+  as: 'station'
+});
+
+// 一个充电站有多个报警
+Station.hasMany(Alarm, {
+  foreignKey: 'station_id',
+  as: 'alarms'
+});
+Alarm.belongsTo(Station, {
+  foreignKey: 'station_id',
+  as: 'station'
+});
+
+// Pile (充电桩) 关联关系
+// 一个充电桩有多个报警
+Pile.hasMany(Alarm, {
+  foreignKey: 'pile_id',
+  as: 'alarms'
+});
+Alarm.belongsTo(Pile, {
+  foreignKey: 'pile_id',
+  as: 'pile'
+});
+
+// User (用户) 关联关系
+// 一个用户有多个订单
+User.hasMany(Order, {
+  foreignKey: 'user_id',
+  as: 'orders'
+});
+Order.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+// 用户和角色的关联
+User.belongsTo(Role, {
+  foreignKey: 'role_id',
+  as: 'role'
+});
+Role.hasMany(User, {
+  foreignKey: 'role_id',
+  as: 'users'
+});
+
+// ==================== 导出模型 ====================
+export {
+  User,
+  Station,
+  Pile,
+  Order,
+  Revenue,
+  Alarm,
+  Notice,
+  Role,
+  Permission
+};
