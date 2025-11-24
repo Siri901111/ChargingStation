@@ -34,6 +34,7 @@ import memberCardRoutes from './routes/memberCardRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import billingTemplateRoutes from './routes/billingTemplateRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
+import personalRoutes from './routes/personalRoutes.js';
 app.use('/api', userRoutes);
 app.use('/api/stations', stationRoutes);
 app.use('/api', revenueRoutes);
@@ -43,32 +44,118 @@ app.use('/api/member', memberCardRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', billingTemplateRoutes);
 app.use('/api', documentRoutes);
+app.use('/api', personalRoutes);
 
 // 兼容前端的报警列表API路径
 app.use('/api', alarmRoutes);
 
+// 更新现有用户的缺失字段
+async function updateExistingUsersData() {
+  try {
+    const users = await User.findAll();
+    const addresses = [
+      '北京市朝阳区建国路88号',
+      '北京市海淀区中关村大街1号',
+      '北京市西城区西单北大街176号',
+      '上海市浦东新区陆家嘴环路1000号',
+      '上海市黄浦区南京东路100号',
+      '广州市天河区天河路123号',
+      '深圳市南山区科技园南路2号',
+      '杭州市西湖区文三路259号',
+    ];
+    
+    const tagOptions = [
+      ['认真', '工作狂', '与人和善', '代码洁癖'],
+      ['负责', '高效', '团队合作', '学习能力强'],
+      ['细心', '专业', '沟通能力强', '执行力强'],
+      ['创新', '积极', '乐观', '抗压能力强'],
+      ['严谨', '专注', '有责任心', '技术过硬'],
+    ];
+
+    for (const user of users) {
+      const updateData: any = {};
+      let needUpdate = false;
+
+      // 检查并补充缺失的字段
+      if (!(user as any).address) {
+        updateData.address = addresses[Math.floor(Math.random() * addresses.length)];
+        needUpdate = true;
+      }
+      if (!(user as any).tags || (Array.isArray((user as any).tags) && (user as any).tags.length === 0)) {
+        updateData.tags = tagOptions[Math.floor(Math.random() * tagOptions.length)];
+        needUpdate = true;
+      }
+      if (!(user as any).work_status) {
+        updateData.work_status = Math.floor(Math.random() * 4) + 1; // 1-4随机
+        needUpdate = true;
+      }
+      if (!(user as any).avatar) {
+        // 使用dicebear生成头像，基于用户ID或账号
+        const seed = (user as any).account || (user as any).id;
+        updateData.avatar = `https://api.dicebear.com/7.x/miniavs/svg?seed=${seed}`;
+        needUpdate = true;
+      }
+
+      if (needUpdate) {
+        await (user as any).update(updateData);
+      }
+    }
+
+    if (users.length > 0) {
+      console.log(`✅ 已更新 ${users.length} 个用户的个人信息字段`);
+    }
+  } catch (error) {
+    console.error('⚠️  更新用户数据时出错:', error);
+  }
+}
+
 // 手动添加缺失的列（避免alter导致的索引问题）
 async function addMissingColumnsIfNeeded() {
   try {
-    const [results] = await sequelize.query(`
+    // 处理 charging_user 表
+    const [chargingUserResults] = await sequelize.query(`
       SELECT COLUMN_NAME 
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = DATABASE() 
       AND TABLE_NAME = 'charging_user'
     `) as any[];
     
-    const existingColumns = results.map((r: any) => r.COLUMN_NAME);
+    const chargingUserColumns = chargingUserResults.map((r: any) => r.COLUMN_NAME);
     const queries: string[] = [];
     
-    // 检查并添加缺失的字段
-    if (!existingColumns.includes('card_type')) {
+    // 检查并添加 charging_user 表缺失的字段
+    if (!chargingUserColumns.includes('card_type')) {
       queries.push(`ALTER TABLE charging_user ADD COLUMN card_type VARCHAR(20) DEFAULT '普通卡' COMMENT '卡类型：普通卡、VIP卡、季卡'`);
     }
-    if (!existingColumns.includes('issue_date')) {
+    if (!chargingUserColumns.includes('issue_date')) {
       queries.push(`ALTER TABLE charging_user ADD COLUMN issue_date DATETIME COMMENT '开卡日期'`);
     }
-    if (!existingColumns.includes('valid_until')) {
+    if (!chargingUserColumns.includes('valid_until')) {
       queries.push(`ALTER TABLE charging_user ADD COLUMN valid_until DATETIME COMMENT '有效期至'`);
+    }
+    
+    // 处理 user 表
+    const [userResults] = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'user'
+    `) as any[];
+    
+    const userColumns = userResults.map((r: any) => r.COLUMN_NAME);
+    
+    // 检查并添加 user 表缺失的字段
+    if (!userColumns.includes('address')) {
+      queries.push(`ALTER TABLE user ADD COLUMN address VARCHAR(200) COMMENT '地址'`);
+    }
+    if (!userColumns.includes('tags')) {
+      queries.push(`ALTER TABLE user ADD COLUMN tags JSON COMMENT '个人标签（数组）'`);
+    }
+    if (!userColumns.includes('work_status')) {
+      queries.push(`ALTER TABLE user ADD COLUMN work_status TINYINT DEFAULT 1 COMMENT '在职状态：1工作中，2请假中，3出差中，4年假中'`);
+    }
+    if (!userColumns.includes('avatar')) {
+      queries.push(`ALTER TABLE user ADD COLUMN avatar VARCHAR(500) COMMENT '头像URL'`);
     }
     
     // 执行所有添加字段的SQL
@@ -77,7 +164,7 @@ async function addMissingColumnsIfNeeded() {
     }
     
     if (queries.length > 0) {
-      console.log(`✅ 已添加 ${queries.length} 个缺失的字段到 charging_user 表`);
+      console.log(`✅ 已添加 ${queries.length} 个缺失的字段`);
     }
   } catch (error) {
     console.error('⚠️  添加缺失字段时出错（可能字段已存在）:', error);
@@ -123,6 +210,9 @@ sequelize.authenticate()
     try {
       // 初始化默认角色和管理员账号
       await initDefaultUser();
+      
+      // 更新现有用户的缺失字段
+      await updateExistingUsersData();
       
       // 初始化Mock数据（如果数据库为空）
       const userCount = await User.count();

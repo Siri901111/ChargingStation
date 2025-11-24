@@ -45,6 +45,27 @@ export async function initMockData() {
 
 // 初始化用户数据
 async function initUsers() {
+  // 标签库
+  const tagOptions = [
+    ['认真', '工作狂', '与人和善', '代码洁癖'],
+    ['负责', '高效', '团队合作', '学习能力强'],
+    ['细心', '专业', '沟通能力强', '执行力强'],
+    ['创新', '积极', '乐观', '抗压能力强'],
+    ['严谨', '专注', '有责任心', '技术过硬'],
+  ];
+
+  // 地址库
+  const addresses = [
+    '北京市朝阳区建国路88号',
+    '北京市海淀区中关村大街1号',
+    '北京市西城区西单北大街176号',
+    '上海市浦东新区陆家嘴环路1000号',
+    '上海市黄浦区南京东路100号',
+    '广州市天河区天河路123号',
+    '深圳市南山区科技园南路2号',
+    '杭州市西湖区文三路259号',
+  ];
+
   const users = [
     {
       account: 'admin',
@@ -58,6 +79,10 @@ async function initUsers() {
       page_authority: 'admin',
       btn_authority: 'all,add,edit,delete',
       role_id: 1,
+      address: addresses[0],
+      tags: tagOptions[0],
+      work_status: 1,
+      avatar: 'https://api.dicebear.com/7.x/miniavs/svg?seed=admin',
     },
     {
       account: 'manager1',
@@ -71,6 +96,10 @@ async function initUsers() {
       page_authority: 'manager',
       btn_authority: 'add,edit',
       role_id: 2,
+      address: addresses[1],
+      tags: tagOptions[1],
+      work_status: 1,
+      avatar: 'https://api.dicebear.com/7.x/miniavs/svg?seed=manager1',
     },
     {
       account: 'manager2',
@@ -84,6 +113,10 @@ async function initUsers() {
       page_authority: 'manager',
       btn_authority: 'add,edit',
       role_id: 2,
+      address: addresses[2],
+      tags: tagOptions[2],
+      work_status: 2, // 请假中
+      avatar: 'https://api.dicebear.com/7.x/miniavs/svg?seed=manager2',
     },
     {
       account: 'user1',
@@ -97,6 +130,10 @@ async function initUsers() {
       page_authority: 'user',
       btn_authority: 'add',
       role_id: 3,
+      address: addresses[3],
+      tags: tagOptions[3],
+      work_status: 1,
+      avatar: 'https://api.dicebear.com/7.x/miniavs/svg?seed=user1',
     },
     {
       account: 'user2',
@@ -110,6 +147,10 @@ async function initUsers() {
       page_authority: 'user',
       btn_authority: 'add',
       role_id: 3,
+      address: addresses[4],
+      tags: tagOptions[4],
+      work_status: 3, // 出差中
+      avatar: 'https://api.dicebear.com/7.x/miniavs/svg?seed=user2',
     },
   ];
 

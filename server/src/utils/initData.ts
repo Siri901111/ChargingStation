@@ -39,14 +39,19 @@ export async function initDefaultUser() {
       await User.create({
         account: 'admin',
         password: hashedPassword,
-        name: '管理员',
+        name: '系统管理员',
         phone: '13800138000',
-        position: '管理员',
+        id_no: '110101199001011234',
+        position: '系统管理员',
         department: '总裁办',
         status: 1,
         page_authority: 'admin',
-        btn_authority: 'admin',
+        btn_authority: 'all,add,edit,delete',
         role_id: 1,
+        address: '北京市朝阳区建国路88号',
+        tags: ['认真', '工作狂', '与人和善', '代码洁癖'],
+        work_status: 1,
+        avatar: 'https://api.dicebear.com/7.x/miniavs/svg?seed=admin',
       });
       
       console.log('✅ 默认管理员账号创建成功！');

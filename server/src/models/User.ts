@@ -17,6 +17,10 @@ User.init(
     page_authority: { type: DataTypes.STRING(512) },
     btn_authority: { type: DataTypes.STRING(512) },
     role_id: { type: DataTypes.BIGINT },
+    address: { type: DataTypes.STRING(200) }, // 地址
+    tags: { type: DataTypes.JSON }, // 个人标签（数组）
+    work_status: { type: DataTypes.TINYINT, defaultValue: 1 }, // 在职状态：1工作中，2请假中，3出差中，4年假中
+    avatar: { type: DataTypes.STRING(500) }, // 头像URL
     created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   },
   {
