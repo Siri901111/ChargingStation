@@ -1,4 +1,5 @@
 import User from './User.js';
+import ChargingUser from './ChargingUser.js';
 import Station from './Station.js';
 import Pile from './Pile.js';
 import Order from './Order.js';
@@ -62,16 +63,19 @@ Alarm.belongsTo(Pile, {
   as: 'pile'
 });
 
-// User (用户) 关联关系
-// 一个用户有多个订单
-User.hasMany(Order, {
+// ChargingUser (充电用户) 关联关系
+// 一个充电用户有多个订单
+ChargingUser.hasMany(Order, {
   foreignKey: 'user_id',
   as: 'orders'
 });
-Order.belongsTo(User, {
+Order.belongsTo(ChargingUser, {
   foreignKey: 'user_id',
-  as: 'user'
+  as: 'chargingUser'
 });
+
+// User (后台管理用户) 关联关系
+// 后台管理用户与角色的关联
 
 // 用户和角色的关联
 User.belongsTo(Role, {
@@ -86,6 +90,7 @@ Role.hasMany(User, {
 // ==================== 导出模型 ====================
 export {
   User,
+  ChargingUser,
   Station,
   Pile,
   Order,

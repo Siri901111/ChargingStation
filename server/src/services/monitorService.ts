@@ -24,7 +24,7 @@ export async function getCurrentListService() {
       const pileList = await Promise.all(
         piles.map(async (pile: any) => {
           // 获取该充电桩的使用记录（最近6条）
-          // equipment_no 可能是充电桩ID的字符串形式
+          // equipment_no 对应充电桩ID
           const records = await Order.findAll({
             where: {
               equipment_no: String(pile.id)
