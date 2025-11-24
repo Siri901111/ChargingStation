@@ -28,9 +28,11 @@ app.use((req, res, next) => {
 import userRoutes from './routes/userRoutes.js';
 import stationRoutes from './routes/stationRoutes.js';
 import revenueRoutes from './routes/revenueRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 app.use('/api', userRoutes);
 app.use('/api/stations', stationRoutes);
 app.use('/api', revenueRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 const PORT = process.env.PORT || 3001;
 
