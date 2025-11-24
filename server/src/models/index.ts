@@ -8,6 +8,7 @@ import Alarm from './Alarm.js';
 import Notice from './Notice.js';
 import Role from './Role.js';
 import Permission from './Permission.js';
+import BillingTemplate from './BillingTemplate.js';
 
 // ==================== 模型关联关系设置 ====================
 
@@ -48,6 +49,16 @@ Station.hasMany(Alarm, {
   as: 'alarms'
 });
 Alarm.belongsTo(Station, {
+  foreignKey: 'station_id',
+  as: 'station'
+});
+
+// 一个充电站有一个计费模板
+Station.hasOne(BillingTemplate, {
+  foreignKey: 'station_id',
+  as: 'billingTemplate'
+});
+BillingTemplate.belongsTo(Station, {
   foreignKey: 'station_id',
   as: 'station'
 });
@@ -98,5 +109,6 @@ export {
   Alarm,
   Notice,
   Role,
-  Permission
+  Permission,
+  BillingTemplate
 };
