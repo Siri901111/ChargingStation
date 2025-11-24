@@ -29,33 +29,48 @@ import userRoutes from './routes/userRoutes.js';
 import stationRoutes from './routes/stationRoutes.js';
 import revenueRoutes from './routes/revenueRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import alarmRoutes from './routes/alarmRoutes.js';
 app.use('/api', userRoutes);
 app.use('/api/stations', stationRoutes);
 app.use('/api', revenueRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/alarms', alarmRoutes);
+
+// 兼容前端的报警列表API路径
+app.use('/api', alarmRoutes);
 
 const PORT = process.env.PORT || 3001;
 
 // 测试数据库连接
 sequelize.authenticate()
-  .then(() => {
+  .then(async () => {
     console.log('✅ 数据库连接成功！');
     
     // 同步表结构（如果表不存在则创建，存在则不修改）
-    return sequelize.sync({ alter: false, force: false });
+    // 注意：如需添加新字段，临时设置 alter: true，同步后改回 alter: false
+    // 临时禁用外键检查，避免同步时的约束冲突
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+    const result = await sequelize.sync({ alter: true, force: false });
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+    return result;
   })
   .then(async () => {
     console.log('✅ 数据库表结构同步成功！');
     
-    // 初始化默认管理员账号
-    await initDefaultUser();
-    
-    // 初始化Mock数据（如果数据库为空）
-    const userCount = await User.count();
-    if (userCount <= 1) {
-      await initMockData();
-    } else {
-      console.log('ℹ️  数据库已有数据，跳过Mock数据初始化');
+    try {
+      // 初始化默认角色和管理员账号
+      await initDefaultUser();
+      
+      // 初始化Mock数据（如果数据库为空）
+      const userCount = await User.count();
+      if (userCount <= 1) {
+        await initMockData();
+      } else {
+        console.log('ℹ️  数据库已有数据，跳过Mock数据初始化');
+      }
+    } catch (error) {
+      console.error('❌ 数据初始化失败:', error);
+      console.log('⚠️  服务器将继续启动，但可能缺少初始数据');
     }
     
     // 启动服务器

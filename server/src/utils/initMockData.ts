@@ -335,24 +335,49 @@ async function initAlarms(stations: any[]) {
     '充电站设备故障',
   ];
   
-  const levels = [1, 2, 3]; // 1-低, 2-中, 3-高
+  const levels = [1, 2, 3, 4]; // 1-严重, 2-紧急, 3-重要, 4-一般
+  
+  // 获取所有充电桩
+  const piles = await Pile.findAll();
   
   for (let i = 0; i < 20; i++) {
     const station = stations[Math.floor(Math.random() * stations.length)];
     const title = alarmTitles[Math.floor(Math.random() * alarmTitles.length)];
     const level = levels[Math.floor(Math.random() * levels.length)];
     
+    // 随机选择是否关联充电桩（有些报警可能是站点级别的）
+    const shouldHavePile = Math.random() > 0.3; // 70%概率关联充电桩
+    let pileId = null;
+    
+    if (shouldHavePile && piles.length > 0) {
+      // 从该站点的充电桩中随机选择一个
+      const stationPiles = piles.filter((pile: any) => pile.station_id === station.id);
+      if (stationPiles.length > 0) {
+        const randomPile = stationPiles[Math.floor(Math.random() * stationPiles.length)];
+        pileId = randomPile.id;
+      }
+    }
+    
     const faultTime = new Date();
     faultTime.setDate(faultTime.getDate() - Math.floor(Math.random() * 30));
     faultTime.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60));
     
+    // 根据级别设置初始状态
+    let initialStatus = 1; // 默认待指派
+    if (level === 2) initialStatus = 2; // 紧急的设为处理中
+    if (level === 4) initialStatus = Math.random() > 0.5 ? 3 : 1; // 一般的有50%概率已处理
+    
     await Alarm.create({
       station_id: station.id,
-      pile_id: Math.floor(Math.random() * 20) + 1,
+      pile_id: pileId,
       title: title,
       detail: `${station.name}的${title}，请及时处理`,
       fault_time: faultTime,
       level: level,
+      status: initialStatus,
+      handler: initialStatus > 1 ? ['张工程师', '李维修员', '王技术员'][Math.floor(Math.random() * 3)] : null,
+      handle_time: initialStatus > 1 ? new Date(faultTime.getTime() + Math.random() * 24 * 60 * 60 * 1000) : null,
+      handle_note: initialStatus === 3 ? '问题已解决，设备恢复正常' : (initialStatus === 2 ? '正在现场处理中' : null)
     });
   }
   console.log('✅ 报警数据初始化完成');

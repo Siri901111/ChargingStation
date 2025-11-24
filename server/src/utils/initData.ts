@@ -1,10 +1,35 @@
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import Role from '../models/Role.js';
 
-// 初始化数据：创建默认管理员账号
+// 初始化数据：创建默认角色和管理员账号
 export async function initDefaultUser() {
   try {
-    // 检查是否已存在管理员
+    // 1. 先确保角色表有数据
+    let adminRole = await Role.findOne({ where: { id: 1 } });
+    if (!adminRole) {
+      adminRole = await Role.create({
+        id: 1,
+        name: 'admin'
+      });
+      console.log('✅ 默认管理员角色创建成功！');
+    }
+
+    // 确保其他角色也存在
+    const roles = [
+      { id: 2, name: 'manager' },
+      { id: 3, name: 'user' }
+    ];
+
+    for (const roleData of roles) {
+      const existingRole = await Role.findOne({ where: { id: roleData.id } });
+      if (!existingRole) {
+        await Role.create(roleData);
+        console.log(`✅ 角色 ${roleData.name} 创建成功！`);
+      }
+    }
+
+    // 2. 检查是否已存在管理员
     const admin = await User.findOne({ where: { account: 'admin' } });
     
     if (!admin) {
@@ -32,6 +57,7 @@ export async function initDefaultUser() {
     }
   } catch (error) {
     console.error('❌ 初始化默认用户失败:', error);
+    throw error; // 重新抛出错误，让调用者知道初始化失败
   }
 }
 
