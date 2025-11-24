@@ -9,6 +9,7 @@ import Notice from './Notice.js';
 import Role from './Role.js';
 import Permission from './Permission.js';
 import BillingTemplate from './BillingTemplate.js';
+import Document from './Document.js';
 
 // ==================== 模型关联关系设置 ====================
 
@@ -98,6 +99,17 @@ Role.hasMany(User, {
   as: 'users'
 });
 
+// User (后台管理用户) 与 Document (招商文章) 关联关系
+// 一个用户可以创建多篇文章
+User.hasMany(Document, {
+  foreignKey: 'author_id',
+  as: 'documents'
+});
+Document.belongsTo(User, {
+  foreignKey: 'author_id',
+  as: 'author'
+});
+
 // ==================== 导出模型 ====================
 export {
   User,
@@ -110,5 +122,6 @@ export {
   Notice,
   Role,
   Permission,
-  BillingTemplate
+  BillingTemplate,
+  Document
 };
