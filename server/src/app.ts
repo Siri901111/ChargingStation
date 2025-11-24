@@ -35,6 +35,7 @@ import orderRoutes from './routes/orderRoutes.js';
 import billingTemplateRoutes from './routes/billingTemplateRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import personalRoutes from './routes/personalRoutes.js';
+import mapRoutes from './routes/mapRoutes.js';
 app.use('/api', userRoutes);
 app.use('/api/stations', stationRoutes);
 app.use('/api', revenueRoutes);
@@ -45,6 +46,7 @@ app.use('/api', orderRoutes);
 app.use('/api', billingTemplateRoutes);
 app.use('/api', documentRoutes);
 app.use('/api', personalRoutes);
+app.use('/api', mapRoutes);
 
 // 兼容前端的报警列表API路径
 app.use('/api', alarmRoutes);
