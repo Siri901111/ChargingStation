@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import ChargingUser from '../models/ChargingUser.js';
 import Station from '../models/Station.js';
 import Pile from '../models/Pile.js';
 import Order from '../models/Order.js';
@@ -15,22 +16,25 @@ export async function initMockData() {
     // 1. 创建用户数据
     await initUsers();
     
-    // 2. 创建充电站数据
+    // 2. 创建充电用户数据（会员卡）
+    const chargingUsers = await initChargingUsers();
+    
+    // 3. 创建充电站数据
     const stations = await initStations();
     
-    // 3. 创建充电桩数据
+    // 4. 创建充电桩数据
     await initPiles(stations);
     
-    // 4. 创建订单数据
-    await initOrders(stations);
+    // 5. 创建订单数据
+    await initOrders(stations, chargingUsers);
     
-    // 5. 创建营收数据
+    // 6. 创建营收数据
     await initRevenue(stations);
     
-    // 6. 创建报警数据
+    // 7. 创建报警数据
     await initAlarms(stations);
     
-    // 7. 创建公告数据
+    // 8. 创建公告数据
     await initNotices();
 
     console.log('✅ Mock数据初始化完成！');
@@ -116,6 +120,86 @@ async function initUsers() {
     }
   }
   console.log('✅ 用户数据初始化完成');
+}
+
+// 初始化充电用户数据（会员卡）
+export async function initChargingUsers() {
+  const cardTypes = ['普通卡', 'VIP卡', '季卡'];
+  const names = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十'];
+  const phones = [
+    '13800138001', '13800138002', '13800138003', '13800138004',
+    '13800138005', '13800138006', '13800138007', '13800138008',
+    '13900139001', '13900139002', '13900139003', '13900139004',
+    '15000150001', '15000150002', '15000150003', '15000150004',
+    '15100151001', '15100151002', '15100151003', '15100151004',
+  ];
+
+  const chargingUsers = [];
+
+  for (let i = 0; i < 30; i++) {
+    const phone = phones[i % phones.length];
+    const name = names[i % names.length];
+    const cardType = cardTypes[Math.floor(Math.random() * cardTypes.length)];
+    
+    // 生成会员卡号
+    const memberCardNo = `MC${String(i + 1).padStart(6, '0')}`;
+    
+    // 生成开卡日期（随机过去1-12个月）
+    const issueDate = new Date();
+    issueDate.setMonth(issueDate.getMonth() - Math.floor(Math.random() * 12) - 1);
+    
+    // 根据卡类型设置有效期
+    let validUntil: Date | null = null;
+    if (cardType === '季卡') {
+      validUntil = new Date(issueDate);
+      validUntil.setMonth(validUntil.getMonth() + 3); // 3个月有效期
+    } else if (cardType === 'VIP卡') {
+      validUntil = new Date(issueDate);
+      validUntil.setFullYear(validUntil.getFullYear() + 1); // 1年有效期
+    } else {
+      validUntil = new Date(issueDate);
+      validUntil.setFullYear(validUntil.getFullYear() + 2); // 普通卡2年有效期
+    }
+    
+    // 生成余额（根据卡类型不同范围）
+    let balance = 0;
+    if (cardType === 'VIP卡') {
+      balance = Math.floor(Math.random() * 5000) + 2000; // 2000-7000
+    } else if (cardType === '季卡') {
+      balance = Math.floor(Math.random() * 3000) + 1000; // 1000-4000
+    } else {
+      balance = Math.floor(Math.random() * 2000) + 500; // 500-2500
+    }
+    
+    // 生成身份证号（模拟）
+    const idNo = `110101199${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}${String(Math.floor(Math.random() * 100)).padStart(2, '0')}`;
+
+    try {
+      const existing = await ChargingUser.findOne({ where: { phone } });
+      if (!existing) {
+        const user = await ChargingUser.create({
+          phone,
+          name: `${name}${i > 7 ? i : ''}`,
+          id_no: idNo,
+          member_card_no: memberCardNo,
+          card_type: cardType,
+          balance: balance,
+          issue_date: issueDate,
+          valid_until: validUntil,
+          status: Math.random() > 0.1 ? 1 : 0, // 90%正常，10%禁用
+          created_at: issueDate,
+        });
+        chargingUsers.push(user);
+      } else {
+        chargingUsers.push(existing);
+      }
+    } catch (error) {
+      console.error(`创建充电用户失败 (${phone}):`, error);
+    }
+  }
+
+  console.log('✅ 充电用户数据初始化完成');
+  return chargingUsers;
 }
 
 // 初始化充电站数据
@@ -243,15 +327,23 @@ async function initPiles(stations: any[]) {
 }
 
 // 初始化订单数据
-async function initOrders(stations: any[]) {
+async function initOrders(stations: any[], chargingUsers: any[]) {
   const payMethods = ['微信支付', '支付宝', '银行卡', '会员卡'];
   const statuses = [2, 3, 3, 3, 4]; // 进行中、已完成、已完成、已完成、异常
   
-  const users = await User.findAll();
+  // 如果没有充电用户，创建一些
+  if (!chargingUsers || chargingUsers.length === 0) {
+    chargingUsers = await ChargingUser.findAll();
+  }
+  
+  if (chargingUsers.length === 0) {
+    console.log('⚠️  没有充电用户，跳过订单数据初始化');
+    return;
+  }
   
   for (let i = 0; i < 50; i++) {
     const station = stations[Math.floor(Math.random() * stations.length)];
-    const user = users[Math.floor(Math.random() * users.length)];
+    const user = chargingUsers[Math.floor(Math.random() * chargingUsers.length)];
     const status = statuses[Math.floor(Math.random() * statuses.length)];
     
     const startTime = new Date();
@@ -265,8 +357,8 @@ async function initOrders(stations: any[]) {
     const money = (hours * 30 + Math.random() * 20).toFixed(2);
     
     await Order.create({
-      order_no: `ORD${Date.now()}${i}`,
-      user_id: user.id,
+      order_no: `ORD${Date.now()}${i}${Math.floor(Math.random() * 1000)}`,
+      user_id: (user as any).id,
       equipment_no: `PILE${station.id}-${Math.floor(Math.random() * 20) + 1}`,
       station_id: station.id,
       date: startTime,
