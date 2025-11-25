@@ -68,9 +68,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue"
-import { cityListApi } from "@/api/operation"
+import { getCityListApi, getBillingTemplateApi, saveBillingTemplateApi } from "@/api/operation"
 import { watch } from "vue";
-import { ElTree } from 'element-plus'
+import { ElTree, ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { reactive } from "vue";
 
@@ -98,10 +98,20 @@ const defaultProps = {
     label: 'label',
 }
 const treeData = ref<Tree[]>([]);
-onMounted(async () => {
-    const { data } = await cityListApi();
-    treeData.value = data
+const currentStationId = ref<number | null>(null);
 
+onMounted(async () => {
+    try {
+        const res = await getCityListApi();
+        if (res.code === 200 && res.data) {
+            treeData.value = res.data;
+        } else {
+            ElMessage.error(res.message || '获取城市列表失败');
+        }
+    } catch (error: any) {
+        console.error('加载城市列表失败:', error);
+        ElMessage.error(error.message || '加载城市列表失败');
+    }
 })
 const filterNode: any = (value: string, data: Tree) => {
     console.log(value, data)
@@ -141,19 +151,81 @@ const addTimeSlot=()=>{
     ruleForm.value.date.push( { date1: "", date2: "", electricity: "" })
 }
 
-const submitForm=()=>{
-    ruleFormRef.value?.validate((valid)=>{
+const submitForm=async ()=>{
+    if (!currentStationId.value) {
+        ElMessage.warning('请先选择充电站');
+        return;
+    }
+    
+    ruleFormRef.value?.validate(async (valid)=>{
         if(valid){
-           console.log(ruleForm.value)
-           //将数据发送到后端
+            try {
+                // 转换时间段数据格式
+                const timeSlots = ruleForm.value.date.map(slot => ({
+                    start_time: slot.date1,
+                    end_time: slot.date2,
+                    electricity_price: parseFloat(slot.electricity) || 0
+                }));
+                
+                // 后端接口期望的参数格式
+                const res = await saveBillingTemplateApi({
+                    station_id: currentStationId.value,
+                    name: ruleForm.value.name,
+                    service: ruleForm.value.service,
+                    parking: ruleForm.value.parking,
+                    date: ruleForm.value.date,
+                    remarks: ruleForm.value.remarks
+                });
+                
+                if (res.code === 200 || res.code === 201) {
+                    ElMessage.success(res.message || '保存成功');
+                } else {
+                    ElMessage.error(res.message || '保存失败');
+                }
+            } catch (error: any) {
+                console.error('保存计费模板失败:', error);
+                ElMessage.error(error.message || '保存失败');
+            }
         }
     })
 }
 
-const handleNodeClick=(data:Tree)=>{
-    if(!data.children){
-        title.value=data.label;
-        resetForm()
+const handleNodeClick=async (data:Tree)=>{
+    if(!data.children && (data as any).id){
+        title.value = data.label;
+        currentStationId.value = (data as any).id;
+        resetForm();
+        
+        // 加载该站点的计费模板
+        try {
+            const res = await getBillingTemplateApi((data as any).id);
+            if (res.code === 200 && res.data) {
+                const template = res.data;
+                ruleForm.value.name = template.name || '';
+                ruleForm.value.service = template.service_fee?.toString() || '';
+                ruleForm.value.parking = template.parking_fee?.toString() || '';
+                ruleForm.value.remarks = template.remarks || '';
+                
+                // 处理时间段数据
+                if (template.time_slots && Array.isArray(template.time_slots)) {
+                    ruleForm.value.date = template.time_slots.map((slot: any) => ({
+                        date1: slot.start_time || '',
+                        date2: slot.end_time || '',
+                        electricity: slot.electricity_price?.toString() || ''
+                    }));
+                } else {
+                    ruleForm.value.date = [{ date1: "", date2: "", electricity: "" }];
+                }
+            } else if (res.code === 404) {
+                // 没有模板，使用空表单
+                resetForm();
+            } else {
+                ElMessage.warning(res.message || '获取计费模板失败');
+            }
+        } catch (error: any) {
+            console.error('加载计费模板失败:', error);
+            ElMessage.error(error.message || '加载计费模板失败');
+        }
     }
 }
 

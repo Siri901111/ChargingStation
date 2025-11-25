@@ -60,7 +60,6 @@
             <el-table-column label="操作">
                 <template #default="scope">
                     <el-button type="primary" size="small" @click="handleDetail(scope.row.orderNo)">详情</el-button>
-                    <el-button type="danger" size="small">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -80,8 +79,8 @@
 <script setup lang="ts">
 import {useHttp} from "@/hooks/useHttp"
 import {ref,watch} from "vue"
-import {batchDeleteApi} from "@/api/operation"
-import  {ElMessage} from "element-plus"
+import {batchDeleteOrdersApi} from "@/api/operation"
+import  {ElMessage, ElMessageBox} from "element-plus"
 import { useRouter,useRoute } from "vue-router"
 import { useTabsStore } from "@/store/tabs"
 import * as XLSX from "xlsx";
@@ -128,7 +127,7 @@ const {
         handleSizeChange,
         handleCurrentChange,
         resetPagination
-    }= useHttp<SelectionListType>("/orderList",searchParams);
+    }= useHttp<SelectionListType>("/api/orderList",searchParams);
 const handleReset=()=>{
     date.value=""
     searchParams.value={
@@ -149,18 +148,36 @@ const handleSelectionChange=(selection:SelectionListType[])=>{
 
 const handleBatchDelete=async ()=>{
   try {
-    const res= await batchDeleteApi(selectionList.value.map((item:SelectionListType)=>item.orderNo));
-    if(res.code){
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectionList.value.length} 条订单吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    );
+    
+    const res = await batchDeleteOrdersApi({
+      order: selectionList.value.map((item: SelectionListType) => item.orderNo)
+    });
+    
+    if(res.code === 200){
         ElMessage({
-            message:res.data,
+            message: res.message || '批量删除成功',
             type:"success"
         });
+        selectionList.value = [];
         loadData();
+    } else {
+        ElMessage.error(res.message || '批量删除失败');
     }
-  } catch (error) {
-    console.log(error)
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('批量删除失败:', error);
+      ElMessage.error(error.message || '批量删除失败');
+    }
   }  
-
 }
 const router=useRouter()
 const tabsStore=useTabsStore()
