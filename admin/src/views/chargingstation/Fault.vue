@@ -69,7 +69,7 @@
 import free from "@/assets/free.png"
 import outline from "@/assets/outline.png";
 import ing from "@/assets/ing.png"
-import { currentListApi } from "@/api/chargingstation"
+import { getCurrentListApi } from "@/api/chargingstation"
 import { onMounted, ref } from "vue";
 import { computed, watch } from "vue";
 
@@ -78,7 +78,7 @@ const options = ref<any>([]) //下拉菜单数据
 const dataList = ref<any>([]) //渲染列表数据
 const dataListCopy = ref<any>([])
 const loadData = async () => {
-    const { data } = await currentListApi();
+    const { data } = await getCurrentListApi();
     options.value = data;
     dataList.value = data[0].list //原始数据
     dataListCopy.value = data[0].list //做列表渲染

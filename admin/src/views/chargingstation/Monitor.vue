@@ -95,7 +95,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from "vue"
-import { listApi,deleteApi } from "@/api/chargingstation"
+import { getStationListApi, deleteStationApi } from "@/api/chargingstation"
 import StationForm from "./components/StationForm.vue"
 import {useStationStore}  from "@/store/station"
 import type{RowType} from "@/types/station"
@@ -115,7 +115,7 @@ const pageInfo=reactive({
 const loading=ref<boolean>(false)
 const loadData = async () => {
     loading.value=true
-    const { data: { list, total } } = await listApi({...pageInfo,status:formParams.value,[select.value]:formParams.input});
+    const { data: { list, total } } = await getStationListApi({...pageInfo,status:formParams.value,[select.value]:formParams.input});
     loading.value=false
     tableData.value = list
     totals.value=total
@@ -166,7 +166,7 @@ const handleAdd=()=>{
     visible.value=true
 }
 const handleDelete=async (id:string)=>{
-    const res=await deleteApi(id);
+    const res=await deleteStationApi(id);
     if(res.code==200){
         ElMessage({
             message:res.data,

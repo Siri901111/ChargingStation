@@ -155,7 +155,7 @@
 <script setup lang="ts">
 import formatNumberToThousands from "@/utils/toThousands"
 import {ref,reactive} from "vue"
-import {chartApi,revenueApi} from "@/api/chargingstation"
+import {getRevenueChartApi, getRevenueListApi} from "@/api/chargingstation"
 import { useChart } from "@/hooks/useChart";
 import {usePagination} from "@/hooks/usePagination"
 import { onMounted } from "vue";
@@ -206,7 +206,7 @@ const setChartData=async ()=>{
             }
         ]
     });
-    const res = await chartApi()
+    const res = await getRevenueChartApi()
     chartOptions.legend.data = res.data.list.map((item: any) => item.name);
     for (let i = 0; i < res.data.list.length; i++) {
         chartOptions.series[i].name = res.data.list[i].name
@@ -220,7 +220,7 @@ const tableData=ref([]);
 const loading=ref<boolean>(false)
 const loadData= async ()=>{
    loading.value=true 
-  const {data:{list,total}} = await revenueApi({...pageInfo,name:name.value});
+  const {data:{list,total}} = await getRevenueListApi({...pageInfo,name:name.value});
   setTotals(total)
   loading.value=false
   tableData.value=list

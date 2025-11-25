@@ -71,7 +71,7 @@ import type { FormRules,FormInstance } from "element-plus";
 import type{RowType} from "@/types/station"
 import {useStationStore}  from "@/store/station"
 import { storeToRefs } from "pinia";
-import {editApi} from "@/api/chargingstation"
+import {createStationApi, updateStationApi} from "@/api/chargingstation"
 import { ElMessage } from 'element-plus'
 const props=defineProps({
     dialogVisible:{
@@ -131,7 +131,7 @@ const {rowData}=storeToRefs(stationStore)
 const title=ref<string>("")
 watch(()=>props.dialogVisible,()=>{
 
-    if(rowData.value.name){
+    if(rowData.value.id){
        
         title.value="编辑充电站信息"
         disabled.value=true;
@@ -152,10 +152,17 @@ const formRef=ref<FormInstance>()
 const handleConfirm=()=>{
     formRef.value?.validate(async (valid:boolean)=>{
         if(valid){
-         const res=await editApi(ruleForm.value);
+         let res;
+         if(ruleForm.value.id){
+             // 编辑：使用更新接口
+             res = await updateStationApi(ruleForm.value.id, ruleForm.value);
+         } else {
+             // 新增：使用创建接口
+             res = await createStationApi(ruleForm.value);
+         }
          if(res.code==200){
             ElMessage({
-                message:res.data,
+                message:res.message || res.data || '操作成功',
                 type:"success"
             });
             handleCancel();

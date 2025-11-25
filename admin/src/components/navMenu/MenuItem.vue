@@ -8,7 +8,7 @@
         </template>
         <my-menu v-for="child in item.children" :key="child.url" :item="child"></my-menu>
     </el-sub-menu>
-    <el-menu-item v-else :index="item.url" @click="add(item.name,item.url,item.icon)" v-show="!(item.name=='订单详情')">
+    <el-menu-item v-else :index="item.url" @click="handleClick" v-show="!(item.name=='订单详情')">
         <el-icon>
             <component :is="item.icon"></component>
         </el-icon>
@@ -21,6 +21,7 @@ import {defineComponent,PropType} from "vue"
 import {MenuItem as MenuItemType} from "@/types/user"
 import { useTabsStore } from "@/store/tabs";
 import { useRouter } from "vue-router";
+
 export default defineComponent({
     name:"MyMenu",
     props:{
@@ -29,17 +30,21 @@ export default defineComponent({
             required:true    
         }
     },
-    setup(){
+    setup(props){
         const tabsStore=useTabsStore();
         const router=useRouter();
         const {addTab,setCurrentTab}=tabsStore;
-        const add=(name:string,url:string,icon:string)=>{
-            addTab(name,url,icon);
-            setCurrentTab(name,url);
-            // 进行路由跳转
-            router.push(url);
+        
+        const handleClick = () => {
+            const { name, url, icon } = props.item;
+            if (name && url && icon) {
+                addTab(name, url, icon);
+                setCurrentTab(name, url);
+                router.push(url);
+            }
         }
-        return {add}
+        
+        return { handleClick }
     }
 })
 </script>
