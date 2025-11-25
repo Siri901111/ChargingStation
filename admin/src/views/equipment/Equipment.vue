@@ -30,17 +30,21 @@
             <el-table-column prop="cardBalance" label="卡余额"></el-table-column>
             <el-table-column prop="transactionRecords" label="消费记录">
                 <template #default="scope">
-                    <el-popover placement="top-start" title="消费记录" :width="200" trigger="hover"
-                        content="this is content, this is content, this is content">
+                    <el-popover placement="top-start" title="消费记录" :width="300" trigger="hover">
                         <template #reference>
-                            <el-button class="m-2" >消费记录</el-button>
+                            <el-button class="m-2" size="small">消费记录 ({{ scope.row.transactionRecords?.length || 0 }})</el-button>
                         </template>
-                        <el-timeline style="max-width: 600px;">
-                            <el-timeline-item v-for="(item,index) in scope.row.transactionRecords" color="#0bbd87" :timestamp="item.transactionDate" :key="index">
-                                <p>消费金额：{{ item.transactionAmount }}</p>
-                                <p>消费类型：{{ item.transactionType }}</p>
-                            </el-timeline-item>
-                        </el-timeline>
+                        <div v-if="scope.row.transactionRecords && scope.row.transactionRecords.length > 0">
+                            <el-timeline style="max-width: 600px;">
+                                <el-timeline-item v-for="(item,index) in scope.row.transactionRecords" color="#0bbd87" :timestamp="item.transactionDate" :key="index">
+                                    <p>消费金额：¥{{ item.transactionAmount }}</p>
+                                    <p>消费类型：{{ item.transactionType }}</p>
+                                </el-timeline-item>
+                            </el-timeline>
+                        </div>
+                        <div v-else style="padding: 10px; color: #999;">
+                            暂无消费记录
+                        </div>
                     </el-popover>
                 </template>
             </el-table-column>
@@ -68,7 +72,7 @@ const searchParams = ref({
     tel: "",
     name: ""
 })
-const { dataList, loading, loadData, totals, pageInfo, handleCurrentChange, handleSizeChange,resetPagination } = useHttp("/member", searchParams)
+const { dataList, loading, loadData, totals, pageInfo, handleCurrentChange, handleSizeChange,resetPagination } = useHttp("/api/member", searchParams)
 
 const handleReset=()=>{
     searchParams.value={

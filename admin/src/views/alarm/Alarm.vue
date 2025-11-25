@@ -7,20 +7,43 @@
             <el-radio-button label="一般告警" :value="4"> </el-radio-button>
         </el-radio-group>
     </el-card>
-    <el-card class="mt" v-for="item in alarmList" :key="item.equNo">
+    <el-card class="mt" v-for="item in alarmList" :key="item.id" v-loading="loading">
         <el-alert :title="`${item.address}充电桩充电异常`" type="warning" show-icon />
-        <el-descriptions :border="true" :column="4" direction="vertical" class="mt">
-            <el-descriptions-item v-for="(val,key) in item" :label="getLabel(key)">
-                <el-tag v-if="key=='level'" :type="val==1?'danger':(val==2?'warning':'info')">
-                    {{ val==1?'严重':(val==2?'紧急':'一般') }}
+        <el-descriptions :border="true" :column="2" class="mt alarm-descriptions">
+            <el-descriptions-item label="故障描述">
+                {{ item.description || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="设备地址">
+                {{ item.address || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="设备号">
+                {{ item.equNo || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="告警级别">
+                <el-tag :type="item.level==1?'danger':(item.level==2?'warning':(item.level==3?'info':'success'))">
+                    {{ item.level==1?'严重':(item.level==2?'紧急':(item.level==3?'重要':'一般')) }}
                 </el-tag>
-                <el-text  type="danger" v-else-if="key=='status'">
-                    {{ val==1?"待指派":(val==2?"处理中":"处理异常") }}
+            </el-descriptions-item>
+            <el-descriptions-item label="故障时间">
+                {{ item.time || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="故障代码">
+                {{ item.code || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="当前状态">
+                <el-text :type="item.status==1?'danger':(item.status==2?'warning':(item.status==3?'success':'danger'))">
+                    {{ item.status==1?"待指派":(item.status==2?"处理中":(item.status==3?"已处理":"处理异常")) }}
                 </el-text>
-                <span v-else>{{ val }}</span>
             </el-descriptions-item>
             <el-descriptions-item label="操作">
-                <el-button @click="drawer=true" :type="item.status==2?'warning':'primary'"> {{ item.status==1?"指派":(item.status==2?"催办":"查看") }} </el-button>
+                <el-button 
+                    @click="handleAction(item)" 
+                    :type="item.status==2?'warning':'primary'"
+                    :disabled="item.status==3"
+                    size="small"
+                > 
+                    {{ item.status==1?"指派":(item.status==2?"催办":"查看") }} 
+                </el-button>
             </el-descriptions-item>
         </el-descriptions>
     </el-card>
@@ -94,9 +117,10 @@
         </template>
     </StepForm>
     <el-result
+        v-if="currentAlarmId && urgeCount > 0"
         icon="warning"
-        title="设备编号：CD1001"
-        sub-title="该任务已催促2次，请抓紧处理"
+        :title="`设备编号：${alarmList.find(a => a.id === currentAlarmId)?.equNo || ''}`"
+        :sub-title="`该任务已催促${urgeCount}次，请抓紧处理`"
       >
         <template #extra>
           <el-button type="primary" @click="drawer=false">我已知晓</el-button>
@@ -105,28 +129,57 @@
   </el-drawer>
 </template>
 <script setup lang="ts">
-import {ref} from "vue"
-import {alarmListApi} from "@/api/alarm"
+import {ref, watch} from "vue"
+import {getAlarmListApi, assignAlarmTaskApi, urgeAlarmTaskApi, getAlarmUrgeCountApi} from "@/api/alarm"
 import { onMounted } from "vue";
-import {getLabel} from "./fieldLabelMap"
 import StepForm from "@/components/stepForm/StepForm.vue"
 import { FormInstance } from "element-plus";
 import { ElMessage } from 'element-plus'
 const radio1=ref<number>(1);
+const loading = ref<boolean>(false);
+const currentAlarmId = ref<number | null>(null);
+const urgeCount = ref<number>(0);
+
 interface AlarmListType{
+    id: number,
     description: string,
     address: string,
     equNo: string,
-    level: number,//1严重 2紧急 3一般
+    level: number,//1严重 2紧急 3重要 4一般
     time: string,
     code: number,//故障代码
-    status: number,//1待指派 2处理中 处理异常
+    status: number,//1待指派 2处理中 3已处理 4处理异常
 }
 const alarmList=ref<AlarmListType[]>([])
 
-onMounted(async()=>{
-    const {data}=await alarmListApi();
-    alarmList.value=data;
+const loadAlarmList = async () => {
+    loading.value = true;
+    try {
+        const res = await getAlarmListApi({
+            level: radio1.value,
+            page: 1,
+            pageSize: 100 // 获取所有数据，前端不做分页
+        });
+        if (res.code === 200 && res.data) {
+            alarmList.value = res.data.list || [];
+        } else {
+            ElMessage.error(res.message || '获取报警列表失败');
+        }
+    } catch (error: any) {
+        console.error('加载报警列表失败:', error);
+        ElMessage.error(error.message || '加载报警列表失败');
+    } finally {
+        loading.value = false;
+    }
+}
+
+onMounted(() => {
+    loadAlarmList();
+})
+
+// 监听级别变化，重新加载数据
+watch(radio1, () => {
+    loadAlarmList();
 })
 
 const drawer=ref<boolean>(false)
@@ -192,12 +245,118 @@ const form1=ref<FormInstance>()
 const form2=ref<FormInstance>()
 const form3=ref<FormInstance>()
 
-const handleSubmit=()=>{
-    console.log(formData.value);
-    ElMessage({
-    message: '指派成功',
-    type: 'success',
-  });
-  drawer.value=false;
+const handleAction = async (alarm: AlarmListType) => {
+    currentAlarmId.value = alarm.id;
+    
+    if (alarm.status === 1) {
+        // 待指派，打开指派表单
+        drawer.value = true;
+        // 重置表单
+        formData.value = {
+            basicInfo: {
+                name: "",
+                email: "",
+                tel: "",
+                no: "",
+                urgent: false,
+                other: [],
+                remarks: ""
+            },
+            shenpi: {
+                a: "",
+                b: ""
+            },
+            info: {
+                person: "",
+                tel: ""
+            }
+        };
+        urgeCount.value = 0;
+    } else if (alarm.status === 2) {
+        // 处理中，催办
+        try {
+            const res = await urgeAlarmTaskApi(alarm.id);
+            if (res.code === 200) {
+                ElMessage.success(res.message || '催办成功');
+                // 重新加载催办次数
+                await loadUrgeCount(alarm.id);
+                drawer.value = true;
+            } else {
+                ElMessage.error(res.message || '催办失败');
+            }
+        } catch (error: any) {
+            console.error('催办失败:', error);
+            ElMessage.error(error.message || '催办失败');
+        }
+    } else {
+        // 已处理或处理异常，只查看
+        drawer.value = true;
+        await loadUrgeCount(alarm.id);
+    }
+}
+
+const loadUrgeCount = async (alarmId: number) => {
+    try {
+        const res = await getAlarmUrgeCountApi(alarmId);
+        if (res.code === 200 && res.data) {
+            urgeCount.value = res.data.urgeCount || 0;
+        }
+    } catch (error) {
+        console.error('获取催办次数失败:', error);
+    }
+}
+
+const handleSubmit=async ()=>{
+    if (!currentAlarmId.value) {
+        ElMessage.warning('请先选择报警任务');
+        return;
+    }
+    
+    // 验证表单
+    try {
+        await form1.value?.validate();
+        await form2.value?.validate();
+        await form3.value?.validate();
+    } catch (error) {
+        ElMessage.warning('请填写完整的表单信息');
+        return;
+    }
+    
+    try {
+        const res = await assignAlarmTaskApi(currentAlarmId.value, {
+            handler: formData.value.info.person,
+            handle_note: formData.value.basicInfo.remarks || `指派给${formData.value.info.person}，电话：${formData.value.info.tel}`
+        });
+        
+        if (res.code === 200) {
+            ElMessage.success(res.message || '指派成功');
+            drawer.value = false;
+            // 重新加载报警列表
+            loadAlarmList();
+        } else {
+            ElMessage.error(res.message || '指派失败');
+        }
+    } catch (error: any) {
+        console.error('指派失败:', error);
+        ElMessage.error(error.message || '指派失败');
+    }
 }
 </script>
+<style scoped lang="less">
+.alarm-descriptions {
+    :deep(.el-descriptions__table) {
+        table-layout: fixed;
+        width: 100%;
+    }
+    
+    :deep(.el-descriptions__cell) {
+        width: 50%;
+        word-break: break-word;
+    }
+    
+    :deep(.el-descriptions__label) {
+        width: 120px;
+        font-weight: 500;
+    }
+}
+</style>
