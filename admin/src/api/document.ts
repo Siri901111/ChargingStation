@@ -5,18 +5,19 @@ interface DocumentListParams {
   page: number;
   pageSize: number;
   type?: string;
-  importance?: number;
+  important?: string;
+  publish?: string;
   status?: number;
   keyword?: string;
 }
 
 // 创建文章参数
 interface CreateDocumentParams {
-  title: string;
+  title?: string;
   content: string;
   type: string;
-  importance?: number;
-  publish_channels?: string[];
+  important: string;
+  publish: string;
 }
 
 // 更新文章参数
@@ -24,13 +25,13 @@ interface UpdateDocumentParams {
   title?: string;
   content?: string;
   type?: string;
-  importance?: number;
-  publish_channels?: string[];
+  important?: string;
+  publish?: string;
 }
 
-// 发布文章参数
+// 发布文章参数（后端接口不需要参数，直接调用即可）
 interface PublishDocumentParams {
-  publish_channels: string[];
+  publish_channels?: string[];
 }
 
 // 获取文章类型列表
@@ -40,7 +41,14 @@ export function getDocumentTypeListApi() {
 
 // 获取文章列表
 export function getDocumentListApi(data: DocumentListParams) {
-  return post("/api/document/list", data);
+  // 后端接口是GET请求，需要将参数作为query传递
+  const params = new URLSearchParams()
+  Object.keys(data).forEach(key => {
+    if (data[key as keyof DocumentListParams] !== undefined && data[key as keyof DocumentListParams] !== '') {
+      params.append(key, String(data[key as keyof DocumentListParams]))
+    }
+  })
+  return get(`/api/document/list?${params.toString()}`)
 }
 
 // 获取文章详情
@@ -65,7 +73,7 @@ export function deleteDocumentApi(id: number | string) {
 
 // 发布文章
 export function publishDocumentApi(id: number | string, data: PublishDocumentParams) {
-  return put(`/api/document/${id}/publish`, data);
+  return post(`/api/document/${id}/publish`, data);
 }
 
 // 兼容旧接口名称
