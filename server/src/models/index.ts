@@ -10,6 +10,7 @@ import Role from './Role.js';
 import Permission from './Permission.js';
 import BillingTemplate from './BillingTemplate.js';
 import Document from './Document.js';
+import PileMaintenance from './PileMaintenance.js';
 
 // ==================== 模型关联关系设置 ====================
 
@@ -75,6 +76,16 @@ Alarm.belongsTo(Pile, {
   as: 'pile'
 });
 
+// 一个充电桩有多个维保记录
+Pile.hasMany(PileMaintenance, {
+  foreignKey: 'pile_id',
+  as: 'maintenances'
+});
+PileMaintenance.belongsTo(Pile, {
+  foreignKey: 'pile_id',
+  as: 'pile'
+});
+
 // ChargingUser (充电用户) 关联关系
 // 一个充电用户有多个订单
 ChargingUser.hasMany(Order, {
@@ -123,5 +134,6 @@ export {
   Role,
   Permission,
   BillingTemplate,
-  Document
+  Document,
+  PileMaintenance
 };
