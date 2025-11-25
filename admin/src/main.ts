@@ -6,7 +6,7 @@ import "@/router/guard"
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import { createPinia } from 'pinia'
-import "./mock"
+// import "./mock" // 已移除Mock，使用真实后端接口
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import permission from './directives/permission'
 const app = createApp(App);
