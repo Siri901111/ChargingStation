@@ -20,6 +20,7 @@
 import {defineComponent,PropType} from "vue"
 import {MenuItem as MenuItemType} from "@/types/user"
 import { useTabsStore } from "@/store/tabs";
+import { useRouter } from "vue-router";
 export default defineComponent({
     name:"MyMenu",
     props:{
@@ -30,10 +31,13 @@ export default defineComponent({
     },
     setup(){
         const tabsStore=useTabsStore();
+        const router=useRouter();
         const {addTab,setCurrentTab}=tabsStore;
         const add=(name:string,url:string,icon:string)=>{
             addTab(name,url,icon);
-            setCurrentTab(name,url)
+            setCurrentTab(name,url);
+            // 进行路由跳转
+            router.push(url);
         }
         return {add}
     }

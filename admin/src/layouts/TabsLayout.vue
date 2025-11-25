@@ -54,9 +54,16 @@ function findObjectByUrl(arr:any[],url:string){
     }
     return null
 }
-const {name,url,icon}=findObjectByUrl(menu.value,route.path);
-addTab(name,url,icon)
-setCurrentTab(name,url)
+
+// 在路由变化时添加tab
+import { watch } from "vue";
+watch(() => route.path, (newPath) => {
+    const menuItem = findObjectByUrl(menu.value, newPath);
+    if(menuItem && menuItem.name && menuItem.url && menuItem.icon){
+        addTab(menuItem.name, menuItem.url, menuItem.icon);
+        setCurrentTab(menuItem.name, menuItem.url);
+    }
+}, { immediate: true });
 
 const handleClick = ({index}:{index:number}) => {
     router.push(tabs.value[index].url)
