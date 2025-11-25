@@ -218,11 +218,16 @@ sequelize.authenticate()
       // 更新现有用户的缺失字段
       await updateExistingUsersData();
       
-      // 初始化Mock数据（如果数据库为空）
+      // 初始化Mock数据（如果数据库为空或强制初始化）
+      const FORCE_INIT_MOCK = process.env.FORCE_INIT_MOCK === 'true'; // 环境变量控制是否强制初始化
       const userCount = await User.count();
       const chargingUserCount = await ChargingUser.count();
       
-      if (userCount <= 1) {
+      if (FORCE_INIT_MOCK) {
+        // 强制初始化所有Mock数据（会跳过已存在检查）
+        console.log('🔄 强制初始化Mock数据（FORCE_INIT_MOCK=true）...');
+        await initMockData();
+      } else if (userCount <= 1) {
         // 完全初始化所有Mock数据
         await initMockData();
       } else if (chargingUserCount === 0) {
@@ -233,6 +238,7 @@ sequelize.authenticate()
         console.log('✅ 充电用户数据初始化完成');
       } else {
         console.log('ℹ️  数据库已有数据，跳过Mock数据初始化');
+        console.log('💡 提示：如需强制重新初始化，请在 .env 文件中设置 FORCE_INIT_MOCK=true');
       }
     } catch (error) {
       console.error('❌ 数据初始化失败:', error);

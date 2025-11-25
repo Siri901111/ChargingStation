@@ -206,11 +206,40 @@ const setChartData=async ()=>{
             }
         ]
     });
-    const res = await getRevenueChartApi()
-    chartOptions.legend.data = res.data.list.map((item: any) => item.name);
-    for (let i = 0; i < res.data.list.length; i++) {
-        chartOptions.series[i].name = res.data.list[i].name
-        chartOptions.series[i].data = res.data.list[i].data
+    try {
+        const res = await getRevenueChartApi();
+        if (res.code === 200 && res.data && res.data.list) {
+            chartOptions.legend.data = res.data.list.map((item: any) => item.name);
+            // 确保series数组有足够的元素
+            while (chartOptions.series.length < res.data.list.length) {
+                chartOptions.series.push({
+                    name: '',
+                    type: 'line',
+                    data: [],
+                    yAxisIndex: chartOptions.series.length === 0 ? 0 : 1,
+                    itemStyle: {
+                        color: chartOptions.series.length === 0 ? '#409eff' : '#67c23a'
+                    },
+                    smooth: true
+                });
+            }
+            for (let i = 0; i < res.data.list.length; i++) {
+                if (chartOptions.series[i]) {
+                    chartOptions.series[i].name = res.data.list[i].name;
+                    chartOptions.series[i].data = res.data.list[i].data || [];
+                    // 根据索引设置图表类型和yAxisIndex
+                    if (i === 0) {
+                        chartOptions.series[i].type = 'bar';
+                        chartOptions.series[i].yAxisIndex = 0;
+                    } else {
+                        chartOptions.series[i].type = 'line';
+                        chartOptions.series[i].yAxisIndex = 1;
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('加载营收图表数据失败:', error);
     }
     return chartOptions
 }
@@ -219,15 +248,23 @@ const name=ref<string>("")
 const tableData=ref([]);
 const loading=ref<boolean>(false)
 const loadData= async ()=>{
-   loading.value=true 
-  const {data:{list,total}} = await getRevenueListApi({...pageInfo,name:name.value});
-  setTotals(total)
-  loading.value=false
-  tableData.value=list
-  tableData.value=list.map((item:any)=>({
-    ...item,
-    day:item.electricity+item.parkingFee+item.serviceFee+item.member
-  }))
+   loading.value=true;
+   try {
+        const res = await getRevenueListApi({...pageInfo,name:name.value});
+        if (res.code === 200 && res.data) {
+            setTotals(res.data.total || 0);
+            // 后端已经计算了day字段，直接使用
+            tableData.value = (res.data.list || []).map((item:any)=>({
+                ...item,
+                // 如果后端没有计算day，前端计算
+                day: item.day || (item.electricity + item.parkingFee + item.serviceFee + item.member)
+            }));
+        }
+   } catch (error) {
+        console.error('加载营收列表失败:', error);
+   } finally {
+        loading.value=false;
+   }
 }
 
 const {totals,pageInfo,handleCurrentChange,handleSizeChange,setTotals}=usePagination(loadData)

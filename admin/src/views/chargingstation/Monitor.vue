@@ -67,13 +67,14 @@
             <el-table-column prop="tel" label="负责人电话" />
             <el-table-column label="操作">
                 <template #default="scope">
-                    <el-button type="primary" size="small" @click="edit(scope.row)">编辑</el-button>
-                    <el-popconfirm title="确定要删除当前站点吗？" @confirm="handleDelete(scope.row.id)">
-                        <template #reference>
-                            <el-button type="danger" size="small" >删除</el-button>
-                        </template>
-                    </el-popconfirm>
-                    
+                    <div class="action-buttons">
+                        <el-button type="primary" size="small" @click="edit(scope.row)">编辑</el-button>
+                        <el-popconfirm title="确定要删除当前站点吗？" @confirm="handleDelete(scope.row.id)">
+                            <template #reference>
+                                <el-button type="danger" size="small">删除</el-button>
+                            </template>
+                        </el-popconfirm>
+                    </div>
                 </template>
             </el-table-column>
         </el-table>
@@ -115,10 +116,33 @@ const pageInfo=reactive({
 const loading=ref<boolean>(false)
 const loadData = async () => {
     loading.value=true
-    const { data: { list, total } } = await getStationListApi({...pageInfo,status:formParams.value,[select.value]:formParams.input});
-    loading.value=false
-    tableData.value = list
-    totals.value=total
+    try {
+        // 构建查询参数
+        const params: any = {
+            page: pageInfo.page,
+            pageSize: pageInfo.pageSize
+        };
+        
+        // 状态筛选（status=1表示全部，不传status参数）
+        if (formParams.value !== 1) {
+            params.status = formParams.value;
+        }
+        
+        // 搜索条件
+        if (formParams.input) {
+            params[select.value] = formParams.input;
+        }
+        
+        const res = await getStationListApi(params);
+        if (res.code === 200 && res.data) {
+            tableData.value = res.data.list || [];
+            totals.value = res.data.total || 0;
+        }
+    } catch (error) {
+        console.error('加载充电站列表失败:', error);
+    } finally {
+        loading.value=false;
+    }
 }
 
 onMounted(() => {
@@ -166,14 +190,34 @@ const handleAdd=()=>{
     visible.value=true
 }
 const handleDelete=async (id:string)=>{
-    const res=await deleteStationApi(id);
-    if(res.code==200){
+    try {
+        const res=await deleteStationApi(id);
+        if(res.code==200){
+            ElMessage({
+                message:res.message || '删除成功',
+                type:"success"
+            });
+            loadData();
+        }
+    } catch (error: any) {
         ElMessage({
-            message:res.data,
-            type:"success"
-        })
+            message: error.message || '删除失败',
+            type:"error"
+        });
     }
-    loadData()
 }   
 
 </script>
+
+<style scoped lang="less">
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    
+    .el-button {
+        margin: 0;
+        width: 60%;
+    }
+}
+</style>

@@ -152,21 +152,29 @@ const formRef=ref<FormInstance>()
 const handleConfirm=()=>{
     formRef.value?.validate(async (valid:boolean)=>{
         if(valid){
-         let res;
-         if(ruleForm.value.id){
-             // 编辑：使用更新接口
-             res = await updateStationApi(ruleForm.value.id, ruleForm.value);
-         } else {
-             // 新增：使用创建接口
-             res = await createStationApi(ruleForm.value);
-         }
-         if(res.code==200){
-            ElMessage({
-                message:res.message || res.data || '操作成功',
-                type:"success"
-            });
-            handleCancel();
-            emit("reload")
+         try {
+             let res;
+             if(ruleForm.value.id){
+                 // 编辑：使用更新接口
+                 res = await updateStationApi(ruleForm.value.id, ruleForm.value);
+             } else {
+                 // 新增：使用创建接口
+                 res = await createStationApi(ruleForm.value);
+             }
+             // 创建接口返回201，更新接口返回200
+             if(res.code==200 || res.code==201){
+                ElMessage({
+                    message:res.message || '操作成功',
+                    type:"success"
+                });
+                handleCancel();
+                emit("reload")
+             }
+         } catch (error: any) {
+             ElMessage({
+                 message: error.message || '操作失败',
+                 type:"error"
+             });
          }
         }
     })
