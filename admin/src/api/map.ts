@@ -1,7 +1,7 @@
 import { get, post } from "@/utils/http";
 
 // 创建充电站参数（从地图）
-interface CreateStationFromMapParams {
+export interface CreateStationFromMapParams {
   name: string;
   region: string;
   longitude: number;
@@ -22,7 +22,15 @@ export function getMapStatsApi() {
 
 // 通过地图创建充电站
 export function createStationFromMapApi(data: CreateStationFromMapParams) {
-  return post("/api/map/station", data);
+  // 后端接口期望的参数名是 location1 和 location2
+  return post("/api/map/station", {
+    name: data.name,
+    region: data.region,
+    location1: data.longitude.toString(),
+    location2: data.latitude.toString(),
+    now: data.now,
+    remarks: data.remarks
+  });
 }
 
 // 兼容旧接口名称
