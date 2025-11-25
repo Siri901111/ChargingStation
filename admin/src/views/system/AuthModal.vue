@@ -36,7 +36,7 @@
 import { useUserStore } from '@/store/auth';
 import { storeToRefs } from 'pinia';
 import { transformMenu } from "@/utils/transformMenu"
-import {setAuthApi} from "@/api/system"
+import {setUserAuthApi} from "@/api/system"
 import { ref } from "vue"
 import { ElMessage } from 'element-plus';
 const props = defineProps<{ visible: boolean, checkedKeys: string[], btnAuth: string[],account:string }>()
@@ -55,14 +55,26 @@ const handleClose = () => {
 }
 
 const handleConfirm=async ()=>{
-    const res=await setAuthApi(props.account,treeRef.value.getCheckedKeys(true),initBtnAuth.value)
-    if(res.code==200){
-        ElMessage({
-            message:res.message,
-            type:"success"
-        })
-        emit("close");
-        emit("reload")
+    try {
+        const res = await setUserAuthApi({
+            account: props.account,
+            pageList: treeRef.value.getCheckedKeys(true),
+            btnList: initBtnAuth.value
+        });
+        
+        if(res.code === 200){
+            ElMessage({
+                message: res.message || '权限设置成功',
+                type: "success"
+            });
+            emit("close");
+            emit("reload");
+        } else {
+            ElMessage.error(res.message || '权限设置失败');
+        }
+    } catch (error: any) {
+        console.error('权限设置失败:', error);
+        ElMessage.error(error.message || '权限设置失败');
     }
 }
 

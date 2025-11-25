@@ -37,12 +37,21 @@
             <el-table-column prop="department" label="部门"></el-table-column>
             <el-table-column prop="pageAuthority" label="页面权限">
                 <template #default="scope">
-                    <el-tag type="success">{{ scope.row.pageAuthority }}</el-tag>
+                    <el-tag :type="scope.row.pageAuthority === 'admin' ? 'danger' : (scope.row.pageAuthority === 'manager' ? 'warning' : 'success')">
+                        {{ scope.row.pageAuthority === 'admin' ? '管理员' : (scope.row.pageAuthority === 'manager' ? '运营专员' : '普通用户') }}
+                    </el-tag>
                 </template>
             </el-table-column>
             <el-table-column prop="btnAuthority" label="按钮权限">
                 <template #default="scope">
-                    <el-tag type="info">{{ scope.row.btnAuthority }}</el-tag>
+                    <el-tag type="info">{{ scope.row.btnAuthority || '-' }}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态">
+                <template #default="scope">
+                    <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
+                        {{ scope.row.status === 1 ? '启用' : '禁用' }}
+                    </el-tag>
                 </template>
             </el-table-column>
             <el-table-column  label="操作" width="280">
@@ -50,11 +59,15 @@
                     <el-button type="primary" size="small" @click="settingAuth(scope.row.pageAuthority,scope.row.account)">
                         权限设置
                     </el-button>
-                    <el-button type="danger" size="small">
+                    <el-button type="danger" size="small" @click="handleDelete(scope.row.account)">
                         删除
                     </el-button>
-                    <el-button type="danger" size="small">
-                        禁用
+                    <el-button 
+                        :type="scope.row.status === 1 ? 'warning' : 'success'" 
+                        size="small" 
+                        @click="handleToggleStatus(scope.row.account, scope.row.status)"
+                    >
+                        {{ scope.row.status === 1 ? '禁用' : '启用' }}
                     </el-button>
                 </template>
             </el-table-column>
@@ -78,6 +91,8 @@ import {ref} from "vue"
 import { useHttp } from "@/hooks/useHttp";
 import AuthModal from "./AuthModal.vue"
 import {getAuthApi} from "@/api/system"
+import {deleteUserApi, toggleUserStatusApi} from "@/api/user"
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { MenuItem } from "@/types/user";
 interface searchType{
     name:string,
@@ -88,7 +103,7 @@ const searchParams=ref<searchType>({
     department:""
  })
 
- const {dataList,loading,resetPagination,loadData,totals,pageInfo,handleCurrentChange,handleSizeChange}= useHttp("/permissionList",searchParams)
+ const {dataList,loading,resetPagination,loadData,totals,pageInfo,handleCurrentChange,handleSizeChange}= useHttp("/api/permissionList",searchParams)
 
  const visible=ref<boolean>(false)
 
@@ -110,11 +125,20 @@ const btnAuth=ref<string[]>([])
 const checkedKeys=ref<string[]>([])
 const accountNo=ref<string>("")
  const settingAuth=async (pageAuthority:string,account:string)=>{
-   accountNo.value=account
-   const {data:{list,btn}}=await getAuthApi(pageAuthority);
-   checkedKeys.value=collectUrls(list);
-   btnAuth.value=btn
-   visible.value=true
+   try {
+     accountNo.value=account
+     const res = await getAuthApi({ pageAuthority });
+     if (res.code === 200 && res.data) {
+       checkedKeys.value=collectUrls(res.data.list || []);
+       btnAuth.value=res.data.btn || []
+       visible.value=true
+     } else {
+       ElMessage.error(res.message || '获取权限信息失败')
+     }
+   } catch (error: any) {
+     console.error('获取权限信息失败:', error)
+     ElMessage.error(error.message || '获取权限信息失败')
+   }
  }
 
  const handleReset=()=>{
@@ -123,5 +147,64 @@ const accountNo=ref<string>("")
         department:""
     }
     resetPagination()
+}
+
+// 删除用户
+const handleDelete = async (account: string) => {
+    try {
+        await ElMessageBox.confirm(
+            `确定要删除用户 "${account}" 吗？此操作不可恢复！`,
+            '删除确认',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        );
+        
+        const res = await deleteUserApi({ account });
+        if (res.code === 200) {
+            ElMessage.success(res.message || '删除成功');
+            loadData();
+        } else {
+            ElMessage.error(res.message || '删除失败');
+        }
+    } catch (error: any) {
+        if (error !== 'cancel') {
+            console.error('删除用户失败:', error);
+            ElMessage.error(error.message || '删除失败');
+        }
+    }
+}
+
+// 禁用/启用用户
+const handleToggleStatus = async (account: string, currentStatus: number) => {
+    const newStatus = currentStatus === 1 ? 0 : 1;
+    const action = newStatus === 0 ? '禁用' : '启用';
+    
+    try {
+        await ElMessageBox.confirm(
+            `确定要${action}用户 "${account}" 吗？`,
+            `${action}确认`,
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        );
+        
+        const res = await toggleUserStatusApi({ account });
+        if (res.code === 200) {
+            ElMessage.success(res.message || `${action}成功`);
+            loadData();
+        } else {
+            ElMessage.error(res.message || `${action}失败`);
+        }
+    } catch (error: any) {
+        if (error !== 'cancel') {
+            console.error(`${action}用户失败:`, error);
+            ElMessage.error(error.message || `${action}失败`);
+        }
+    }
 }
 </script>

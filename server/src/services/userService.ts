@@ -416,6 +416,7 @@ export async function getUserListService(params: UserListParams) {
     department: user.department,
     pageAuthority: user.page_authority,
     btnAuthority: user.btn_authority,
+    status: user.status, // 添加状态字段
   }));
   
   return {
@@ -426,12 +427,22 @@ export async function getUserListService(params: UserListParams) {
 
 // 获取用户权限（根据pageAuthority返回菜单）
 export async function getUserAuthService(pageAuthority: string) {
-  const { menulist, btnAuth } = getMenuAndBtnAuthByRole(pageAuthority);
-  
-  return {
-    list: menulist,
-    btn: btnAuth
-  };
+  try {
+    // 验证权限级别
+    if (!pageAuthority || typeof pageAuthority !== 'string') {
+      throw new Error('权限级别参数无效');
+    }
+
+    const { menulist, btnAuth } = getMenuAndBtnAuthByRole(pageAuthority);
+    
+    return {
+      list: menulist,
+      btn: btnAuth
+    };
+  } catch (error: any) {
+    console.error('getUserAuthService 错误:', error);
+    throw error;
+  }
 }
 
 // 设置用户权限

@@ -42,10 +42,13 @@ export async function getUserAuthController(req: Request, res: Response) {
     }
 
     // 获取当前用户的权限级别（从 token 中）
-    const currentUserRole = currentUser.roles[0] || 'user';
+    const currentUserRole = currentUser.roles?.[0] || 'user';
 
+    // 确定要查询的权限级别
+    let targetAuthority: string;
+    
     // 如果请求指定了 pageAuthority，需要检查权限
-    if (pageAuthority) {
+    if (pageAuthority && typeof pageAuthority === 'string' && pageAuthority.trim()) {
       // 只有管理员可以预览其他权限级别的菜单（用于权限设置页面）
       if (currentUserRole !== 'admin') {
         // 非管理员只能查看自己的权限
@@ -57,23 +60,32 @@ export async function getUserAuthController(req: Request, res: Response) {
           });
         }
       }
-      // 管理员可以预览任何权限级别，普通用户只能查看自己的
-      const result = await getUserAuthService(pageAuthority);
-      return res.json({
-        code: 200,
-        message: '获取成功',
-        data: result
-      });
+      targetAuthority = pageAuthority.trim();
     } else {
       // 如果没有指定 pageAuthority，返回当前登录用户的权限菜单
-      const result = await getUserAuthService(currentUserRole);
-      return res.json({
-        code: 200,
-        message: '获取成功',
-        data: result
+      targetAuthority = currentUserRole;
+    }
+
+    // 验证权限级别是否有效
+    if (!['admin', 'manager', 'user'].includes(targetAuthority)) {
+      console.error('无效的权限级别:', targetAuthority);
+      return res.status(400).json({
+        code: 400,
+        message: '无效的权限级别',
+        data: null
       });
     }
+
+    // 获取权限菜单
+    const result = await getUserAuthService(targetAuthority);
+    
+    return res.json({
+      code: 200,
+      message: '获取成功',
+      data: result
+    });
   } catch (error: any) {
+    console.error('获取用户权限失败:', error);
     return res.status(500).json({
       code: 500,
       message: error.message || '获取用户权限失败',

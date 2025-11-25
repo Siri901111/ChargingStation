@@ -8,7 +8,7 @@ interface UpdatePersonalInfoParams {
   department?: string;
   address?: string;
   tags?: string[];
-  work_status?: number;
+  workStatus?: number; // 后端期望的是 workStatus
   avatar?: string;
 }
 

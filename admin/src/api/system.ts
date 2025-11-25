@@ -22,6 +22,11 @@ export function setUserAuthApi(data: SetUserAuthParams) {
   return post("/api/setAuth", data);
 }
 
+// 兼容旧接口调用方式（三个参数）
+export function setUserAuthApiLegacy(account: string, pageList: string[], btnList: string[]) {
+  return setUserAuthApi({ account, pageList, btnList });
+}
+
 // 兼容旧接口名称
 export const getAuthApi = getUserAuthApi;
 export const setAuthApi = setUserAuthApi;

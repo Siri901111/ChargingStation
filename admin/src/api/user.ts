@@ -78,7 +78,7 @@ export function deleteUserApi(data: DeleteUserParams) {
   return post("/api/deleteUser", data);
 }
 
-// 禁用/启用用户
-export function toggleUserStatusApi(data: ToggleUserStatusParams) {
+// 禁用/启用用户（只需要account，后端会自动切换状态）
+export function toggleUserStatusApi(data: { account: string }) {
   return post("/api/toggleUserStatus", data);
 }
