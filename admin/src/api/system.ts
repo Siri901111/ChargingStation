@@ -1,15 +1,27 @@
-import {post} from "@/utils/http"
-enum Api{
-    auth="/userAuth",
-    setAuth="/setAuth"
+import { post } from "@/utils/http";
+
+// 获取用户权限参数
+interface GetUserAuthParams {
+  pageAuthority: string;
 }
 
-function getAuthApi(pageAuthority:string){
-    return post(Api.auth,{pageAuthority})
+// 设置用户权限参数
+interface SetUserAuthParams {
+  account: string;
+  btnList: string[];
+  pageList: string[];
 }
 
-function setAuthApi(account:string,btnList:string[],pageList:string[]){
-    return post(Api.setAuth,{account,btnList,pageList})
+// 获取用户权限（菜单和按钮权限）
+export function getUserAuthApi(data: GetUserAuthParams) {
+  return post("/api/userAuth", data);
 }
 
-export {getAuthApi,setAuthApi}
+// 设置用户权限
+export function setUserAuthApi(data: SetUserAuthParams) {
+  return post("/api/setAuth", data);
+}
+
+// 兼容旧接口名称
+export const getAuthApi = getUserAuthApi;
+export const setAuthApi = setUserAuthApi;

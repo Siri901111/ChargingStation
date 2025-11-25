@@ -1,48 +1,58 @@
-import {post,get} from "@/utils/http";
+import { get, post, put, del } from "@/utils/http";
 import { RowType } from "@/types/station";
-interface ListType{
-    page:number,
-    pageSize:number,
-    name?:string,
-    id?:string,
-    status:number
+
+// 充电站列表查询参数
+interface StationListParams {
+  page: number;
+  pageSize: number;
+  name?: string;
+  id?: string;
+  status?: number;
 }
 
-interface RevenueType{
-    page:number,
-    pageSize:number,
-    name:string
+// 营收列表查询参数
+interface RevenueListParams {
+  page: number;
+  pageSize: number;
+  name?: string;
 }
 
-enum Api{
-    List="/stationList",
-    Edit ="/station/edit",
-    Delete="/station/delete",
-    RevenueChart="/revenueChart",
-    Revenue="/revenueList",
-    CurrentList="/currentList"
+// 获取充电站列表
+export function getStationListApi(data: StationListParams) {
+  return post("/api/stations", data);
 }
 
-function listApi(data:ListType){
-    return post(Api.List,data)
-}
-function editApi(data:RowType){
-    return post(Api.Edit,data)
-}
-function deleteApi(id:string){
-    return post(Api.Delete,{id})
+// 获取充电站详情
+export function getStationDetailApi(id: number | string) {
+  return get(`/api/stations/${id}`);
 }
 
-function chartApi(){
-    return get(Api.RevenueChart)
-}
-function revenueApi(data:RevenueType){
-    return post(Api.Revenue,data)
+// 创建充电站
+export function createStationApi(data: RowType) {
+  return post("/api/stations", data);
 }
 
-
-function currentListApi(){
-    return post(Api.CurrentList)
+// 更新充电站
+export function updateStationApi(id: number | string, data: RowType) {
+  return put(`/api/stations/${id}`, data);
 }
 
-export {listApi,editApi,deleteApi,chartApi,revenueApi,currentListApi}
+// 删除充电站
+export function deleteStationApi(id: number | string) {
+  return del(`/api/stations/${id}`);
+}
+
+// 获取营收统计图表
+export function getRevenueChartApi() {
+  return get("/api/revenueChart");
+}
+
+// 获取营收列表
+export function getRevenueListApi(data: RevenueListParams) {
+  return post("/api/revenueList", data);
+}
+
+// 获取实时充电桩监控列表
+export function getCurrentListApi() {
+  return post("/api/currentList");
+}
