@@ -19,8 +19,3 @@ export function getDeviceOverviewApi() {
 export function getDeviceStatusApi() {
   return get("/api/dashboard/device-status");
 }
-
-// 兼容旧接口名称
-export const chartDataApi = getElectricityStatsApi;
-export const chartDataApi2 = getRevenueRatioApi;
-export const chartDataApi3 = getDeviceOverviewApi;

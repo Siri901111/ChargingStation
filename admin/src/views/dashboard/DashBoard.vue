@@ -4,8 +4,8 @@
             <el-card>
                 <div class="title">
                     <h3>今日设备运行状态</h3>
-                    <p class="ml">更新时间:2024年8月31日</p>
-                    <el-icon color="#86909c" style="margin-left: 5px;">
+                    <p class="ml">更新时间:{{ updateTime }}</p>
+                    <el-icon color="#86909c" style="margin-left: 5px; cursor: pointer;" @click="refreshData">
                         <Refresh />
                     </el-icon>
                 </div>
@@ -13,13 +13,13 @@
                     <div class="item">
                         <h4 class="mt mb">充电桩使用率</h4>
                         <img :src="flash" class="mt mb">
-                        <h1 class="mb">2263 / 3398</h1>
+                        <h1 class="mb">{{ deviceStatus.usingPiles }} / {{ deviceStatus.totalPiles }}</h1>
                         <div class="statistic-card">
-                            <el-statistic :value="9">
+                            <el-statistic :value="deviceStatus.faultPiles">
                                 <template #title>
                                     <div style="display: inline-flex; align-items: center">
                                         异常设备
-                                        <el-tooltip effect="dark" content="当前有9台设备异常，请尽快处理" placement="top">
+                                        <el-tooltip effect="dark" :content="`当前有${deviceStatus.faultPiles}台设备异常，请尽快处理`" placement="top">
                                             <el-icon style="margin-left: 4px" :size="12">
                                                 <Warning />
                                             </el-icon>
@@ -31,9 +31,10 @@
                                 <div class="footer-item">
                                     <span>相较昨日</span>
                                     <span class="green">
-                                        24%
-                                        <el-icon color="green">
-                                            <CaretTop />
+                                        {{ deviceStatusChange.pile }}%
+                                        <el-icon :color="deviceStatusChange.pile >= 0 ? 'green' : 'red'">
+                                            <CaretTop v-if="deviceStatusChange.pile >= 0" />
+                                            <CaretBottom v-else />
                                         </el-icon>
                                     </span>
                                 </div>
@@ -43,13 +44,13 @@
                     <div class="item">
                         <h4 class="mt mb">充电柜使用率</h4>
                         <img :src="flash2" class="mt mb">
-                        <h1 class="mb">655 / 1233</h1>
+                        <h1 class="mb">{{ deviceStatus.usingPiles }} / {{ deviceStatus.totalPiles }}</h1>
                         <div class="statistic-card">
-                            <el-statistic :value="22">
+                            <el-statistic :value="deviceStatus.faultPiles">
                                 <template #title>
                                     <div style="display: inline-flex; align-items: center">
                                         异常设备
-                                        <el-tooltip effect="dark" content="当前有9台设备异常，请尽快处理" placement="top">
+                                        <el-tooltip effect="dark" :content="`当前有${deviceStatus.faultPiles}台设备异常，请尽快处理`" placement="top">
                                             <el-icon style="margin-left: 4px" :size="12">
                                                 <Warning />
                                             </el-icon>
@@ -61,9 +62,10 @@
                                 <div class="footer-item">
                                     <span>相较昨日</span>
                                     <span class="green">
-                                        24%
-                                        <el-icon color="red">
-                                            <CaretTop />
+                                        {{ deviceStatusChange.cabinet }}%
+                                        <el-icon :color="deviceStatusChange.cabinet >= 0 ? 'green' : 'red'">
+                                            <CaretTop v-if="deviceStatusChange.cabinet >= 0" />
+                                            <CaretBottom v-else />
                                         </el-icon>
                                     </span>
                                 </div>
@@ -73,13 +75,13 @@
                     <div class="item">
                         <h4 class="mt mb">充电站使用率</h4>
                         <img :src="flash3" class="mt mb">
-                        <h1 class="mb">72 / 95 </h1>
+                        <h1 class="mb">{{ stationStatus.using }} / {{ stationStatus.total }}</h1>
                         <div class="statistic-card">
-                            <el-statistic :value="47">
+                            <el-statistic :value="stationStatus.fault">
                                 <template #title>
                                     <div style="display: inline-flex; align-items: center">
                                         异常设备
-                                        <el-tooltip effect="dark" content="当前有9台设备异常，请尽快处理" placement="top">
+                                        <el-tooltip effect="dark" :content="`当前有${stationStatus.fault}个充电站异常，请尽快处理`" placement="top">
                                             <el-icon style="margin-left: 4px" :size="12">
                                                 <Warning />
                                             </el-icon>
@@ -91,9 +93,10 @@
                                 <div class="footer-item">
                                     <span>相较昨日</span>
                                     <span class="green">
-                                        14%
-                                        <el-icon color="green">
-                                            <CaretTop />
+                                        {{ deviceStatusChange.station }}%
+                                        <el-icon :color="deviceStatusChange.station >= 0 ? 'green' : 'red'">
+                                            <CaretTop v-if="deviceStatusChange.station >= 0" />
+                                            <CaretBottom v-else />
                                         </el-icon>
                                     </span>
                                 </div>
@@ -170,80 +173,15 @@
                     </div>
                 </template>
                 <ul class="ranking-list">
-                    <li class="ranking-item">
-                        <span class="rank" style="background-color: rgb(103, 194, 58);color: #fff;">1</span>
-                        <span class="store-name">广州</span>
-                        <span class="sales">52,457</span>
+                    <li class="ranking-item" v-for="(item, index) in revenueRanking" :key="index">
+                        <span class="rank" :style="getRankStyle(index)">{{ index + 1 }}</span>
+                        <span class="store-name">{{ item.name }}</span>
+                        <span class="sales">{{ formatNumber(item.value) }}</span>
                         <span style="margin-left:50px">
-                            24%
-                            <el-icon color="green">
-                                <CaretTop />
-                            </el-icon>
-                        </span>
-                    </li>
-                    <li class="ranking-item">
-                        <span class="rank" style="background-color:rgb(64, 158, 255) ;color: #fff ;">2</span>
-                        <span class="store-name">上海</span>
-                        <span class="sales">323,234</span>
-                        <span style="margin-left: 50px;">
-                            24%
-                            <el-icon color="red">
-                                <CaretBottom />
-                            </el-icon>
-                        </span>
-                    </li>
-                    <li class="ranking-item">
-                        <span class="rank" style="background-color:rgb(230, 162, 60) ;color: #fff ;">3</span>
-                        <span class="store-name">佛山</span>
-                        <span class="sales">192,255</span>
-                        <span style="margin-left: 50px;">
-                            24%
-                            <el-icon color="red">
-                                <CaretBottom />
-                            </el-icon>
-                        </span>
-                    </li>
-                    <li class="ranking-item">
-                        <span class="rank">4</span>
-                        <span class="store-name">珠海</span>
-                        <span class="sales">17,540</span>
-                        <span style="margin-left: 50px;">
-                            24%
-                            <el-icon color="green">
-                                <CaretTop />
-                            </el-icon>
-                        </span>
-                    </li>
-                    <li class="ranking-item">
-                        <span class="rank">5</span>
-                        <span class="store-name">深圳</span>
-                        <span class="sales">662,337</span>
-                        <span style="margin-left: 50px;">
-                            24%
-                            <el-icon color="red">
-                                <CaretBottom />
-                            </el-icon>
-                        </span>
-                    </li>
-                    <li class="ranking-item">
-                        <span class="rank">6</span>
-                        <span class="store-name">厦门</span>
-                        <span class="sales">22,941</span>
-                        <span style="margin-left: 50px;">
-                            24%
-                            <el-icon color="green">
-                                <CaretTop />
-                            </el-icon>
-                        </span>
-                    </li>
-                    <li class="ranking-item">
-                        <span class="rank">7</span>
-                        <span class="store-name">长沙</span>
-                        <span class="sales">565,221</span>
-                        <span style="margin-left: 50px;">
-                            24%
-                            <el-icon color="green">
-                                <CaretTop />
+                            {{ item.growth }}%
+                            <el-icon :color="item.growth >= 0 ? 'green' : 'red'">
+                                <CaretTop v-if="item.growth >= 0" />
+                                <CaretBottom v-else />
                             </el-icon>
                         </span>
                     </li>
@@ -256,23 +194,18 @@
                     </div>
                 </template>
                 <el-timeline style="max-width: 600px">
-                    <el-timeline-item timestamp="2024/4/12" placement="top" :hollow="true" type="danger">
+                    <el-timeline-item 
+                        v-for="(alarm, index) in recentAlarms" 
+                        :key="index"
+                        :timestamp="alarm.time" 
+                        placement="top" 
+                        :hollow="true" 
+                        :type="alarm.level <= 2 ? 'danger' : 'warning'">
                         <el-card>
-                            <h4>矿业北路通讯中断</h4>
+                            <h4>{{ alarm.content }}</h4>
                         </el-card>
                     </el-timeline-item>
-                    <el-timeline-item timestamp="2024/2/3" placement="top" :hollow="true" type="warning">
-                        <el-card>
-                            <h4>黄河南路超出服务区域</h4>
-                           
-                        </el-card>
-                    </el-timeline-item>
-                    <el-timeline-item timestamp="2024/5/17" placement="top" :hollow="true" type="danger">
-                        <el-card>
-                            <h4>6号机组异常断电</h4>
-                          
-                        </el-card>
-                    </el-timeline-item>
+                    <el-empty v-if="recentAlarms.length === 0" description="暂无故障报警" :image-size="80" />
                 </el-timeline>
             </el-card>
         </el-col>
@@ -288,13 +221,147 @@ import remain from "@/assets/remain.png"
 import total from "@/assets/total.png"
 import money from "@/assets/money.png"
 import daily from "@/assets/daily.png"
-import { ref } from "vue"
+import { ref, reactive, onMounted } from "vue"
 import { useChart } from "@/hooks/useChart"
-import { chartDataApi, chartDataApi2, chartDataApi3 } from "@/api/dashboard.ts"
-import { reactive } from "vue"
+import { 
+    getElectricityStatsApi, 
+    getRevenueRatioApi, 
+    getDeviceOverviewApi,
+    getDeviceStatusApi 
+} from "@/api/dashboard"
+import { getAlarmListApi } from "@/api/alarm"
+import { ElMessage } from "element-plus"
+
 const chartRef = ref(null)
 const chartRef2 = ref(null)
 const chartRef3 = ref(null)
+
+// 更新时间
+const updateTime = ref(new Date().toLocaleString('zh-CN', { 
+    year: 'numeric', 
+    month: '2-digit', 
+    day: '2-digit' 
+}))
+
+// 设备状态数据
+const deviceStatus = reactive({
+    totalPiles: 0,
+    usingPiles: 0,
+    faultPiles: 0,
+    todayRevenue: 0
+})
+
+// 充电站状态数据
+const stationStatus = reactive({
+    total: 0,
+    using: 0,
+    fault: 0
+})
+
+// 状态变化百分比（模拟数据，实际应该从后端获取）
+const deviceStatusChange = reactive({
+    pile: 24,
+    cabinet: -24,
+    station: 14
+})
+
+// 营收排名数据
+const revenueRanking = ref<Array<{ name: string; value: number; growth: number }>>([])
+
+// 最近报警数据
+const recentAlarms = ref<Array<{ content: string; time: string; level: number }>>([])
+
+// 格式化数字
+const formatNumber = (num: number) => {
+    return num.toLocaleString('zh-CN')
+}
+
+// 获取排名样式
+const getRankStyle = (index: number) => {
+    const colors = [
+        { bg: 'rgb(103, 194, 58)', color: '#fff' },
+        { bg: 'rgb(64, 158, 255)', color: '#fff' },
+        { bg: 'rgb(230, 162, 60)', color: '#fff' }
+    ]
+    if (index < 3) {
+        return {
+            backgroundColor: colors[index].bg,
+            color: colors[index].color
+        }
+    }
+    return {}
+}
+
+// 刷新数据
+const refreshData = async () => {
+    updateTime.value = new Date().toLocaleString('zh-CN', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+    })
+    await loadDeviceStatus()
+    await loadRevenueRanking()
+    await loadRecentAlarms()
+    ElMessage.success('数据已刷新')
+}
+
+// 加载设备状态数据
+const loadDeviceStatus = async () => {
+    try {
+        const res = await getDeviceStatusApi()
+        if (res.code === 200 && res.data) {
+            deviceStatus.totalPiles = res.data.totalPiles || 0
+            deviceStatus.usingPiles = res.data.usingPiles || 0
+            deviceStatus.faultPiles = res.data.faultPiles || 0
+            deviceStatus.todayRevenue = res.data.todayRevenue || 0
+            
+            // 模拟充电站数据（实际应该从后端获取）
+            stationStatus.total = Math.ceil(deviceStatus.totalPiles / 10)
+            stationStatus.using = Math.ceil(deviceStatus.usingPiles / 10)
+            stationStatus.fault = Math.ceil(deviceStatus.faultPiles / 10)
+        }
+    } catch (error) {
+        console.error('加载设备状态失败:', error)
+    }
+}
+
+// 加载营收排名数据
+const loadRevenueRanking = async () => {
+    try {
+        const res = await getRevenueRatioApi()
+        if (res.code === 200 && res.data && res.data.list) {
+            // 将营收占比数据转换为排名数据
+            revenueRanking.value = res.data.list
+                .map((item: any) => ({
+                    name: item.name,
+                    value: item.value,
+                    growth: Math.floor(Math.random() * 50) - 25 // 模拟增长率
+                }))
+                .sort((a: any, b: any) => b.value - a.value)
+                .slice(0, 7) // 取前7名
+        }
+    } catch (error) {
+        console.error('加载营收排名失败:', error)
+    }
+}
+
+// 加载最近报警数据
+const loadRecentAlarms = async () => {
+    try {
+        const res = await getAlarmListApi({ page: 1, pageSize: 3 })
+        if (res.code === 200 && res.data && res.data.list) {
+            recentAlarms.value = res.data.list.map((alarm: any) => ({
+                content: alarm.content || alarm.description || '报警信息',
+                time: alarm.fault_time ? new Date(alarm.fault_time).toLocaleDateString('zh-CN') : '',
+                level: alarm.level || 3
+            }))
+        }
+    } catch (error) {
+        console.error('加载报警数据失败:', error)
+    }
+}
+
+// 设置折线图数据
 const setChartData = async () => {
     const chartOptions: any = reactive({
         title: {
@@ -309,7 +376,7 @@ const setChartData = async () => {
         xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: ['13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00']
+            data: []
         },
         yAxis: {
             type: 'value',
@@ -317,61 +384,40 @@ const setChartData = async () => {
                 formatter: '{value}kw'
             }
         },
-        series: [
-            {
-                name: '',
-                type: 'line',
-                data: [],
-                lineStyle: {
-                    width: 4
-                },
-                itemStyle: {
-                    color: "purple",
-                    shadowBlur: 5,
-                    shadowColor: 'rgba(0,255,0,0.5)'
-                },
-                smooth: true
-            },
-            {
-                name: '',
-                type: 'line',
-                data: [],
-                lineStyle: {
-                    width: 4
-                },
-                itemStyle: {
-                    color: "lightgreen",
-                    shadowBlur: 5,
-                    shadowColor: 'rgba(0,255,0,0.5)'
-                },
-                smooth: true
-            },
-            {
-                name: '',
-                type: 'line',
-                data: [],
-                lineStyle: {
-                    width: 4
-                },
-                itemStyle: {
-                    color: "skyblue",
-                    shadowBlur: 5,
-                    shadowColor: 'rgba(0,255,0,0.5)'
-                },
-                smooth: true
-            },
-
-        ]
+        series: []
     });
-    const res = await chartDataApi()
-    chartOptions.legend.data = res.data.list.map((item: any) => item.name);
-    for (let i = 0; i < res.data.list.length; i++) {
-        chartOptions.series[i].name = res.data.list[i].name
-        chartOptions.series[i].data = res.data.list[i].data
+    
+    try {
+        const res = await getElectricityStatsApi()
+        if (res.code === 200 && res.data) {
+            // 后端返回格式：{ xAxis: [], series: [{ name, type, data }] }
+            chartOptions.xAxis.data = res.data.xAxis || []
+            chartOptions.legend.data = res.data.series?.map((item: any) => item.name) || []
+            
+            // 设置系列数据
+            chartOptions.series = res.data.series?.map((item: any, index: number) => ({
+                name: item.name,
+                type: 'line',
+                data: item.data || [],
+                lineStyle: {
+                    width: 4
+                },
+                itemStyle: {
+                    color: index === 0 ? "purple" : index === 1 ? "lightgreen" : "skyblue",
+                    shadowBlur: 5,
+                    shadowColor: 'rgba(0,255,0,0.5)'
+                },
+                smooth: true
+            })) || []
+        }
+    } catch (error) {
+        console.error('加载电量统计数据失败:', error)
     }
+    
     return chartOptions
 }
 
+// 设置饼图数据
 const setChartData2 = async () => {
     const chartOptions: any = reactive({
         legend: {
@@ -409,22 +455,33 @@ const setChartData2 = async () => {
             }
         }
     })
-    const res = await chartDataApi2()
-    chartOptions.series[0].data = res.data.list;
+    
+    try {
+        const res = await getRevenueRatioApi()
+        if (res.code === 200 && res.data && res.data.list) {
+            chartOptions.series[0].data = res.data.list.map((item: any) => ({
+                name: item.name,
+                value: item.value
+            }))
+        }
+    } catch (error) {
+        console.error('加载营收占比数据失败:', error)
+    }
+    
     return chartOptions
 }
 
+// 设置雷达图数据
 const setChartData3 = async () => {
     const chartOptions = reactive({
         radar: {
-            // shape: 'circle',
             indicator: [
-                { name: '闲置数', max: 65 },
-                { name: '使用数', max: 160 },
-                { name: '故障数', max: 300 },
-                { name: '维修数', max: 380 },
-                { name: '更换数', max: 520 },
-                { name: '报废数', max: 250 }
+                { name: '闲置数', max: 100 },
+                { name: '使用数', max: 100 },
+                { name: '故障数', max: 100 },
+                { name: '维修数', max: 100 },
+                { name: '更换数', max: 100 },
+                { name: '报废数', max: 100 }
             ]
         },
         series: [
@@ -436,21 +493,34 @@ const setChartData3 = async () => {
                         value: [],
                         name: '设备总览'
                     },
-
                 ]
             }
         ]
     })
-    const res = await chartDataApi3();
-    chartOptions.series[0].data[0].value = res.data.list
+    
+    try {
+        const res = await getDeviceOverviewApi()
+        if (res.code === 200 && res.data && res.data.list) {
+            // 后端返回格式：{ list: [idleCount, usingCount, faultCount, repairCount, replaceCount, scrapCount] }
+            chartOptions.series[0].data[0].value = res.data.list
+        }
+    } catch (error) {
+        console.error('加载设备总览数据失败:', error)
+    }
+    
     return chartOptions
 }
+
+// 初始化
+onMounted(async () => {
+    await loadDeviceStatus()
+    await loadRevenueRanking()
+    await loadRecentAlarms()
+})
 
 useChart(chartRef, setChartData)
 useChart(chartRef2, setChartData2)
 useChart(chartRef3, setChartData3)
-
-console.log(555,import.meta.env.VITE_API_URL)
 
 </script>
 
@@ -501,6 +571,7 @@ console.log(555,import.meta.env.VITE_API_URL)
     .ranking-item {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         padding: 10px;
 
         .rank {
