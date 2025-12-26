@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import './style.less'
+import './assets/styles/tailwind.css'
 import App from './App.vue'
 import router from './router'
 import "@/router/guard"
@@ -10,6 +11,7 @@ import { createPinia } from 'pinia'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import permission from './directives/permission'
 import * as Sentry from "@sentry/vue";
+import { initMonitor } from './monitor'
 
 const app = createApp(App);
 
@@ -46,5 +48,13 @@ app.use(ElementPlus)
 app.use(pinia)
 app.use(router);
 app.mount('#app')
+
+// 初始化自研监控SDK（与Sentry并行使用）
+initMonitor({
+  app,
+  router,
+  appId: 'charging-station-admin',
+  debug: import.meta.env.DEV, // 开发环境开启调试日志
+})
 
 

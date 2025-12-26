@@ -1,7 +1,8 @@
 /**
  * 工具函数
  */
-import UAParser from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
+import type { IResult } from 'ua-parser-js';
 import type { DeviceInfo, EnvironmentInfo, ReferrerInfo, SessionInfo, RateLimitConfig } from '../types';
 
 // ==================== 基础工具 ====================
@@ -182,15 +183,16 @@ export function error(debug: boolean, ...args: any[]): void {
 
 // ==================== 设备信息检测 ====================
 
-// UA解析器实例缓存
-let uaParserResult: UAParser.IResult | null = null;
+// UA解析结果缓存
+let uaParserResult: IResult | null = null;
 
 /**
  * 获取UA解析结果
  */
-function getUAResult(): UAParser.IResult {
+function getUAResult(): IResult {
   if (!uaParserResult) {
-    uaParserResult = UAParser(navigator.userAgent);
+    const parser = new UAParser();
+    uaParserResult = parser.getResult();
   }
   return uaParserResult;
 }
@@ -199,8 +201,7 @@ function getUAResult(): UAParser.IResult {
  * 获取设备信息
  */
 export function getDeviceInfo(): DeviceInfo {
-  const parser = getUAParser();
-  const result = parser.getResult();
+  const result = getUAResult();
 
   return {
     browser: {

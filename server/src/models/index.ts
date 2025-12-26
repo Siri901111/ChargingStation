@@ -11,6 +11,7 @@ import Permission from './Permission.js';
 import BillingTemplate from './BillingTemplate.js';
 import Document from './Document.js';
 import PileMaintenance from './PileMaintenance.js';
+import MonitorData from './MonitorData.js';
 
 // ==================== 模型关联关系设置 ====================
 
@@ -135,5 +136,6 @@ export {
   Permission,
   BillingTemplate,
   Document,
-  PileMaintenance
+  PileMaintenance,
+  MonitorData
 };

@@ -85,6 +85,14 @@ const routes:RouteRecordRaw[]=[
                 name:"test",
                 component:()=>import("@/views/test/Test.vue")
             },
+            {
+                path:"/web-monitor",
+                name:"webMonitor",
+                component:()=>import("@/views/webMonitor/WebMonitor.vue"),
+                meta:{
+                    title:"前端监控"
+                }
+            },
         ]
     },
     {
