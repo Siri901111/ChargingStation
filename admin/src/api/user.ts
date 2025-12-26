@@ -58,6 +58,18 @@ export function registerApi(data: RegisterParams) {
   return post("/api/register", data);
 }
 
+// 忘记密码参数
+interface ForgotPasswordParams {
+  account: string;
+  phone: string;
+  newPassword: string;
+}
+
+// 忘记密码
+export function forgotPasswordApi(data: ForgotPasswordParams) {
+  return post("/api/forgot-password", data);
+}
+
 // 获取用户列表（权限列表）
 export function getUserListApi(data: UserListParams) {
   return post("/api/permissionList", data);

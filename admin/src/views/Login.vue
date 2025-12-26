@@ -79,17 +79,179 @@
                     </el-form-item>
                 </el-form>
 
-                <div class="card-footer">
+                <!-- <div class="card-footer">
                     <div class="divider">
                         <span>或</span>
                     </div>
                     <div class="footer-links">
-                        <a href="#" class="link">忘记密码？</a>
-                        <a href="#" class="link">注册账户</a>
+                        <a href="#" class="link" @click.prevent="showForgotPasswordDialog">忘记密码？</a>
+                        <a href="#" class="link" @click.prevent="showRegisterDialog">注册账户</a>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
+        
+        <!-- 忘记密码对话框 -->
+        <el-dialog
+            v-model="forgotPasswordVisible"
+            title="忘记密码"
+            width="500px"
+            :close-on-click-modal="false"
+            class="forgot-password-dialog"
+        >
+            <el-form
+                :model="forgotPasswordForm"
+                :rules="forgotPasswordRules"
+                ref="forgotPasswordFormRef"
+                label-width="100px"
+            >
+                <el-form-item label="账号" prop="account">
+                    <el-input
+                        v-model="forgotPasswordForm.account"
+                        placeholder="请输入您的账号"
+                        size="large"
+                    />
+                </el-form-item>
+                <el-form-item label="手机号" prop="phone">
+                    <el-input
+                        v-model="forgotPasswordForm.phone"
+                        placeholder="请输入注册时的手机号"
+                        size="large"
+                    />
+                </el-form-item>
+                <el-form-item label="新密码" prop="newPassword">
+                    <el-input
+                        v-model="forgotPasswordForm.newPassword"
+                        type="password"
+                        placeholder="请输入新密码（至少6位）"
+                        size="large"
+                        show-password
+                    />
+                </el-form-item>
+                <el-form-item label="确认密码" prop="confirmPassword">
+                    <el-input
+                        v-model="forgotPasswordForm.confirmPassword"
+                        type="password"
+                        placeholder="请再次输入新密码"
+                        size="large"
+                        show-password
+                    />
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <el-button @click="forgotPasswordVisible = false">取消</el-button>
+                <el-button type="primary" :loading="forgotPasswordLoading" @click="handleForgotPassword">
+                    重置密码
+                </el-button>
+            </template>
+        </el-dialog>
+        
+        <!-- 注册对话框 -->
+        <el-dialog
+            v-model="registerVisible"
+            title="注册账户"
+            width="600px"
+            :close-on-click-modal="false"
+            class="register-dialog"
+        >
+            <el-form
+                :model="registerForm"
+                :rules="registerRules"
+                ref="registerFormRef"
+                label-width="100px"
+            >
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="账号" prop="account">
+                            <el-input
+                                v-model="registerForm.account"
+                                placeholder="4-20位字母、数字或下划线"
+                                size="large"
+                            />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="姓名" prop="name">
+                            <el-input
+                                v-model="registerForm.name"
+                                placeholder="请输入真实姓名"
+                                size="large"
+                            />
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="密码" prop="password">
+                            <el-input
+                                v-model="registerForm.password"
+                                type="password"
+                                placeholder="至少6位"
+                                size="large"
+                                show-password
+                            />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="确认密码" prop="confirmPassword">
+                            <el-input
+                                v-model="registerForm.confirmPassword"
+                                type="password"
+                                placeholder="请再次输入密码"
+                                size="large"
+                                show-password
+                            />
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="手机号" prop="phone">
+                            <el-input
+                                v-model="registerForm.phone"
+                                placeholder="11位手机号"
+                                size="large"
+                            />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="身份证号" prop="idNo">
+                            <el-input
+                                v-model="registerForm.idNo"
+                                placeholder="18位身份证号（可选）"
+                                size="large"
+                            />
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="职位" prop="position">
+                            <el-input
+                                v-model="registerForm.position"
+                                placeholder="职位（可选）"
+                                size="large"
+                            />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="部门" prop="department">
+                            <el-input
+                                v-model="registerForm.department"
+                                placeholder="部门（可选）"
+                                size="large"
+                            />
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+            </el-form>
+            <template #footer>
+                <el-button @click="registerVisible = false">取消</el-button>
+                <el-button type="primary" :loading="registerLoading" @click="handleRegister">
+                    注册
+                </el-button>
+            </template>
+        </el-dialog>
     </div>
 </template>
 
@@ -102,6 +264,7 @@ import { useRouter } from "vue-router"
 import { User, Lock, Lightning, DataLine, Setting, CircleCheck } from '@element-plus/icons-vue'
 import logo from "@/assets/logo.png"
 import { ElMessage } from 'element-plus'
+import { registerApi, forgotPasswordApi } from '@/api/user'
 
 interface RuleForm {
     username: string
@@ -128,6 +291,118 @@ const userStore = useUserStore()
 const router = useRouter()
 const loading = ref(false)
 
+// 忘记密码相关
+const forgotPasswordVisible = ref(false)
+const forgotPasswordLoading = ref(false)
+const forgotPasswordFormRef = ref<FormInstance>()
+const forgotPasswordForm = reactive({
+    account: '',
+    phone: '',
+    newPassword: '',
+    confirmPassword: ''
+})
+
+const validateConfirmPassword = (_rule: any, value: any, callback: any) => {
+    if (value !== forgotPasswordForm.newPassword) {
+        callback(new Error('两次输入的密码不一致'))
+    } else {
+        callback()
+    }
+}
+
+const forgotPasswordRules = reactive<FormRules>({
+    account: [
+        { required: true, message: '请输入账号', trigger: 'blur' },
+        { min: 4, max: 20, message: '账号长度为4-20位', trigger: 'blur' }
+    ],
+    phone: [
+        { required: true, message: '请输入手机号', trigger: 'blur' },
+        { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+    ],
+    newPassword: [
+        { required: true, message: '请输入新密码', trigger: 'blur' },
+        { min: 6, message: '密码长度至少6位', trigger: 'blur' }
+    ],
+    confirmPassword: [
+        { required: true, message: '请确认密码', trigger: 'blur' },
+        { validator: validateConfirmPassword, trigger: 'blur' }
+    ]
+})
+
+// 注册相关
+const registerVisible = ref(false)
+const registerLoading = ref(false)
+const registerFormRef = ref<FormInstance>()
+const registerForm = reactive({
+    account: '',
+    password: '',
+    name: '',
+    phone: '',
+    idNo: '',
+    position: '',
+    department: '',
+    confirmPassword: ''
+})
+
+const validateRegisterConfirmPassword = (_rule: any, value: any, callback: any) => {
+    if (value !== registerForm.password) {
+        callback(new Error('两次输入的密码不一致'))
+    } else {
+        callback()
+    }
+}
+
+const validateAccount = (_rule: any, value: any, callback: any) => {
+    if (!value) {
+        callback(new Error('请输入账号'))
+    } else if (!/^[a-zA-Z0-9_]{4,20}$/.test(value)) {
+        callback(new Error('账号格式不正确，应为4-20位字母、数字或下划线'))
+    } else {
+        callback()
+    }
+}
+
+const validatePhone = (_rule: any, value: any, callback: any) => {
+    if (!value) {
+        callback(new Error('请输入手机号'))
+    } else if (!/^1[3-9]\d{9}$/.test(value)) {
+        callback(new Error('请输入正确的手机号'))
+    } else {
+        callback()
+    }
+}
+
+const validateIdNo = (_rule: any, value: any, callback: any) => {
+    if (value && !/^\d{17}[\dXx]$/.test(value)) {
+        callback(new Error('请输入正确的18位身份证号'))
+    } else {
+        callback()
+    }
+}
+
+const registerRules = reactive<FormRules>({
+    account: [
+        { validator: validateAccount, trigger: 'blur' }
+    ],
+    password: [
+        { required: true, message: '请输入密码', trigger: 'blur' },
+        { min: 6, message: '密码长度至少6位', trigger: 'blur' }
+    ],
+    name: [
+        { required: true, message: '请输入姓名', trigger: 'blur' }
+    ],
+    phone: [
+        { validator: validatePhone, trigger: 'blur' }
+    ],
+    idNo: [
+        { validator: validateIdNo, trigger: 'blur' }
+    ],
+    confirmPassword: [
+        { required: true, message: '请确认密码', trigger: 'blur' },
+        { validator: validateRegisterConfirmPassword, trigger: 'blur' }
+    ]
+})
+
 // 动画引用
 const leftSectionRef = ref<HTMLElement | null>(null)
 const rightSectionRef = ref<HTMLElement | null>(null)
@@ -149,61 +424,61 @@ const features = [
 ]
 
 // 输入框聚焦动画
-const handleInputFocus = (event: Event) => {
-    const inputWrapper = (event.target as HTMLElement)?.closest('.input-wrapper')
-    if (inputWrapper) {
-        gsap.to(inputWrapper, {
-            scale: 1.02,
-            y: -3,
-            duration: 0.4,
-            ease: "back.out(1.7)"
-        })
-        const icon = inputWrapper.querySelector('.input-icon')
-        if (icon) {
-            gsap.to(icon, {
-                scale: 1.3,
-                rotation: 360,
-                color: "#409eff",
-                duration: 0.6,
-                ease: "power2.out"
-            })
-        }
-        // 添加边框光晕效果
-        gsap.to(inputWrapper, {
-            boxShadow: "0 0 0 4px rgba(64, 158, 255, 0.15)",
-            duration: 0.3,
-            ease: "power2.out"
-        })
-    }
-}
+// const handleInputFocus = (event: Event) => {
+//     const inputWrapper = (event.target as HTMLElement)?.closest('.input-wrapper')
+//     if (inputWrapper) {
+//         gsap.to(inputWrapper, {
+//             scale: 1.02,
+//             y: -3,
+//             duration: 0.4,
+//             ease: "back.out(1.7)"
+//         })
+//         const icon = inputWrapper.querySelector('.input-icon')
+//         if (icon) {
+//             gsap.to(icon, {
+//                 scale: 1.3,
+//                 rotation: 360,
+//                 color: "#409eff",
+//                 duration: 0.6,
+//                 ease: "power2.out"
+//             })
+//         }
+//         // 添加边框光晕效果
+//         gsap.to(inputWrapper, {
+//             boxShadow: "0 0 0 4px rgba(64, 158, 255, 0.15)",
+//             duration: 0.3,
+//             ease: "power2.out"
+//         })
+//     }
+// }
 
 // 输入框失焦动画
-const handleInputBlur = (event: Event) => {
-    const inputWrapper = (event.target as HTMLElement)?.closest('.input-wrapper')
-    if (inputWrapper) {
-        gsap.to(inputWrapper, {
-            scale: 1,
-            y: 0,
-            duration: 0.3,
-            ease: "power2.out"
-        })
-        const icon = inputWrapper.querySelector('.input-icon')
-        if (icon) {
-            gsap.to(icon, {
-                scale: 1,
-                rotation: 0,
-                color: "#909399",
-                duration: 0.3,
-                ease: "power2.out"
-            })
-        }
-        gsap.to(inputWrapper, {
-            boxShadow: "0 0 0 0px rgba(64, 158, 255, 0)",
-            duration: 0.3,
-            ease: "power2.out"
-        })
-    }
-}
+// const handleInputBlur = (event: Event) => {
+//     const inputWrapper = (event.target as HTMLElement)?.closest('.input-wrapper')
+//     if (inputWrapper) {
+//         gsap.to(inputWrapper, {
+//             scale: 1,
+//             y: 0,
+//             duration: 0.3,
+//             ease: "power2.out"
+//         })
+//         const icon = inputWrapper.querySelector('.input-icon')
+//         if (icon) {
+//             gsap.to(icon, {
+//                 scale: 1,
+//                 rotation: 0,
+//                 color: "#909399",
+//                 duration: 0.3,
+//                 ease: "power2.out"
+//             })
+//         }
+//         gsap.to(inputWrapper, {
+//             boxShadow: "0 0 0 0px rgba(64, 158, 255, 0)",
+//             duration: 0.3,
+//             ease: "power2.out"
+//         })
+//     }
+// }
 
 // 登录处理
 const handleLogin = async () => {
@@ -270,224 +545,224 @@ const handleLogin = async () => {
 }
 
 // 初始化动画
-const initAnimations = () => {
-    const tl = gsap.timeline()
+// const initAnimations = () => {
+//     const tl = gsap.timeline()
     
-    // 左侧区域动画
-    if (leftSectionRef.value) {
-        gsap.set(leftSectionRef.value, { x: -100, opacity: 0 })
-        tl.to(leftSectionRef.value, {
-            x: 0,
-            opacity: 1,
-            duration: 1,
-            ease: "power3.out"
-        })
-    }
+//     // 左侧区域动画
+//     if (leftSectionRef.value) {
+//         gsap.set(leftSectionRef.value, { x: -100, opacity: 0 })
+//         tl.to(leftSectionRef.value, {
+//             x: 0,
+//             opacity: 1,
+//             duration: 1,
+//             ease: "power3.out"
+//         })
+//     }
     
-    // Logo动画
-    if (logoRef.value) {
-        gsap.set(logoRef.value, { scale: 0, rotation: -180, opacity: 0 })
-        tl.to(logoRef.value, {
-            scale: 1,
-            rotation: 0,
-            opacity: 1,
-            duration: 0.8,
-            ease: "back.out(1.7)"
-        }, "-=0.5")
-    }
+//     // Logo动画
+//     if (logoRef.value) {
+//         gsap.set(logoRef.value, { scale: 0, rotation: -180, opacity: 0 })
+//         tl.to(logoRef.value, {
+//             scale: 1,
+//             rotation: 0,
+//             opacity: 1,
+//             duration: 0.8,
+//             ease: "back.out(1.7)"
+//         }, "-=0.5")
+//     }
     
-    // 标题动画
-    if (titleRef.value) {
-        gsap.set(titleRef.value, { y: 30, opacity: 0 })
-        tl.to(titleRef.value, {
-            y: 0,
-            opacity: 1,
-            duration: 0.6,
-            ease: "power2.out"
-        }, "-=0.3")
-    }
+//     // 标题动画
+//     if (titleRef.value) {
+//         gsap.set(titleRef.value, { y: 30, opacity: 0 })
+//         tl.to(titleRef.value, {
+//             y: 0,
+//             opacity: 1,
+//             duration: 0.6,
+//             ease: "power2.out"
+//         }, "-=0.3")
+//     }
     
-    // 副标题动画
-    if (subtitleRef.value) {
-        gsap.set(subtitleRef.value, { y: 20, opacity: 0 })
-        tl.to(subtitleRef.value, {
-            y: 0,
-            opacity: 1,
-            duration: 0.6,
-            ease: "power2.out"
-        }, "-=0.2")
-    }
+//     // 副标题动画
+//     if (subtitleRef.value) {
+//         gsap.set(subtitleRef.value, { y: 20, opacity: 0 })
+//         tl.to(subtitleRef.value, {
+//             y: 0,
+//             opacity: 1,
+//             duration: 0.6,
+//             ease: "power2.out"
+//         }, "-=0.2")
+//     }
     
-    // 特性列表动画
-    if (featuresRef.value) {
-        const featureItems = featuresRef.value.querySelectorAll('.feature-item')
-        gsap.set(featureItems, { x: -50, opacity: 0 })
-        tl.to(featureItems, {
-            x: 0,
-            opacity: 1,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: "power2.out"
-        }, "-=0.2")
-    }
+//     // 特性列表动画
+//     if (featuresRef.value) {
+//         const featureItems = featuresRef.value.querySelectorAll('.feature-item')
+//         gsap.set(featureItems, { x: -50, opacity: 0 })
+//         tl.to(featureItems, {
+//             x: 0,
+//             opacity: 1,
+//             duration: 0.5,
+//             stagger: 0.1,
+//             ease: "power2.out"
+//         }, "-=0.2")
+//     }
     
-    // 右侧区域动画
-    if (rightSectionRef.value) {
-        gsap.set(rightSectionRef.value, { x: 100, opacity: 0 })
-        tl.to(rightSectionRef.value, {
-            x: 0,
-            opacity: 1,
-            duration: 1,
-            ease: "power3.out"
-        }, "-=0.8")
-    }
+//     // 右侧区域动画
+//     if (rightSectionRef.value) {
+//         gsap.set(rightSectionRef.value, { x: 100, opacity: 0 })
+//         tl.to(rightSectionRef.value, {
+//             x: 0,
+//             opacity: 1,
+//             duration: 1,
+//             ease: "power3.out"
+//         }, "-=0.8")
+//     }
     
-    // 登录卡片动画
-    if (loginCardRef.value) {
-        gsap.set(loginCardRef.value, { y: 50, opacity: 0, scale: 0.9 })
-        tl.to(loginCardRef.value, {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            duration: 0.8,
-            ease: "back.out(1.2)"
-        }, "-=0.5")
-    }
+//     // 登录卡片动画
+//     if (loginCardRef.value) {
+//         gsap.set(loginCardRef.value, { y: 50, opacity: 0, scale: 0.9 })
+//         tl.to(loginCardRef.value, {
+//             y: 0,
+//             opacity: 1,
+//             scale: 1,
+//             duration: 0.8,
+//             ease: "back.out(1.2)"
+//         }, "-=0.5")
+//     }
     
-    // 卡片头部动画
-    const cardHeader = loginCardRef.value?.querySelector('.card-header')
-    if (cardHeader) {
-        gsap.set(cardHeader, { y: -20, opacity: 0 })
-        tl.to(cardHeader, {
-            y: 0,
-            opacity: 1,
-            duration: 0.6,
-            ease: "power2.out"
-        }, "-=0.2")
-    }
+//     // 卡片头部动画
+//     const cardHeader = loginCardRef.value?.querySelector('.card-header')
+//     if (cardHeader) {
+//         gsap.set(cardHeader, { y: -20, opacity: 0 })
+//         tl.to(cardHeader, {
+//             y: 0,
+//             opacity: 1,
+//             duration: 0.6,
+//             ease: "power2.out"
+//         }, "-=0.2")
+//     }
     
-    // 输入框依次出现动画
-    if (usernameWrapperRef.value && passwordWrapperRef.value) {
-        gsap.set([usernameWrapperRef.value, passwordWrapperRef.value], { 
-            y: 30, 
-            opacity: 0,
-            scale: 0.95
-        })
-        tl.to([usernameWrapperRef.value, passwordWrapperRef.value], {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            duration: 0.7,
-            stagger: 0.2,
-            ease: "back.out(1.4)"
-        }, "-=0.3")
-    }
+//     // 输入框依次出现动画
+//     if (usernameWrapperRef.value && passwordWrapperRef.value) {
+//         gsap.set([usernameWrapperRef.value, passwordWrapperRef.value], { 
+//             y: 30, 
+//             opacity: 0,
+//             scale: 0.95
+//         })
+//         tl.to([usernameWrapperRef.value, passwordWrapperRef.value], {
+//             y: 0,
+//             opacity: 1,
+//             scale: 1,
+//             duration: 0.7,
+//             stagger: 0.2,
+//             ease: "back.out(1.4)"
+//         }, "-=0.3")
+//     }
     
-    // 登录按钮动画
-    if (loginButtonRef.value) {
-        gsap.set(loginButtonRef.value, { 
-            scale: 0.8, 
-            opacity: 0,
-            y: 30
-        })
-        tl.to(loginButtonRef.value, {
-            scale: 1,
-            opacity: 1,
-            y: 0,
-            duration: 0.7,
-            ease: "back.out(1.7)"
-        }, "-=0.2")
-    }
+//     // 登录按钮动画
+//     if (loginButtonRef.value) {
+//         gsap.set(loginButtonRef.value, { 
+//             scale: 0.8, 
+//             opacity: 0,
+//             y: 30
+//         })
+//         tl.to(loginButtonRef.value, {
+//             scale: 1,
+//             opacity: 1,
+//             y: 0,
+//             duration: 0.7,
+//             ease: "back.out(1.7)"
+//         }, "-=0.2")
+//     }
     
-    // 底部链接动画
-    const cardFooter = loginCardRef.value?.querySelector('.card-footer')
-    if (cardFooter) {
-        gsap.set(cardFooter, { y: 20, opacity: 0 })
-        tl.to(cardFooter, {
-            y: 0,
-            opacity: 1,
-            duration: 0.6,
-            ease: "power2.out"
-        }, "-=0.1")
-    }
+//     // 底部链接动画
+//     const cardFooter = loginCardRef.value?.querySelector('.card-footer')
+//     if (cardFooter) {
+//         gsap.set(cardFooter, { y: 20, opacity: 0 })
+//         tl.to(cardFooter, {
+//             y: 0,
+//             opacity: 1,
+//             duration: 0.6,
+//             ease: "power2.out"
+//         }, "-=0.1")
+//     }
     
-    // 持续动画：Logo呼吸效果
-    if (logoRef.value) {
-        gsap.to(logoRef.value.querySelector('.logo-glow'), {
-            scale: 1.2,
-            opacity: 0.6,
-            duration: 2,
-            repeat: -1,
-            yoyo: true,
-            ease: "sine.inOut"
-        })
-    }
+//     // 持续动画：Logo呼吸效果
+//     if (logoRef.value) {
+//         gsap.to(logoRef.value.querySelector('.logo-glow'), {
+//             scale: 1.2,
+//             opacity: 0.6,
+//             duration: 2,
+//             repeat: -1,
+//             yoyo: true,
+//             ease: "sine.inOut"
+//         })
+//     }
     
-    // 特性项悬停动画准备
-    if (featuresRef.value) {
-        const featureItems = featuresRef.value.querySelectorAll('.feature-item')
-        featureItems.forEach((item, index) => {
-            // 添加初始动画延迟
-            gsap.set(item, { opacity: 0, x: -20 })
-            gsap.to(item, {
-                opacity: 1,
-                x: 0,
-                duration: 0.5,
-                delay: 0.8 + index * 0.1,
-                ease: "power2.out"
-            })
+//     // 特性项悬停动画准备
+//     if (featuresRef.value) {
+//         const featureItems = featuresRef.value.querySelectorAll('.feature-item')
+//         featureItems.forEach((item, index) => {
+//             // 添加初始动画延迟
+//             gsap.set(item, { opacity: 0, x: -20 })
+//             gsap.to(item, {
+//                 opacity: 1,
+//                 x: 0,
+//                 duration: 0.5,
+//                 delay: 0.8 + index * 0.1,
+//                 ease: "power2.out"
+//             })
             
-            item.addEventListener('mouseenter', () => {
-                gsap.to(item, {
-                    x: 15,
-                    scale: 1.05,
-                    duration: 0.3,
-                    ease: "back.out(1.7)"
-                })
-                const icon = item.querySelector('.feature-icon')
-                if (icon) {
-                    gsap.to(icon, {
-                        rotation: 360,
-                        scale: 1.2,
-                        duration: 0.5,
-                        ease: "power2.out"
-                    })
-                }
-            })
-            item.addEventListener('mouseleave', () => {
-                gsap.to(item, {
-                    x: 0,
-                    scale: 1,
-                    duration: 0.3,
-                    ease: "power2.out"
-                })
-                const icon = item.querySelector('.feature-icon')
-                if (icon) {
-                    gsap.to(icon, {
-                        rotation: 0,
-                        scale: 1,
-                        duration: 0.3,
-                        ease: "power2.out"
-                    })
-                }
-            })
-        })
-    }
+//             item.addEventListener('mouseenter', () => {
+//                 gsap.to(item, {
+//                     x: 15,
+//                     scale: 1.05,
+//                     duration: 0.3,
+//                     ease: "back.out(1.7)"
+//                 })
+//                 const icon = item.querySelector('.feature-icon')
+//                 if (icon) {
+//                     gsap.to(icon, {
+//                         rotation: 360,
+//                         scale: 1.2,
+//                         duration: 0.5,
+//                         ease: "power2.out"
+//                     })
+//                 }
+//             })
+//             item.addEventListener('mouseleave', () => {
+//                 gsap.to(item, {
+//                     x: 0,
+//                     scale: 1,
+//                     duration: 0.3,
+//                     ease: "power2.out"
+//                 })
+//                 const icon = item.querySelector('.feature-icon')
+//                 if (icon) {
+//                     gsap.to(icon, {
+//                         rotation: 0,
+//                         scale: 1,
+//                         duration: 0.3,
+//                         ease: "power2.out"
+//                     })
+//                 }
+//             })
+//         })
+//     }
     
-    // Logo持续动画
-    if (logoRef.value) {
-        const logoImage = logoRef.value.querySelector('.logo-image')
-        if (logoImage) {
-            gsap.to(logoImage, {
-                y: -5,
-                duration: 2,
-                repeat: -1,
-                yoyo: true,
-                ease: "sine.inOut"
-            })
-        }
-    }
-}
+//     // Logo持续动画
+//     if (logoRef.value) {
+//         const logoImage = logoRef.value.querySelector('.logo-image')
+//         if (logoImage) {
+//             gsap.to(logoImage, {
+//                 y: -5,
+//                 duration: 2,
+//                 repeat: -1,
+//                 yoyo: true,
+//                 ease: "sine.inOut"
+//             })
+//         }
+//     }
+// }
 
 // 鼠标移动视差效果（更轻微）
 let mouseMoveHandler: ((e: MouseEvent) => void) | null = null
@@ -523,7 +798,7 @@ const initParallax = () => {
 }
 
 onMounted(() => {
-    initAnimations()
+    // initAnimations()
     initParallax()
 })
 
@@ -532,6 +807,98 @@ onUnmounted(() => {
         window.removeEventListener('mousemove', mouseMoveHandler)
     }
 })
+
+// 显示忘记密码对话框
+const showForgotPasswordDialog = () => {
+    forgotPasswordVisible.value = true
+    // 重置表单
+    Object.assign(forgotPasswordForm, {
+        account: '',
+        phone: '',
+        newPassword: '',
+        confirmPassword: ''
+    })
+    forgotPasswordFormRef.value?.clearValidate()
+}
+
+// 处理忘记密码
+const handleForgotPassword = async () => {
+    if (!forgotPasswordFormRef.value) return
+    
+    await forgotPasswordFormRef.value.validate(async (valid: boolean) => {
+        if (valid) {
+            forgotPasswordLoading.value = true
+            try {
+                const res = await forgotPasswordApi({
+                    account: forgotPasswordForm.account,
+                    phone: forgotPasswordForm.phone,
+                    newPassword: forgotPasswordForm.newPassword
+                })
+                
+                if (res.code === 200) {
+                    ElMessage.success('密码重置成功，请使用新密码登录')
+                    forgotPasswordVisible.value = false
+                } else {
+                    ElMessage.error(res.message || '密码重置失败')
+                }
+            } catch (error: any) {
+                ElMessage.error(error.response?.data?.message || error.message || '密码重置失败')
+            } finally {
+                forgotPasswordLoading.value = false
+            }
+        }
+    })
+}
+
+// 显示注册对话框
+const showRegisterDialog = () => {
+    registerVisible.value = true
+    // 重置表单
+    Object.assign(registerForm, {
+        account: '',
+        password: '',
+        name: '',
+        phone: '',
+        idNo: '',
+        position: '',
+        department: '',
+        confirmPassword: ''
+    })
+    registerFormRef.value?.clearValidate()
+}
+
+// 处理注册
+const handleRegister = async () => {
+    if (!registerFormRef.value) return
+    
+    await registerFormRef.value.validate(async (valid: boolean) => {
+        if (valid) {
+            registerLoading.value = true
+            try {
+                const res = await registerApi({
+                    account: registerForm.account,
+                    password: registerForm.password,
+                    name: registerForm.name,
+                    phone: registerForm.phone,
+                    idNo: registerForm.idNo || undefined,
+                    position: registerForm.position || undefined,
+                    department: registerForm.department || undefined
+                })
+                
+                if (res.code === 200) {
+                    ElMessage.success('注册成功，请使用新账号登录')
+                    registerVisible.value = false
+                } else {
+                    ElMessage.error(res.message || '注册失败')
+                }
+            } catch (error: any) {
+                ElMessage.error(error.response?.data?.message || error.message || '注册失败')
+            } finally {
+                registerLoading.value = false
+            }
+        }
+    })
+}
 </script>
 
 <style lang="less" scoped>
@@ -960,6 +1327,55 @@ onUnmounted(() => {
     .feature-item {
         padding: 12px 20px;
         font-size: 14px;
+    }
+}
+
+// 对话框样式
+:deep(.forgot-password-dialog),
+:deep(.register-dialog) {
+    .el-dialog {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    
+    .el-dialog__header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px 24px;
+        margin: 0;
+        
+        .el-dialog__title {
+            color: #fff;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .el-dialog__headerbtn {
+            .el-dialog__close {
+                color: #fff;
+                font-size: 20px;
+                
+                &:hover {
+                    color: rgba(255, 255, 255, 0.8);
+                }
+            }
+        }
+    }
+    
+    .el-dialog__body {
+        padding: 30px 24px;
+    }
+    
+    .el-dialog__footer {
+        padding: 20px 24px;
+        border-top: 1px solid #e4e7ed;
+    }
+    
+    .el-form-item {
+        margin-bottom: 22px;
+    }
+    
+    .el-input__wrapper {
+        border-radius: 8px;
     }
 }
 </style>

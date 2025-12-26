@@ -80,6 +80,11 @@ const routes:RouteRecordRaw[]=[
                 name:"personal",
                 component:()=>import("@/views/personal/Personal.vue")
             },
+            {
+                path:"/test",
+                name:"test",
+                component:()=>import("@/views/test/Test.vue")
+            },
         ]
     },
     {

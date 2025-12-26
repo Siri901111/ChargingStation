@@ -117,6 +117,11 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
           icon: 'Setting'
         },
         {
+          name: '服务监控',
+          url: '/test',
+          icon: 'Monitor'
+        },
+        {
           name: '个人中心',
           url: '/personal',
           icon: 'User'
@@ -126,7 +131,7 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
     };
   }
   
-  // 运营专员权限 - 大部分菜单，但无系统设置
+  // 运营专员权限 - 大部分菜单，无系统设置 服务监控
   if (pageAuthority === 'manager') {
     return {
       menulist: [
