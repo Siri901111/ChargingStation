@@ -2,8 +2,9 @@
  * 前端监控SDK集成配置
  *
  * 本文件用于在Vue项目中集成自研的monitor-sdk
+ * 通过 npm link 方式引用
  */
-import { createMonitor, createVuePlugin, type Monitor } from '../../monitor-sdk/src';
+import { createMonitor, createVuePlugin, type Monitor } from 'monitor-sdk';
 import type { App } from 'vue';
 import type { Router } from 'vue-router';
 

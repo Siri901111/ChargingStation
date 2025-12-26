@@ -5,20 +5,28 @@ interface ResponseData{
     message:string
 }
 
-function get(url:string,params?:any):Promise<ResponseData>{
-    return service.get(url,{params})
+function get<T = any>(url:string,params?:any):Promise<ResponseData & { data: T }>{
+    return service.get(url,params)
 }
 
-function post(url:string,data?:any):Promise<ResponseData>{
+function post<T = any>(url:string,data?:any):Promise<ResponseData & { data: T }>{
     return service.post(url,data)
 }
 
-function put(url:string,data?:any):Promise<ResponseData>{
+function put<T = any>(url:string,data?:any):Promise<ResponseData & { data: T }>{
     return service.put(url,data)
 }
 
-function del(url:string,params?:any):Promise<ResponseData>{
-    return service.delete(url,{params})
+function del<T = any>(url:string,params?:any):Promise<ResponseData & { data: T }>{
+    return service.delete(url,params)
 }
 
 export {get,post,put,del}
+
+// 默认导出
+export default {
+    get,
+    post,
+    put,
+    delete: del
+}

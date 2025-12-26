@@ -1,9 +1,9 @@
 <template>
-  <div class="web-monitor">
+  <div class="p-6 space-y-6">
     <!-- 页面头部 -->
-    <div class="page-header">
-      <h2>前端监控平台</h2>
-      <div class="header-actions">
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-bold text-gray-800">前端监控平台</h2>
+      <div class="flex gap-3">
         <el-date-picker
           v-model="dateRange"
           type="datetimerange"
@@ -13,165 +13,174 @@
           :shortcuts="dateShortcuts"
           @change="handleDateChange"
         />
-        <el-button type="primary" @click="refreshData">
-          <el-icon><Refresh /></el-icon>
+        <Button @click="refreshData" class="gap-2">
+          <RefreshCw class="h-4 w-4" />
           刷新
-        </el-button>
+        </Button>
       </div>
     </div>
 
     <!-- 统计卡片 -->
-    <el-row :gutter="16" class="stat-cards">
-      <el-col :span="4">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon total">
-              <el-icon><DataAnalysis /></el-icon>
+    <div class="grid grid-cols-6 gap-4">
+      <Card class="hover:shadow-lg transition-shadow">
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+              <BarChart3 class="h-6 w-6 text-white" />
             </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ overviewData.total || 0 }}</div>
-              <div class="stat-label">总上报数</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="4">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon today">
-              <el-icon><Calendar /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ overviewData.todayCount || 0 }}</div>
-              <div class="stat-label">今日上报</div>
+            <div>
+              <div class="text-2xl font-bold">{{ overviewData.total || 0 }}</div>
+              <div class="text-sm text-gray-500">总上报数</div>
             </div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :span="4">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon error">
-              <el-icon><WarningFilled /></el-icon>
+        </CardContent>
+      </Card>
+
+      <Card class="hover:shadow-lg transition-shadow">
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+              <Calendar class="h-6 w-6 text-white" />
             </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ overviewData.errorCount || 0 }}</div>
-              <div class="stat-label">错误数</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="4">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon pv">
-              <el-icon><View /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ overviewData.pv || 0 }}</div>
-              <div class="stat-label">页面访问(PV)</div>
+            <div>
+              <div class="text-2xl font-bold">{{ overviewData.todayCount || 0 }}</div>
+              <div class="text-sm text-gray-500">今日上报</div>
             </div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :span="4">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon uv">
-              <el-icon><User /></el-icon>
+        </CardContent>
+      </Card>
+
+      <Card class="hover:shadow-lg transition-shadow">
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
+              <AlertTriangle class="h-6 w-6 text-white" />
             </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ overviewData.uv || 0 }}</div>
-              <div class="stat-label">独立访客(UV)</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="4">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-icon perf">
-              <el-icon><Timer /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ performanceMetrics.avgFCP || 0 }}ms</div>
-              <div class="stat-label">平均FCP</div>
+            <div>
+              <div class="text-2xl font-bold">{{ overviewData.errorCount || 0 }}</div>
+              <div class="text-sm text-gray-500">错误数</div>
             </div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </CardContent>
+      </Card>
+
+      <Card class="hover:shadow-lg transition-shadow">
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+              <Eye class="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <div class="text-2xl font-bold">{{ overviewData.pv || 0 }}</div>
+              <div class="text-sm text-gray-500">页面访问(PV)</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card class="hover:shadow-lg transition-shadow">
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+              <Users class="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <div class="text-2xl font-bold">{{ overviewData.uv || 0 }}</div>
+              <div class="text-sm text-gray-500">独立访客(UV)</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card class="hover:shadow-lg transition-shadow">
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+              <Clock class="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <div class="text-2xl font-bold">{{ performanceMetrics.avgFCP || 0 }}ms</div>
+              <div class="text-sm text-gray-500">平均FCP</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
 
     <!-- 子路由导航 -->
-    <el-card class="sub-nav-card">
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="概览" name="overview" />
-        <el-tab-pane label="错误监控" name="errors" />
-        <el-tab-pane label="性能监控" name="performance" />
-        <el-tab-pane label="行为分析" name="behavior" />
-        <el-tab-pane label="网络请求" name="network" />
-      </el-tabs>
+    <Card>
+      <CardContent class="pt-6">
+        <Tabs v-model="activeTab" class="w-full">
+          <TabsList class="grid w-full grid-cols-5 mb-6">
+            <TabsTrigger value="overview">概览</TabsTrigger>
+            <TabsTrigger value="errors">错误监控</TabsTrigger>
+            <TabsTrigger value="performance">性能监控</TabsTrigger>
+            <TabsTrigger value="behavior">行为分析</TabsTrigger>
+            <TabsTrigger value="network">网络请求</TabsTrigger>
+          </TabsList>
 
-      <!-- 概览内容 -->
-      <div v-if="activeTab === 'overview'" class="tab-content">
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-card shadow="never" class="chart-card">
-              <template #header>
-                <span>上报趋势</span>
-              </template>
-              <div ref="trendChartRef" class="chart-container"></div>
-            </el-card>
-          </el-col>
-          <el-col :span="12">
-            <el-card shadow="never" class="chart-card">
-              <template #header>
-                <span>数据类型分布</span>
-              </template>
-              <div ref="typeChartRef" class="chart-container"></div>
-            </el-card>
-          </el-col>
-        </el-row>
-        <el-row :gutter="16" style="margin-top: 16px;">
-          <el-col :span="12">
-            <el-card shadow="never" class="chart-card">
-              <template #header>
-                <span>类别分布</span>
-              </template>
-              <div ref="categoryChartRef" class="chart-container"></div>
-            </el-card>
-          </el-col>
-          <el-col :span="12">
-            <el-card shadow="never" class="chart-card">
-              <template #header>
-                <span>性能指标</span>
-              </template>
-              <div ref="performanceChartRef" class="chart-container"></div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </div>
+          <!-- 概览内容 -->
+          <TabsContent value="overview" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle class="text-base">上报趋势</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div ref="trendChartRef" class="h-[280px]"></div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle class="text-base">数据类型分布</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div ref="typeChartRef" class="h-[280px]"></div>
+                </CardContent>
+              </Card>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle class="text-base">类别分布</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div ref="categoryChartRef" class="h-[280px]"></div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle class="text-base">性能指标</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div ref="performanceChartRef" class="h-[280px]"></div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-      <!-- 错误监控内容 -->
-      <div v-if="activeTab === 'errors'" class="tab-content">
-        <ErrorMonitor :date-range="dateRange" />
-      </div>
+          <!-- 错误监控内容 -->
+          <TabsContent value="errors">
+            <ErrorMonitor :date-range="dateRange" />
+          </TabsContent>
 
-      <!-- 性能监控内容 -->
-      <div v-if="activeTab === 'performance'" class="tab-content">
-        <PerformanceMonitor :date-range="dateRange" />
-      </div>
+          <!-- 性能监控内容 -->
+          <TabsContent value="performance">
+            <PerformanceMonitor :date-range="dateRange" />
+          </TabsContent>
 
-      <!-- 行为分析内容 -->
-      <div v-if="activeTab === 'behavior'" class="tab-content">
-        <BehaviorMonitor :date-range="dateRange" />
-      </div>
+          <!-- 行为分析内容 -->
+          <TabsContent value="behavior">
+            <BehaviorMonitor :date-range="dateRange" />
+          </TabsContent>
 
-      <!-- 网络请求内容 -->
-      <div v-if="activeTab === 'network'" class="tab-content">
-        <NetworkMonitor :date-range="dateRange" />
-      </div>
-    </el-card>
+          <!-- 网络请求内容 -->
+          <TabsContent value="network">
+            <NetworkMonitor :date-range="dateRange" />
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
@@ -189,6 +198,14 @@ import ErrorMonitor from './components/ErrorMonitor.vue';
 import PerformanceMonitor from './components/PerformanceMonitor.vue';
 import BehaviorMonitor from './components/BehaviorMonitor.vue';
 import NetworkMonitor from './components/NetworkMonitor.vue';
+
+// shadcn components
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// lucide icons
+import { RefreshCw, BarChart3, Calendar, AlertTriangle, Eye, Users, Clock } from 'lucide-vue-next';
 
 // 日期范围
 const dateRange = ref<[Date, Date] | null>(null);
@@ -342,7 +359,7 @@ const updateTrendChart = (data: any[]) => {
         opacity: 0.3,
       },
       itemStyle: {
-        color: '#409eff',
+        color: '#3b82f6',
       },
     }],
     grid: {
@@ -412,7 +429,7 @@ const updateCharts = () => {
         data: values,
         itemStyle: {
           color: (params: any) => {
-            const colors = ['#f56c6c', '#e6a23c', '#67c23a', '#409eff', '#909399'];
+            const colors = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#6b7280'];
             return colors[params.dataIndex % colors.length];
           },
         },
@@ -450,11 +467,11 @@ const updatePerformanceChart = () => {
     series: [{
       type: 'bar',
       data: [
-        { value: metrics.avgFCP || 0, itemStyle: { color: '#67c23a' } },
-        { value: metrics.avgLCP || 0, itemStyle: { color: '#e6a23c' } },
-        { value: metrics.avgTTFB || 0, itemStyle: { color: '#409eff' } },
-        { value: metrics.avgFID || 0, itemStyle: { color: '#f56c6c' } },
-        { value: metrics.avgLoadComplete || 0, itemStyle: { color: '#909399' } },
+        { value: metrics.avgFCP || 0, itemStyle: { color: '#22c55e' } },
+        { value: metrics.avgLCP || 0, itemStyle: { color: '#f59e0b' } },
+        { value: metrics.avgTTFB || 0, itemStyle: { color: '#3b82f6' } },
+        { value: metrics.avgFID || 0, itemStyle: { color: '#ef4444' } },
+        { value: metrics.avgLoadComplete || 0, itemStyle: { color: '#6b7280' } },
       ],
       label: {
         show: true,
@@ -502,14 +519,14 @@ const handleDateChange = () => {
 };
 
 // Tab切换处理
-const handleTabChange = (tab: string) => {
+watch(activeTab, (tab) => {
   if (tab === 'overview') {
     nextTick(() => {
       initCharts();
       refreshData();
     });
   }
-};
+});
 
 // 监听窗口大小变化
 const handleResize = () => {
@@ -526,101 +543,3 @@ onMounted(() => {
   window.addEventListener('resize', handleResize);
 });
 </script>
-
-<style scoped lang="less">
-.web-monitor {
-  padding: 20px;
-
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-
-    h2 {
-      margin: 0;
-      font-size: 20px;
-      color: #303133;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-    }
-  }
-
-  .stat-cards {
-    margin-bottom: 20px;
-
-    .stat-card {
-      .stat-content {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-
-        .stat-icon {
-          width: 48px;
-          height: 48px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-
-          &.total {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-          }
-          &.today {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
-          }
-          &.error {
-            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
-            color: white;
-          }
-          &.pv {
-            background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
-            color: white;
-          }
-          &.uv {
-            background: linear-gradient(135deg, #cc2b5e 0%, #753a88 100%);
-            color: white;
-          }
-          &.perf {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-          }
-        }
-
-        .stat-info {
-          .stat-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #303133;
-          }
-          .stat-label {
-            font-size: 12px;
-            color: #909399;
-            margin-top: 4px;
-          }
-        }
-      }
-    }
-  }
-
-  .sub-nav-card {
-    .tab-content {
-      padding: 16px 0;
-    }
-
-    .chart-card {
-      height: 350px;
-
-      .chart-container {
-        height: 280px;
-      }
-    }
-  }
-}
-</style>

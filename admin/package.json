@@ -31,6 +31,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^22.7.5",
     "@vitejs/plugin-vue": "^5.1.4",
