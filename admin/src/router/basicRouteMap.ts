@@ -82,44 +82,29 @@ const routes:RouteRecordRaw[]=[
             },
             // Web监控模块
             {
-                path:"/webmonitor/overview",
+                path:"/web-monitor/overview",
                 name:"webmonitor-overview",
                 component:()=>import("@/views/webMonitor/Overview.vue"),
-                meta:{
-                    title:"监控概览"
-                }
             },
             {
-                path:"/webmonitor/performance",
+                path:"/web-monitor/performance",
                 name:"webmonitor-performance",
                 component:()=>import("@/views/webMonitor/Performance.vue"),
-                meta:{
-                    title:"性能监控"
-                }
             },
             {
-                path:"/webmonitor/errors",
+                path:"/web-monitor/errors",
                 name:"webmonitor-errors",
                 component:()=>import("@/views/webMonitor/Errors.vue"),
-                meta:{
-                    title:"错误监控"
-                }
             },
             {
-                path:"/webmonitor/behavior",
+                path:"/web-monitor/behavior",
                 name:"webmonitor-behavior",
                 component:()=>import("@/views/webMonitor/Behavior.vue"),
-                meta:{
-                    title:"行为分析"
-                }
             },
             {
-                path:"/webmonitor/network",
+                path:"/web-monitor/network",
                 name:"webmonitor-network",
                 component:()=>import("@/views/webMonitor/Network.vue"),
-                meta:{
-                    title:"网络请求"
-                }
             },
         ]
     },

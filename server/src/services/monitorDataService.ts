@@ -1,6 +1,13 @@
-import { MonitorData } from '../models/index.js';
+import { MonitorData, User } from '../models/index.js';
 import { Op, fn, col, literal } from 'sequelize';
 import sequelize from '../config/db.js';
+
+// 设置 MonitorData 与 User 的关联关系
+MonitorData.belongsTo(User, {
+  foreignKey: 'user_id',
+  targetKey: 'id',
+  as: 'user'
+});
 
 /**
  * 监控数据类别映射
@@ -122,10 +129,24 @@ export async function getMonitorDataList(params: {
     order: [['created_at', 'DESC']],
     limit: pageSize,
     offset: (page - 1) * pageSize,
+    include: [{
+      model: User,
+      as: 'user',
+      attributes: ['id', 'name', 'account'],
+      required: false
+    }]
+  });
+
+  // 处理返回数据，添加 user_name 字段
+  const list = rows.map((row: any) => {
+    const item = row.toJSON();
+    item.user_name = item.user?.name || null;
+    delete item.user;
+    return item;
   });
 
   return {
-    list: rows,
+    list,
     total: count,
     page,
     pageSize,

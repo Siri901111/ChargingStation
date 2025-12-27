@@ -86,32 +86,32 @@ const menulist = [
     },
     {
       name: "前端监控",
-      url: "/webmonitor",
+      url: "/web-monitor",
       icon: "Monitor",
       children: [
         {
           name: "监控概览",
-          url: "/webmonitor/overview",
+          url: "/web-monitor/overview",
           icon: "DataAnalysis"
         },
         {
           name: "性能监控",
-          url: "/webmonitor/performance",
+          url: "/web-monitor/performance",
           icon: "Odometer"
         },
         {
           name: "错误监控",
-          url: "/webmonitor/errors",
+          url: "/web-monitor/errors",
           icon: "WarningFilled"
         },
         {
           name: "行为分析",
-          url: "/webmonitor/behavior",
+          url: "/web-monitor/behavior",
           icon: "Pointer"
         },
         {
           name: "网络请求",
-          url: "/webmonitor/network",
+          url: "/web-monitor/network",
           icon: "Connection"
         }
       ]

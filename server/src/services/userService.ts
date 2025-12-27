@@ -38,7 +38,7 @@ export interface UserListParams {
 
 // 根据权限获取菜单和按钮权限
 const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnAuth: string[] } => {
-  // 管理员权限 - 全部菜单和全部按钮权限
+  // 管理员权限 - 全部菜单和全部按钮权限 (updated)
   if (pageAuthority === 'admin') {
     return {
       menulist: [
@@ -119,7 +119,34 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
         {
           name: '服务监控',
           url: '/web-monitor',
-          icon: 'Monitor'
+          icon: 'Files',
+          children: [
+            {
+              name: '监控总览',
+              url: '/web-monitor/overview',
+              icon: 'DocumentCopy',
+            },
+            {
+              name: '行为监控',
+              url: '/web-monitor/behavior',
+              icon: 'DocumentCopy',
+            },
+            {
+              name: '网络监控',
+              url: '/web-monitor/network',
+              icon: 'DocumentCopy',
+            },
+            {
+              name: '错误监控',
+              url: '/web-monitor/errors',
+              icon: 'DocumentCopy',
+            },
+            {
+              name: '性能指标监控',
+              url: '/web-monitor/performance',
+              icon: 'DocumentCopy',
+            },
+          ]
         },
         {
           name: '个人中心',

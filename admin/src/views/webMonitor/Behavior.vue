@@ -173,7 +173,7 @@
         </el-table-column>
         <el-table-column prop="user_id" label="用户" width="120">
           <template #default="{ row }">
-            <el-tag v-if="row.user_id" size="small" type="info">{{ row.user_id.slice(0, 8) }}...</el-tag>
+            <el-tag v-if="row.user_name" size="small" type="info">{{ row.user_name }}</el-tag>
             <span v-else class="text-gray">匿名</span>
           </template>
         </el-table-column>

@@ -7,7 +7,11 @@
       "Bash(npm link:*)",
       "Bash(npx tailwindcss:*)",
       "Bash(node ./node_modules/tailwindcss/lib/cli.js:*)",
-      "Bash(dir node_modulestailwindcss)"
+      "Bash(dir node_modulestailwindcss)",
+      "Bash(cat:*)",
+      "Bash(if exist node_modules.cache rmdir /s /q node_modules.cache)",
+      "Bash(if exist node_modules.tsx-cache rmdir /s /q node_modules.tsx-cache)",
+      "Bash(findstr:*)"
     ]
   }
 }

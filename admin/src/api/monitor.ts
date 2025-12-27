@@ -8,6 +8,7 @@ export interface MonitorDataItem {
   report_id: string;
   app_id: string;
   user_id?: string;
+  user_name?: string;  // 用户名称（关联查询）
   type: string;
   category: string;
   timestamp: number;

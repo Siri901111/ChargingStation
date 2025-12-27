@@ -15,6 +15,9 @@ export const useUserStore = defineStore("user", {
     actions: {
         async login(data: LoginParams) {
             try {
+                // 登录前清除旧数据，确保获取最新菜单
+                sessionStorage.clear();
+
                 const { data: { token, user: { username, roles }, menulist } } = await loginApi(data);
                 this.token = token
                 this.roles = roles
