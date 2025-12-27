@@ -12,6 +12,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import permission from './directives/permission'
 // import * as Sentry from "@sentry/vue";
 import { initMonitor, setMonitorUserId } from './monitor'
+import i18n from './locales'
 
 const app = createApp(App);
 
@@ -46,6 +47,7 @@ const pinia=createPinia()
 app.directive("permission",permission)
 app.use(ElementPlus)
 app.use(pinia)
+app.use(i18n)
 app.use(router);
 app.mount('#app')
 

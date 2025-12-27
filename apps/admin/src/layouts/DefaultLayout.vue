@@ -1,14 +1,14 @@
 <template>
-    <el-container :class="{ 'layout-dark': isDark }">
-        <el-aside width="200px">
-            <Menu></Menu>
+    <el-container class="layout-container">
+        <el-aside width="200px" class="aside-container">
+            <Menu />
         </el-aside>
-        <el-container>
-            <el-header>
-                <TopHeader/>
+        <el-container class="main-wrapper">
+            <el-header class="header-container">
+                <TopHeader />
             </el-header>
-            <el-main>
-                <TabsLayout/>
+            <el-main class="main-container">
+                <TabsLayout />
             </el-main>
         </el-container>
     </el-container>
@@ -18,43 +18,38 @@
 import Menu from "@/components/navMenu/Menu.vue"
 import TopHeader from "@/components/TopHeader/TopHeader.vue"
 import TabsLayout from "@/layouts/TabsLayout.vue"
-import { useThemeStore } from "@/store/theme"
-import { storeToRefs } from "pinia"
-
-const themeStore = useThemeStore()
-const { isDark } = storeToRefs(themeStore)
 </script>
 
 <style lang="less" scoped>
-.el-container {
-    transition: all 0.3s;
-
-    &.layout-dark {
-        .el-aside {
-            background-color: #1f1f1f;
-            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .el-main {
-            background-color: #141414;
-        }
-    }
+.layout-container {
+    min-height: 100vh;
 }
 
-.el-aside {
+.aside-container {
     height: 100vh;
-    background-color: white;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s;
+    background-color: var(--bg-container);
+    border-right: 1px solid var(--border-color-light);
+    transition: all 0.3s ease;
+    overflow: hidden;
 }
 
-.el-header {
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.header-container {
     padding: 0 !important;
+    height: 56px !important;
+    line-height: 56px;
 }
 
-.el-main {
-    height: calc(100vh - 60px);
+.main-container {
+    flex: 1;
+    background-color: var(--bg-base);
     overflow: auto;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
+    padding: 0;
 }
 </style>

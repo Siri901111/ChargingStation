@@ -1,77 +1,75 @@
 <template>
-    <el-tabs
-        v-model="activeTabName"
-        class="tabs-container"
-        :class="{ 'tabs-dark': isDark }"
-        @tab-click="handleClick"
-        type="card"
-        closable
-        @tab-remove="remove"
-    >
-        <el-tab-pane
-            v-for="item in tabs"
-            :key="item.url"
-            :label="item.name"
-            :name="item.name"
+    <div class="tabs-wrapper">
+        <el-tabs
+            v-model="activeTabName"
+            type="card"
+            closable
+            class="tabs-nav"
+            @tab-click="handleClick"
+            @tab-remove="remove"
         >
-            <template #label>
-                <span class="custom-tabs-label">
-                    <el-icon>
-                        <component :is="item.icon"></component>
-                    </el-icon>
-                    <span>&nbsp;{{ item.name }}</span>
-                </span>
-            </template>
-
-        </el-tab-pane>
-    </el-tabs>
-    <RouterView v-slot="{Component}">
-        <KeepAlive>
-            <component :is="Component" :key="$route.name" v-if="$route.meta.keepAlive"></component>
-        </KeepAlive>
-        <component :is="Component" :key="$route.name" v-if="!$route.meta.keepAlive"></component>
-    </RouterView>
-
-    <!-- <RouterView/> -->
+            <el-tab-pane
+                v-for="item in tabs"
+                :key="item.url"
+                :label="item.name"
+                :name="item.name"
+            >
+                <template #label>
+                    <span class="custom-tabs-label">
+                        <el-icon>
+                            <component :is="item.icon" />
+                        </el-icon>
+                        <span>&nbsp;{{ item.name }}</span>
+                    </span>
+                </template>
+            </el-tab-pane>
+        </el-tabs>
+    </div>
+    <div class="content-wrapper">
+        <RouterView v-slot="{ Component }">
+            <KeepAlive>
+                <component :is="Component" :key="$route.name" v-if="$route.meta.keepAlive" />
+            </KeepAlive>
+            <component :is="Component" :key="$route.name" v-if="!$route.meta.keepAlive" />
+        </RouterView>
+    </div>
 </template>
+
 <script setup lang="ts">
-import {useTabsStore} from "@/store/tabs.ts"
+import { useTabsStore } from "@/store/tabs"
 import { useUserStore } from "@/store/auth"
-import { useThemeStore } from "@/store/theme"
 import { storeToRefs } from 'pinia'
-import { useRouter,useRoute } from "vue-router"
+import { useRouter, useRoute } from "vue-router"
 import { computed, watch } from "vue"
 
-const tabsStore=useTabsStore()
-const userStore=useUserStore()
-const themeStore=useThemeStore()
-const {menu}=storeToRefs(userStore)
-const { isDark } = storeToRefs(themeStore)
-const router=useRouter()
-const route=useRoute()
+const tabsStore = useTabsStore()
+const userStore = useUserStore()
+const { menu } = storeToRefs(userStore)
+const router = useRouter()
+const route = useRoute()
 
-const {tabs,currentTab}=storeToRefs(tabsStore)
-const {setCurrentTab,addTab,removeTab}=tabsStore
+const { tabs, currentTab } = storeToRefs(tabsStore)
+const { setCurrentTab, addTab, removeTab } = tabsStore
 
 // 计算属性用于 v-model 绑定
 const activeTabName = computed({
     get: () => currentTab.value.name,
     set: (val: string) => {
-        const tab = tabs.value.find(t => t.name === val);
+        const tab = tabs.value.find(t => t.name === val)
         if (tab) {
-            setCurrentTab(tab.name, tab.url);
+            setCurrentTab(tab.name, tab.url)
         }
     }
-});
+})
 
-function findObjectByUrl(arr:any[],url:string){
-    for(const item of arr){
-        if(item.url===url){
+function findObjectByUrl(arr: any[], url: string) {
+    for (const item of arr) {
+        if (item.url === url) {
             return item
         }
-        if(item.children){
-            const found:any=findObjectByUrl(item.children,url);
-            if(found){
+        if (item.children) {
+            const found: any = findObjectByUrl(item.children, url)
+            if (found) {
                 return found
             }
         }
@@ -81,50 +79,68 @@ function findObjectByUrl(arr:any[],url:string){
 
 // 在路由变化时添加tab
 watch(() => route.path, (newPath) => {
-    const menuItem = findObjectByUrl(menu.value, newPath);
-    if(menuItem && menuItem.name && menuItem.url && menuItem.icon){
-        addTab(menuItem.name, menuItem.url, menuItem.icon);
-        setCurrentTab(menuItem.name, menuItem.url);
+    const menuItem = findObjectByUrl(menu.value, newPath)
+    if (menuItem && menuItem.name && menuItem.url && menuItem.icon) {
+        addTab(menuItem.name, menuItem.url, menuItem.icon)
+        setCurrentTab(menuItem.name, menuItem.url)
     }
-}, { immediate: true });
+}, { immediate: true })
 
 const handleClick = (tab: any) => {
-    const index = tabs.value.findIndex(t => t.name === tab.paneName);
+    const index = tabs.value.findIndex(t => t.name === tab.paneName)
     if (index !== -1) {
         router.push(tabs.value[index].url)
-        setCurrentTab(tabs.value[index].name, tabs.value[index].url);//设置当前高亮
+        setCurrentTab(tabs.value[index].name, tabs.value[index].url)
     }
 }
+
 const remove = (TabPaneName: string) => {
-    removeTab(TabPaneName);
+    removeTab(TabPaneName)
     router.push(currentTab.value.url)
 }
 </script>
+
 <style lang="less" scoped>
-.tabs-container {
-    :deep(.is-active) {
-        background-color: var(--el-color-primary) !important;
-        color: #fff !important;
+.tabs-wrapper {
+    background-color: var(--bg-container);
+    border-bottom: 1px solid var(--border-color-light);
+    transition: all 0.3s ease;
+}
+
+.tabs-nav {
+    :deep(.el-tabs__header) {
+        margin: 0;
+        border-bottom: none;
+        background-color: transparent;
     }
 
-    &.tabs-dark {
-        :deep(.el-tabs__header) {
-            background-color: #1f1f1f;
-            border-bottom-color: #303030;
+    :deep(.el-tabs__nav) {
+        border: none;
+    }
+
+    :deep(.el-tabs__item) {
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color-light);
+        border-bottom: none;
+        background-color: transparent;
+        transition: all 0.3s ease;
+        margin-right: 4px;
+
+        &:hover {
+            color: var(--text-primary);
         }
 
-        :deep(.el-tabs__item) {
-            color: #ffffffa6;
-            border-color: #303030;
-
-            &:hover {
-                color: #fff;
-            }
-        }
-
-        :deep(.el-tabs__nav) {
-            border-color: #303030;
+        &.is-active {
+            color: #fff;
+            background-color: var(--el-color-primary);
+            border-color: var(--el-color-primary);
         }
     }
+}
+
+.content-wrapper {
+    padding: 16px;
+    height: calc(100vh - 56px - 41px - 32px);
+    overflow: auto;
 }
 </style>

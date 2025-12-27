@@ -12,10 +12,10 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@amap/amap-jsapi-loader": "^1.0.1",
+    "@charging/monitor-sdk": "workspace:*",
     "@charging/shared-types": "workspace:*",
     "@charging/shared-utils": "workspace:*",
-    "@charging/monitor-sdk": "workspace:*",
-    "@amap/amap-jsapi-loader": "^1.0.1",
     "@element-plus/icons-vue": "^2.3.1",
     "@tinymce/tinymce-vue": "^5.1.1",
     "@vueuse/core": "^14.1.0",
@@ -31,12 +31,13 @@
     "radix-vue": "^1.9.17",
     "tailwind-merge": "^3.4.0",
     "vue": "^3.5.10",
+    "vue-i18n": "9",
     "vue-router": "^4.4.5",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@charging/tsconfig": "workspace:*",
     "@charging/eslint-config": "workspace:*",
+    "@charging/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^22.7.5",
