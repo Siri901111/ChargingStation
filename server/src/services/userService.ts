@@ -118,7 +118,7 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
         },
         {
           name: '服务监控',
-          url: '/test',
+          url: '/web-monitor',
           icon: 'Monitor'
         },
         {

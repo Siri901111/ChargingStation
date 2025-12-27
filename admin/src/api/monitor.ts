@@ -1,6 +1,6 @@
 import http from '@/utils/http';
 
-const BASE_URL = '/monitor';
+const BASE_URL = '/api/monitor';
 
 // 数据类型
 export interface MonitorDataItem {

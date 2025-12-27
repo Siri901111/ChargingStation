@@ -10,7 +10,14 @@ import { initMockData } from './utils/initMockData.js';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// CORS配置 - 支持credentials模式
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'token'],
+}));
 app.use(express.json());
 
 // 处理末尾斜杠的中间件（可选，但建议保留）
