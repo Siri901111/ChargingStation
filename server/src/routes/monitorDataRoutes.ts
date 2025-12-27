@@ -39,6 +39,12 @@ router.get('/error-stats', monitorDataController.getErrorStats);
 // 获取用户行为统计
 router.get('/behavior-stats', monitorDataController.getBehaviorStats);
 
+// 用户追踪 - 根据用户名获取用户所有行为数据
+router.get('/user-tracking', monitorDataController.getUserTracking);
+
+// 获取活跃用户列表
+router.get('/active-users', monitorDataController.getActiveUsers);
+
 // ==================== 管理接口 ====================
 // 删除监控数据
 router.delete('/delete', monitorDataController.deleteData);

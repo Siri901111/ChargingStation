@@ -386,3 +386,66 @@ export async function cleanOldData(req: Request, res: Response) {
     });
   }
 }
+
+/**
+ * 根据用户名追踪用户行为
+ */
+export async function getUserTracking(req: Request, res: Response) {
+  try {
+    const { userName, page, pageSize, startTime, endTime, category } = req.query;
+
+    if (!userName) {
+      return res.status(400).json({
+        code: 400,
+        message: '用户名为必填参数'
+      });
+    }
+
+    const result = await monitorDataService.getUserTrackingData({
+      userName: userName as string,
+      page: page ? parseInt(page as string) : 1,
+      pageSize: pageSize ? parseInt(pageSize as string) : 20,
+      startTime: startTime ? parseInt(startTime as string) : undefined,
+      endTime: endTime ? parseInt(endTime as string) : undefined,
+      category: category as string,
+    });
+
+    res.json({
+      code: 200,
+      data: result
+    });
+  } catch (error: any) {
+    console.error('获取用户追踪数据失败:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取数据失败',
+      error: error.message
+    });
+  }
+}
+
+/**
+ * 获取活跃用户列表
+ */
+export async function getActiveUsers(req: Request, res: Response) {
+  try {
+    const { startTime, endTime } = req.query;
+
+    const result = await monitorDataService.getActiveUsers({
+      startTime: startTime ? parseInt(startTime as string) : undefined,
+      endTime: endTime ? parseInt(endTime as string) : undefined,
+    });
+
+    res.json({
+      code: 200,
+      data: result
+    });
+  } catch (error: any) {
+    console.error('获取活跃用户列表失败:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取数据失败',
+      error: error.message
+    });
+  }
+}

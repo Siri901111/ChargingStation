@@ -11,7 +11,7 @@ import { createPinia } from 'pinia'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import permission from './directives/permission'
 // import * as Sentry from "@sentry/vue";
-import { initMonitor } from './monitor'
+import { initMonitor, setMonitorUserId } from './monitor'
 
 const app = createApp(App);
 
@@ -56,5 +56,11 @@ initMonitor({
   appId: 'charging-station-admin',
   debug: import.meta.env.DEV, // 开发环境开启调试日志
 })
+
+// 页面刷新时恢复用户ID
+const savedUserId = sessionStorage.getItem("userId");
+if (savedUserId) {
+  setMonitorUserId(savedUserId);
+}
 
 

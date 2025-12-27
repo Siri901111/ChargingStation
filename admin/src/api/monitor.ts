@@ -138,6 +138,53 @@ export function getBehaviorStats(params?: { startTime?: number; endTime?: number
   return http.get<BehaviorStats>(`${BASE_URL}/behavior-stats`, { params });
 }
 
+// 用户追踪相关类型
+export interface UserTrackingStats {
+  totalBehaviors: number;
+  firstVisit: number | null;
+  lastVisit: number | null;
+  behaviorTypes: Array<{ type: string; count: number }>;
+  topPages: Array<{ page: string; count: number }>;
+}
+
+export interface UserTrackingResult {
+  list: MonitorDataItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  userInfo: {
+    id: number;
+    name: string;
+    account: string;
+  } | null;
+  stats: UserTrackingStats | null;
+}
+
+export interface ActiveUser {
+  userId: number;
+  userName: string;
+  account: string;
+  behaviorCount: number;
+}
+
+// 根据用户名追踪用户行为
+export function getUserTracking(params: {
+  userName: string;
+  page?: number;
+  pageSize?: number;
+  startTime?: number;
+  endTime?: number;
+  category?: string;
+}) {
+  return http.get<UserTrackingResult>(`${BASE_URL}/user-tracking`, { params });
+}
+
+// 获取活跃用户列表
+export function getActiveUsers(params?: { startTime?: number; endTime?: number }) {
+  return http.get<ActiveUser[]>(`${BASE_URL}/active-users`, { params });
+}
+
 // 删除监控数据
 export function deleteMonitorData(ids: number[]) {
   return http.delete(`${BASE_URL}/delete`, { data: { ids } });

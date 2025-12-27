@@ -586,3 +586,196 @@ export async function cleanOldData(daysToKeep: number = 30) {
     }
   });
 }
+
+/**
+ * 根据用户名追踪用户行为
+ */
+export async function getUserTrackingData(params: {
+  userName: string;
+  page?: number;
+  pageSize?: number;
+  startTime?: number;
+  endTime?: number;
+  category?: string;
+}) {
+  const { userName, page = 1, pageSize = 20, startTime, endTime, category } = params;
+
+  // 先根据用户名查找用户ID
+  const user = await User.findOne({
+    where: {
+      name: userName
+    }
+  });
+
+  if (!user) {
+    return {
+      list: [],
+      total: 0,
+      page,
+      pageSize,
+      totalPages: 0,
+      userInfo: null,
+      stats: null
+    };
+  }
+
+  const userId = (user as any).id;
+  // user_id 在 MonitorData 表中是字符串类型，需要转换
+  const userIdStr = String(userId);
+
+  const where: any = {
+    user_id: userIdStr
+  };
+
+  if (startTime && endTime) {
+    where.timestamp = {
+      [Op.between]: [startTime, endTime]
+    };
+  } else if (startTime) {
+    where.timestamp = { [Op.gte]: startTime };
+  } else if (endTime) {
+    where.timestamp = { [Op.lte]: endTime };
+  }
+
+  if (category) {
+    where.category = category;
+  }
+
+  // 获取用户行为列表
+  const { count, rows } = await MonitorData.findAndCountAll({
+    where,
+    order: [['timestamp', 'DESC']],
+    limit: pageSize,
+    offset: (page - 1) * pageSize
+  });
+
+  const list = rows.map((row: any) => {
+    const item = row.toJSON();
+    item.user_name = (user as any).name;
+    return item;
+  });
+
+  // 获取用户行为统计
+  const behaviorStats = await MonitorData.findAll({
+    where: { user_id: userIdStr },
+    attributes: [
+      'type',
+      [fn('COUNT', col('id')), 'count']
+    ],
+    group: ['type'],
+    raw: true
+  }) as any[];
+
+  // 获取用户访问的页面统计
+  const pageStats = await MonitorData.findAll({
+    where: { user_id: userIdStr, type: 'page_view' },
+    attributes: [
+      'page_url',
+      [fn('COUNT', col('id')), 'count']
+    ],
+    group: ['page_url'],
+    order: [[literal('count'), 'DESC']],
+    limit: 10,
+    raw: true
+  }) as any[];
+
+  // 获取用户首次访问和最后访问时间
+  const timeRange = await MonitorData.findOne({
+    where: { user_id: userIdStr },
+    attributes: [
+      [fn('MIN', col('timestamp')), 'firstVisit'],
+      [fn('MAX', col('timestamp')), 'lastVisit']
+    ],
+    raw: true
+  }) as any;
+
+  // 总行为数
+  const totalBehaviors = await MonitorData.count({ where: { user_id: userIdStr } });
+
+  return {
+    list,
+    total: count,
+    page,
+    pageSize,
+    totalPages: Math.ceil(count / pageSize),
+    userInfo: {
+      id: userId,
+      name: (user as any).name,
+      account: (user as any).account
+    },
+    stats: {
+      totalBehaviors,
+      firstVisit: timeRange?.firstVisit || null,
+      lastVisit: timeRange?.lastVisit || null,
+      behaviorTypes: behaviorStats.map((item: any) => ({
+        type: item.type,
+        count: parseInt(item.count)
+      })),
+      topPages: pageStats.map((item: any) => ({
+        page: item.page_url,
+        count: parseInt(item.count)
+      }))
+    }
+  };
+}
+
+/**
+ * 获取所有有行为记录的用户列表
+ */
+export async function getActiveUsers(params: {
+  startTime?: number;
+  endTime?: number;
+}) {
+  const { startTime, endTime } = params;
+
+  const where: any = {};
+
+  if (startTime && endTime) {
+    where.timestamp = {
+      [Op.between]: [startTime, endTime]
+    };
+  }
+
+  // 获取有监控数据的用户ID列表
+  const userIds = await MonitorData.findAll({
+    where: {
+      ...where,
+      user_id: {
+        [Op.ne]: null
+      }
+    },
+    attributes: [
+      'user_id',
+      [fn('COUNT', col('id')), 'behaviorCount']
+    ],
+    group: ['user_id'],
+    order: [[literal('behaviorCount'), 'DESC']],
+    raw: true
+  }) as any[];
+
+  if (userIds.length === 0) {
+    return [];
+  }
+
+  // 获取用户信息
+  const users = await User.findAll({
+    where: {
+      id: {
+        [Op.in]: userIds.map((item: any) => item.user_id)
+      }
+    },
+    attributes: ['id', 'name', 'account'],
+    raw: true
+  }) as any[];
+
+  // 合并用户信息和行为统计
+  return userIds.map((item: any) => {
+    const user = users.find((u: any) => u.id === item.user_id);
+    return {
+      userId: item.user_id,
+      userName: user?.name || '未知用户',
+      account: user?.account || '',
+      behaviorCount: parseInt(item.behaviorCount)
+    };
+  });
+}

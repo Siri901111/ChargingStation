@@ -12,6 +12,7 @@ export interface LoginParams {
 export interface LoginResult {
   token: string;
   user: {
+    id: number;
     username: string;
     roles: string[];
   };
@@ -129,22 +130,22 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
             {
               name: '行为监控',
               url: '/web-monitor/behavior',
-              icon: 'DocumentCopy',
+              icon: 'Flag',
             },
             {
               name: '网络监控',
               url: '/web-monitor/network',
-              icon: 'DocumentCopy',
+              icon: 'MagicStick',
             },
             {
               name: '错误监控',
               url: '/web-monitor/errors',
-              icon: 'DocumentCopy',
+              icon: 'CloseBold',
             },
             {
               name: '性能指标监控',
               url: '/web-monitor/performance',
-              icon: 'DocumentCopy',
+              icon: 'ChromeFilled',
             },
           ]
         },
@@ -327,6 +328,7 @@ export async function loginService(params: LoginParams): Promise<LoginResult> {
   return {
     token,
     user: {
+      id: (user as any).id,
       username: (user as any).name || (user as any).account,
       roles: roles
     },

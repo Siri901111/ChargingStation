@@ -51,7 +51,7 @@
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-row :gutter="20">
-        <el-col :span="8">
+        <el-col :span="6">
           <el-date-picker
             v-model="dateRange"
             type="datetimerange"
@@ -72,17 +72,111 @@
             <el-option label="自定义事件" value="custom_event" />
           </el-select>
         </el-col>
-        <el-col :span="4">
+        <el-col :span="5">
+          <el-input
+            v-model="filterParams.userName"
+            placeholder="输入用户名搜索追踪"
+            clearable
+            @keyup.enter="handleUserTracking"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+        </el-col>
+        <el-col :span="6">
           <el-button type="primary" @click="handleSearch" :loading="loading">
             <el-icon><Search /></el-icon>查询
+          </el-button>
+          <el-button type="success" @click="handleUserTracking" :loading="trackingLoading" :disabled="!filterParams.userName">
+            <el-icon><Aim /></el-icon>追踪用户
           </el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-col>
       </el-row>
     </el-card>
 
-    <!-- 图表区域 -->
-    <el-row :gutter="20" class="chart-section">
+    <!-- 用户追踪结果面板 -->
+    <el-card v-if="isTrackingMode && trackingResult" class="tracking-card">
+      <template #header>
+        <div class="tracking-header">
+          <span class="tracking-title">
+            <el-icon><Aim /></el-icon>
+            用户追踪: {{ trackingResult.userInfo?.name || filterParams.userName }}
+          </span>
+          <el-button type="danger" size="small" @click="exitTrackingMode">
+            <el-icon><Close /></el-icon>退出追踪
+          </el-button>
+        </div>
+      </template>
+
+      <div v-if="trackingResult.userInfo" class="tracking-content">
+        <!-- 用户信息 -->
+        <el-row :gutter="20">
+          <el-col :span="6">
+            <div class="tracking-stat-card">
+              <div class="stat-label">用户名</div>
+              <div class="stat-value user-name">{{ trackingResult.userInfo.name }}</div>
+            </div>
+          </el-col>
+          <el-col :span="6">
+            <div class="tracking-stat-card">
+              <div class="stat-label">总行为数</div>
+              <div class="stat-value">{{ trackingResult.stats?.totalBehaviors || 0 }}</div>
+            </div>
+          </el-col>
+          <el-col :span="6">
+            <div class="tracking-stat-card">
+              <div class="stat-label">首次访问</div>
+              <div class="stat-value time">{{ formatTime(trackingResult.stats?.firstVisit) }}</div>
+            </div>
+          </el-col>
+          <el-col :span="6">
+            <div class="tracking-stat-card">
+              <div class="stat-label">最后访问</div>
+              <div class="stat-value time">{{ formatTime(trackingResult.stats?.lastVisit) }}</div>
+            </div>
+          </el-col>
+        </el-row>
+
+        <!-- 行为类型分布 -->
+        <el-row :gutter="20" class="tracking-charts">
+          <el-col :span="12">
+            <div class="chart-section">
+              <div class="section-title">行为类型分布</div>
+              <div class="behavior-type-list">
+                <div v-for="item in trackingResult.stats?.behaviorTypes || []" :key="item.type" class="type-item">
+                  <el-tag :type="getBehaviorTagType(item.type)" size="small">{{ getTypeName(item.type) }}</el-tag>
+                  <el-progress
+                    :percentage="getPercentage(item.count, trackingResult.stats?.totalBehaviors || 1)"
+                    :color="getBehaviorColor(item.type)"
+                    :stroke-width="12"
+                  />
+                  <span class="count">{{ item.count }}</span>
+                </div>
+              </div>
+            </div>
+          </el-col>
+          <el-col :span="12">
+            <div class="chart-section">
+              <div class="section-title">常访问页面 Top5</div>
+              <div class="top-pages-list">
+                <div v-for="(item, index) in (trackingResult.stats?.topPages || []).slice(0, 5)" :key="item.page" class="page-item">
+                  <span class="rank" :class="{ top3: index < 3 }">{{ index + 1 }}</span>
+                  <span class="page-name">{{ getPageName(item.page) }}</span>
+                  <span class="count">{{ item.count }}次</span>
+                </div>
+                <el-empty v-if="!trackingResult.stats?.topPages?.length" description="暂无访问记录" :image-size="60" />
+              </div>
+            </div>
+          </el-col>
+        </el-row>
+      </div>
+      <el-empty v-else description="未找到该用户的行为记录" :image-size="100" />
+    </el-card>
+
+    <!-- 图表区域（非追踪模式显示） -->
+    <el-row v-if="!isTrackingMode" :gutter="20" class="chart-section">
       <el-col :span="12">
         <el-card>
           <template #header><span>访问趋势 (PV/UV)</span></template>
@@ -97,8 +191,8 @@
       </el-col>
     </el-row>
 
-    <!-- 行为类型分布 -->
-    <el-row :gutter="20" class="chart-section">
+    <!-- 行为类型分布（非追踪模式显示） -->
+    <el-row v-if="!isTrackingMode" :gutter="20" class="chart-section">
       <el-col :span="8">
         <el-card>
           <template #header><span>行为类型分布</span></template>
@@ -131,8 +225,10 @@
 
     <!-- 行为数据列表 -->
     <el-card class="data-card">
-      <template #header><span>行为数据详情</span></template>
-      <el-table :data="tableData" v-loading="loading" stripe>
+      <template #header>
+        <span>{{ isTrackingMode ? `${trackingResult?.userInfo?.name || '用户'} 的行为数据详情` : '行为数据详情' }}</span>
+      </template>
+      <el-table :data="tableData" v-loading="loading || trackingLoading" stripe>
         <el-table-column type="expand">
           <template #default="{ row }">
             <div class="expand-content">
@@ -173,7 +269,15 @@
         </el-table-column>
         <el-table-column prop="user_id" label="用户" width="120">
           <template #default="{ row }">
-            <el-tag v-if="row.user_name" size="small" type="info">{{ row.user_name }}</el-tag>
+            <el-tag
+              v-if="row.user_name"
+              size="small"
+              type="info"
+              class="clickable-user"
+              @click="handleTrackUser(row.user_name)"
+            >
+              {{ row.user_name }}
+            </el-tag>
             <span v-else class="text-gray">匿名</span>
           </template>
         </el-table-column>
@@ -200,15 +304,18 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount, markRaw } from 'vue'
 import * as echarts from 'echarts'
-import { getBehaviorList, getBehaviorStats, getTrend, type MonitorDataItem, type BehaviorStats } from '@/api/monitor'
-import { View, User, Pointer, Switch, Position, Link } from '@element-plus/icons-vue'
+import { getBehaviorList, getBehaviorStats, getTrend, getUserTracking, type MonitorDataItem, type BehaviorStats, type UserTrackingResult } from '@/api/monitor'
+import { View, User, Pointer, Switch, Position, Link, Search, Aim, Close } from '@element-plus/icons-vue'
 
 const loading = ref(false)
+const trackingLoading = ref(false)
+const isTrackingMode = ref(false)
+const trackingResult = ref<UserTrackingResult | null>(null)
 const tableData = ref<MonitorDataItem[]>([])
 const behaviorPath = ref<MonitorDataItem[]>([])
 const total = ref(0)
 const pageInfo = reactive({ page: 1, pageSize: 20 })
-const filterParams = reactive({ type: '' })
+const filterParams = reactive({ type: '', userName: '' })
 
 const dateRange = ref<[Date, Date]>([new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()])
 
@@ -379,16 +486,98 @@ const getPathContent = (item: MonitorDataItem) => {
   if (item.type === 'route_change') return `${data?.from || ''} → ${data?.to || ''}`
   return item.page_title || '用户行为'
 }
-const formatTime = (timestamp: number) => new Date(timestamp).toLocaleString('zh-CN')
+const formatTime = (timestamp: number | null | undefined) => {
+  if (!timestamp) return '-'
+  return new Date(timestamp).toLocaleString('zh-CN')
+}
 
-const handleSearch = () => { pageInfo.page = 1; loadBehaviorList(); loadBehaviorStats(); loadTrendData() }
-const handleReset = () => {
-  filterParams.type = ''
-  dateRange.value = [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()]
+// 计算百分比
+const getPercentage = (count: number, total: number) => {
+  if (total === 0) return 0
+  return Math.round((count / total) * 100)
+}
+
+// 用户追踪相关方法
+const handleUserTracking = async () => {
+  if (!filterParams.userName.trim()) return
+
+  trackingLoading.value = true
+  isTrackingMode.value = true
+
+  try {
+    const params = {
+      userName: filterParams.userName.trim(),
+      page: pageInfo.page,
+      pageSize: pageInfo.pageSize,
+      ...getTimeParams()
+    }
+    const res = await getUserTracking(params)
+    if (res.code === 200 && res.data) {
+      trackingResult.value = res.data
+      tableData.value = res.data.list
+      total.value = res.data.total
+    }
+  } catch (error) {
+    console.error('用户追踪失败:', error)
+  } finally {
+    trackingLoading.value = false
+  }
+}
+
+// 退出追踪模式
+const exitTrackingMode = () => {
+  isTrackingMode.value = false
+  trackingResult.value = null
+  filterParams.userName = ''
   handleSearch()
 }
-const handleSizeChange = (size: number) => { pageInfo.pageSize = size; loadBehaviorList() }
-const handleCurrentChange = (page: number) => { pageInfo.page = page; loadBehaviorList() }
+
+// 点击用户名追踪
+const handleTrackUser = (userName: string) => {
+  filterParams.userName = userName
+  handleUserTracking()
+}
+
+const handleSearch = () => {
+  if (isTrackingMode.value && filterParams.userName) {
+    pageInfo.page = 1
+    handleUserTracking()
+  } else {
+    isTrackingMode.value = false
+    trackingResult.value = null
+    pageInfo.page = 1
+    loadBehaviorList()
+    loadBehaviorStats()
+    loadTrendData()
+  }
+}
+const handleReset = () => {
+  filterParams.type = ''
+  filterParams.userName = ''
+  isTrackingMode.value = false
+  trackingResult.value = null
+  dateRange.value = [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()]
+  pageInfo.page = 1
+  loadBehaviorList()
+  loadBehaviorStats()
+  loadTrendData()
+}
+const handleSizeChange = (size: number) => {
+  pageInfo.pageSize = size
+  if (isTrackingMode.value) {
+    handleUserTracking()
+  } else {
+    loadBehaviorList()
+  }
+}
+const handleCurrentChange = (page: number) => {
+  pageInfo.page = page
+  if (isTrackingMode.value) {
+    handleUserTracking()
+  } else {
+    loadBehaviorList()
+  }
+}
 
 const handleResize = () => { trendChart?.resize(); pageChart?.resize(); typeChart?.resize() }
 
@@ -433,6 +622,122 @@ onBeforeUnmount(() => {
   .filter-card { margin-bottom: 20px; }
   .chart-section { margin-bottom: 20px; }
 
+  // 用户追踪面板样式
+  .tracking-card {
+    margin-bottom: 20px;
+    border: 2px solid #67c23a;
+
+    .tracking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .tracking-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        color: #67c23a;
+      }
+    }
+
+    .tracking-content {
+      .tracking-stat-card {
+        background: #f5f7fa;
+        padding: 16px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 16px;
+
+        .stat-label {
+          color: #909399;
+          font-size: 12px;
+          margin-bottom: 8px;
+        }
+        .stat-value {
+          font-size: 18px;
+          font-weight: bold;
+          color: #303133;
+
+          &.user-name { color: #67c23a; }
+          &.time { font-size: 14px; }
+        }
+      }
+
+      .tracking-charts {
+        margin-top: 16px;
+
+        .chart-section {
+          background: #f9fafc;
+          padding: 16px;
+          border-radius: 8px;
+
+          .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #303133;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ebeef5;
+          }
+
+          .behavior-type-list {
+            .type-item {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin-bottom: 12px;
+
+              .el-tag { min-width: 70px; text-align: center; }
+              .el-progress { flex: 1; }
+              .count { min-width: 40px; text-align: right; color: #606266; font-weight: bold; }
+            }
+          }
+
+          .top-pages-list {
+            .page-item {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              padding: 10px 0;
+              border-bottom: 1px solid #ebeef5;
+
+              &:last-child { border-bottom: none; }
+
+              .rank {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: #909399;
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: bold;
+
+                &.top3 { background: linear-gradient(135deg, #f39c12, #e74c3c); }
+              }
+              .page-name {
+                flex: 1;
+                color: #606266;
+                font-size: 13px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+              .count {
+                color: #409eff;
+                font-weight: bold;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   .behavior-path {
     max-height: 320px;
     overflow-y: auto;
@@ -457,6 +762,15 @@ onBeforeUnmount(() => {
       pre { background: #fff; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; }
     }
     .text-gray { color: #909399; }
+    .clickable-user {
+      cursor: pointer;
+      transition: all 0.3s;
+      &:hover {
+        background: #67c23a;
+        color: #fff;
+        border-color: #67c23a;
+      }
+    }
     .pagination { margin-top: 20px; justify-content: flex-end; }
   }
 }
