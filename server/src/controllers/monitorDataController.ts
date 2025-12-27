@@ -449,3 +449,36 @@ export async function getActiveUsers(req: Request, res: Response) {
     });
   }
 }
+
+/**
+ * 获取错误发生前的用户行为轨迹（用于错误回放）
+ */
+export async function getErrorBehaviorContext(req: Request, res: Response) {
+  try {
+    const { errorId, seconds } = req.query;
+
+    if (!errorId) {
+      return res.status(400).json({
+        code: 400,
+        message: 'errorId为必填参数'
+      });
+    }
+
+    const result = await monitorDataService.getErrorBehaviorContext({
+      errorId: parseInt(errorId as string),
+      seconds: seconds ? parseInt(seconds as string) : 10,
+    });
+
+    res.json({
+      code: 200,
+      data: result
+    });
+  } catch (error: any) {
+    console.error('获取错误行为上下文失败:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取数据失败',
+      error: error.message
+    });
+  }
+}

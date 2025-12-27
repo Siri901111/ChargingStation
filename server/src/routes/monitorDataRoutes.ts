@@ -45,6 +45,9 @@ router.get('/user-tracking', monitorDataController.getUserTracking);
 // 获取活跃用户列表
 router.get('/active-users', monitorDataController.getActiveUsers);
 
+// 获取错误行为上下文（用于错误回放）
+router.get('/error-context', monitorDataController.getErrorBehaviorContext);
+
 // ==================== 管理接口 ====================
 // 删除监控数据
 router.delete('/delete', monitorDataController.deleteData);

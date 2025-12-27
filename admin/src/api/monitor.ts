@@ -185,6 +185,27 @@ export function getActiveUsers(params?: { startTime?: number; endTime?: number }
   return http.get<ActiveUser[]>(`${BASE_URL}/active-users`, { params });
 }
 
+// 错误行为上下文类型
+export interface ErrorBehaviorContext {
+  error: MonitorDataItem | null;
+  behaviors: MonitorDataItem[];
+  userInfo: {
+    id: number;
+    name: string;
+    account: string;
+  } | null;
+  timeRange: {
+    start: number;
+    end: number;
+    seconds: number;
+  };
+}
+
+// 获取错误发生前的用户行为轨迹（用于错误回放）
+export function getErrorBehaviorContext(params: { errorId: number; seconds?: number }) {
+  return http.get<ErrorBehaviorContext>(`${BASE_URL}/error-context`, { params });
+}
+
 // 删除监控数据
 export function deleteMonitorData(ids: number[]) {
   return http.delete(`${BASE_URL}/delete`, { data: { ids } });

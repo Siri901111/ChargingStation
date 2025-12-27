@@ -779,3 +779,89 @@ export async function getActiveUsers(params: {
     };
   });
 }
+
+/**
+ * 获取错误发生前的用户行为轨迹（用于错误回放）
+ * @param errorId 错误记录ID
+ * @param seconds 错误发生前的秒数，默认10秒
+ */
+export async function getErrorBehaviorContext(params: {
+  errorId: number;
+  seconds?: number;
+}) {
+  const { errorId, seconds = 10 } = params;
+
+  // 1. 获取错误记录
+  const errorRecord = await MonitorData.findByPk(errorId);
+  if (!errorRecord) {
+    return {
+      error: null,
+      behaviors: [],
+      userInfo: null
+    };
+  }
+
+  const errorData = (errorRecord as any).toJSON();
+  const errorTimestamp = errorData.timestamp;
+  const userId = errorData.user_id;
+  const sessionInfo = errorData.session_info;
+
+  // 计算时间范围：错误发生前N秒
+  const startTime = errorTimestamp - (seconds * 1000);
+  const endTime = errorTimestamp;
+
+  // 2. 查询该时间段内的用户行为
+  const where: any = {
+    timestamp: {
+      [Op.between]: [startTime, endTime]
+    },
+    category: 'behavior' // 只查询行为类型的数据
+  };
+
+  // 优先使用会话ID匹配，如果没有则使用用户ID
+  if (sessionInfo?.sessionId) {
+    where[Op.or] = [
+      { 'session_info.sessionId': sessionInfo.sessionId },
+      ...(userId ? [{ user_id: userId }] : [])
+    ];
+  } else if (userId) {
+    where.user_id = userId;
+  } else {
+    // 如果没有用户ID和会话ID，无法追踪
+    return {
+      error: errorData,
+      behaviors: [],
+      userInfo: null
+    };
+  }
+
+  const behaviors = await MonitorData.findAll({
+    where,
+    order: [['timestamp', 'ASC']],
+    limit: 50 // 最多返回50条行为记录
+  });
+
+  const behaviorList = behaviors.map((b: any) => b.toJSON());
+
+  // 3. 获取用户信息
+  let userInfo = null;
+  if (userId) {
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'name', 'account']
+    });
+    if (user) {
+      userInfo = (user as any).toJSON();
+    }
+  }
+
+  return {
+    error: errorData,
+    behaviors: behaviorList,
+    userInfo,
+    timeRange: {
+      start: startTime,
+      end: endTime,
+      seconds
+    }
+  };
+}

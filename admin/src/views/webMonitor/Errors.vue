@@ -163,8 +163,11 @@
         <el-table-column prop="timestamp" label="时间" width="180">
           <template #default="{ row }">{{ formatTime(row.timestamp) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
+            <el-button type="primary" size="small" link @click="handleShowReplay(row)">
+              <el-icon><VideoPlay /></el-icon>回放
+            </el-button>
             <el-button type="danger" size="small" link @click="handleDelete(row)">
               <el-icon><Delete /></el-icon>删除
             </el-button>
@@ -184,14 +187,119 @@
         background
       />
     </el-card>
+
+    <!-- 行为回放对话框 -->
+    <el-dialog
+      v-model="replayDialogVisible"
+      title="用户行为回放"
+      width="800px"
+      :close-on-click-modal="false"
+      destroy-on-close
+    >
+      <div class="replay-container" v-loading="replayLoading">
+        <!-- 错误信息头部 -->
+        <div class="replay-header" v-if="replayData?.error">
+          <div class="error-info">
+            <el-tag type="danger" size="large">
+              <el-icon><WarningFilled /></el-icon>
+              {{ getTypeName(replayData.error.type) }}
+            </el-tag>
+            <span class="error-msg">{{ getDataValue(replayData.error.data, 'message') }}</span>
+          </div>
+          <div class="error-meta">
+            <span v-if="replayData.userInfo">
+              <el-icon><User /></el-icon> {{ replayData.userInfo.name }}
+            </span>
+            <span>
+              <el-icon><Clock /></el-icon> {{ formatTime(replayData.error.timestamp) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- 播放控制栏 -->
+        <div class="replay-controls" v-if="replayData?.behaviors?.length">
+          <el-button-group>
+            <el-button :type="isPlaying ? 'danger' : 'primary'" @click="togglePlay">
+              <el-icon><component :is="isPlaying ? 'VideoPause' : 'VideoPlay'" /></el-icon>
+              {{ isPlaying ? '暂停' : '播放' }}
+            </el-button>
+            <el-button @click="resetReplay">
+              <el-icon><RefreshRight /></el-icon>重置
+            </el-button>
+          </el-button-group>
+          <div class="speed-control">
+            <span>播放速度:</span>
+            <el-select v-model="playSpeed" size="small" style="width: 100px">
+              <el-option label="0.5x" :value="2000" />
+              <el-option label="1x" :value="1000" />
+              <el-option label="2x" :value="500" />
+              <el-option label="4x" :value="250" />
+            </el-select>
+          </div>
+          <div class="progress-info">
+            <span>{{ currentStep + 1 }} / {{ replayData.behaviors.length }}</span>
+          </div>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="replay-progress" v-if="replayData?.behaviors?.length">
+          <el-slider
+            v-model="currentStep"
+            :max="replayData.behaviors.length - 1"
+            :show-tooltip="false"
+            @change="handleStepChange"
+          />
+          <div class="time-labels">
+            <span>{{ formatRelativeTime(replayData.behaviors[0]?.timestamp, replayData.error?.timestamp) }}</span>
+            <span class="error-marker">错误发生</span>
+          </div>
+        </div>
+
+        <!-- 行为时间线 -->
+        <div class="replay-timeline" v-if="replayData?.behaviors?.length">
+          <el-timeline>
+            <el-timeline-item
+              v-for="(item, index) in replayData.behaviors"
+              :key="item.id"
+              :color="index === currentStep ? '#409eff' : (index < currentStep ? '#67c23a' : '#e4e7ed')"
+              :hollow="index > currentStep"
+              :timestamp="formatRelativeTime(item.timestamp, replayData.error?.timestamp)"
+              placement="top"
+            >
+              <div class="timeline-item" :class="{ active: index === currentStep, played: index < currentStep }">
+                <div class="item-header">
+                  <el-tag :type="getBehaviorTagType(item.type)" size="small">
+                    {{ getBehaviorTypeName(item.type) }}
+                  </el-tag>
+                  <span class="item-page">{{ getPageName(item.page_url || '') }}</span>
+                </div>
+                <div class="item-content">{{ getBehaviorContent(item) }}</div>
+              </div>
+            </el-timeline-item>
+          </el-timeline>
+        </div>
+
+        <el-empty v-else-if="!replayLoading" description="该错误发生前10秒内无用户行为记录" />
+      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <span class="tip" v-if="replayData?.timeRange">
+            显示错误发生前 {{ replayData.timeRange.seconds }} 秒内的用户行为
+          </span>
+          <el-button @click="replayDialogVisible = false">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount, markRaw } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, markRaw, watch } from 'vue'
 import * as echarts from 'echarts'
-import { getErrorList, getErrorStats, getTrend, deleteMonitorData, type MonitorDataItem, type ErrorStats } from '@/api/monitor'
+import { getErrorList, getErrorStats, getTrend, deleteMonitorData, getErrorBehaviorContext, type MonitorDataItem, type ErrorStats, type ErrorBehaviorContext } from '@/api/monitor'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { VideoPlay, VideoPause, RefreshRight, User, Clock } from '@element-plus/icons-vue'
 
 const loading = ref(false)
 const tableData = ref<MonitorDataItem[]>([])
@@ -199,6 +307,15 @@ const total = ref(0)
 const selectedRows = ref<MonitorDataItem[]>([])
 const pageInfo = reactive({ page: 1, pageSize: 20 })
 const filterParams = reactive({ type: '', keyword: '' })
+
+// 行为回放相关
+const replayDialogVisible = ref(false)
+const replayLoading = ref(false)
+const replayData = ref<ErrorBehaviorContext | null>(null)
+const isPlaying = ref(false)
+const currentStep = ref(0)
+const playSpeed = ref(1000) // 播放速度，毫秒
+let playTimer: number | null = null
 
 const dateRange = ref<[Date, Date]>([new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()])
 
@@ -381,6 +498,123 @@ const handleBatchDelete = async () => {
 
 const handleResize = () => { trendChart?.resize(); typeChart?.resize() }
 
+// ==================== 行为回放相关方法 ====================
+
+// 显示回放对话框
+const handleShowReplay = async (row: MonitorDataItem) => {
+  replayDialogVisible.value = true
+  replayLoading.value = true
+  currentStep.value = 0
+  isPlaying.value = false
+
+  try {
+    const res = await getErrorBehaviorContext({ errorId: row.id, seconds: 10 })
+    if (res.code === 200 && res.data) {
+      replayData.value = res.data
+    }
+  } catch (error) {
+    console.error('获取错误行为上下文失败:', error)
+    ElMessage.error('获取行为回放数据失败')
+  } finally {
+    replayLoading.value = false
+  }
+}
+
+// 切换播放/暂停
+const togglePlay = () => {
+  if (isPlaying.value) {
+    stopPlay()
+  } else {
+    startPlay()
+  }
+}
+
+// 开始播放
+const startPlay = () => {
+  if (!replayData.value?.behaviors?.length) return
+  if (currentStep.value >= replayData.value.behaviors.length - 1) {
+    currentStep.value = 0
+  }
+  isPlaying.value = true
+  playNext()
+}
+
+// 播放下一步
+const playNext = () => {
+  if (!isPlaying.value || !replayData.value?.behaviors?.length) return
+
+  if (currentStep.value < replayData.value.behaviors.length - 1) {
+    playTimer = window.setTimeout(() => {
+      currentStep.value++
+      playNext()
+    }, playSpeed.value)
+  } else {
+    isPlaying.value = false
+  }
+}
+
+// 停止播放
+const stopPlay = () => {
+  isPlaying.value = false
+  if (playTimer) {
+    clearTimeout(playTimer)
+    playTimer = null
+  }
+}
+
+// 重置回放
+const resetReplay = () => {
+  stopPlay()
+  currentStep.value = 0
+}
+
+// 手动调整进度
+const handleStepChange = () => {
+  stopPlay()
+}
+
+// 格式化相对时间（距错误发生的时间）
+const formatRelativeTime = (timestamp: number | undefined, errorTimestamp: number | undefined) => {
+  if (!timestamp || !errorTimestamp) return ''
+  const diff = (timestamp - errorTimestamp) / 1000
+  if (diff >= 0) return '错误发生时'
+  return `${diff.toFixed(1)}秒`
+}
+
+// 获取行为类型标签样式
+const getBehaviorTagType = (type: string) => {
+  const map: Record<string, string> = {
+    page_view: 'primary',
+    page_leave: 'info',
+    click: 'success',
+    route_change: 'warning',
+    custom_event: ''
+  }
+  return map[type] || 'info'
+}
+
+// 获取行为类型名称
+const getBehaviorTypeName = (type: string) => {
+  const map: Record<string, string> = {
+    page_view: '页面访问',
+    page_leave: '页面离开',
+    click: '点击',
+    route_change: '路由切换',
+    custom_event: '自定义事件'
+  }
+  return map[type] || type
+}
+
+// 获取行为内容描述
+const getBehaviorContent = (item: MonitorDataItem) => {
+  const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data
+  if (item.type === 'page_view') return item.page_title || '访问页面'
+  if (item.type === 'click') return data?.target || data?.text || '点击元素'
+  if (item.type === 'route_change') return `${data?.from || ''} → ${data?.to || ''}`
+  if (item.type === 'page_leave') return `停留 ${data?.duration ? (data.duration / 1000).toFixed(1) + '秒' : '-'}`
+  return item.page_title || '用户行为'
+}
+
 onMounted(async () => {
   await Promise.all([loadErrorStats(), loadErrorList(), loadTrendData()])
   window.addEventListener('resize', handleResize)
@@ -390,6 +624,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
   trendChart?.dispose()
   typeChart?.dispose()
+  stopPlay() // 清理回放定时器
 })
 </script>
 
@@ -468,6 +703,146 @@ onBeforeUnmount(() => {
     }
 
     .pagination { margin-top: 20px; justify-content: flex-end; }
+  }
+
+  // 行为回放对话框样式
+  .replay-container {
+    min-height: 300px;
+
+    .replay-header {
+      background: linear-gradient(135deg, #fef0f0 0%, #fff5f5 100%);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border-left: 4px solid #f56c6c;
+
+      .error-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+
+        .error-msg {
+          color: #c45656;
+          font-weight: 500;
+          flex: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .error-meta {
+        display: flex;
+        gap: 20px;
+        color: #909399;
+        font-size: 13px;
+
+        span {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+      }
+    }
+
+    .replay-controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 12px 16px;
+      background: #f5f7fa;
+      border-radius: 8px;
+      margin-bottom: 16px;
+
+      .speed-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #606266;
+        font-size: 13px;
+      }
+
+      .progress-info {
+        margin-left: auto;
+        color: #409eff;
+        font-weight: 500;
+      }
+    }
+
+    .replay-progress {
+      margin-bottom: 20px;
+      padding: 0 8px;
+
+      .time-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #909399;
+
+        .error-marker {
+          color: #f56c6c;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .replay-timeline {
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 0 8px;
+
+      .timeline-item {
+        padding: 12px;
+        border-radius: 8px;
+        background: #fafafa;
+        transition: all 0.3s;
+
+        &.active {
+          background: #ecf5ff;
+          border: 1px solid #409eff;
+          transform: scale(1.02);
+        }
+
+        &.played {
+          background: #f0f9eb;
+          border: 1px solid #67c23a;
+        }
+
+        .item-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 6px;
+
+          .item-page {
+            color: #909399;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+
+        .item-content {
+          color: #606266;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+      }
+    }
+  }
+
+  .dialog-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .tip {
+      color: #909399;
+      font-size: 12px;
+    }
   }
 }
 </style>
