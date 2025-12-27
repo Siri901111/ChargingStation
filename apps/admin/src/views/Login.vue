@@ -41,8 +41,6 @@
                                 placeholder="请输入用户名"
                                 size="large"
                                 class="custom-input"
-                                @focus="handleInputFocus"
-                                @blur="handleInputBlur"
                             />
                         </div>
                     </el-form-item>
@@ -57,8 +55,6 @@
                                 size="large"
                                 class="custom-input"
                                 show-password
-                                @focus="handleInputFocus"
-                                @blur="handleInputBlur"
                                 @keyup.enter="handleLogin"
                             />
                         </div>
@@ -422,63 +418,6 @@ const features = [
     { icon: Setting, text: '智能运维系统' },
     { icon: CircleCheck, text: '安全可靠保障' }
 ]
-
-// 输入框聚焦动画
-// const handleInputFocus = (event: Event) => {
-//     const inputWrapper = (event.target as HTMLElement)?.closest('.input-wrapper')
-//     if (inputWrapper) {
-//         gsap.to(inputWrapper, {
-//             scale: 1.02,
-//             y: -3,
-//             duration: 0.4,
-//             ease: "back.out(1.7)"
-//         })
-//         const icon = inputWrapper.querySelector('.input-icon')
-//         if (icon) {
-//             gsap.to(icon, {
-//                 scale: 1.3,
-//                 rotation: 360,
-//                 color: "#409eff",
-//                 duration: 0.6,
-//                 ease: "power2.out"
-//             })
-//         }
-//         // 添加边框光晕效果
-//         gsap.to(inputWrapper, {
-//             boxShadow: "0 0 0 4px rgba(64, 158, 255, 0.15)",
-//             duration: 0.3,
-//             ease: "power2.out"
-//         })
-//     }
-// }
-
-// 输入框失焦动画
-// const handleInputBlur = (event: Event) => {
-//     const inputWrapper = (event.target as HTMLElement)?.closest('.input-wrapper')
-//     if (inputWrapper) {
-//         gsap.to(inputWrapper, {
-//             scale: 1,
-//             y: 0,
-//             duration: 0.3,
-//             ease: "power2.out"
-//         })
-//         const icon = inputWrapper.querySelector('.input-icon')
-//         if (icon) {
-//             gsap.to(icon, {
-//                 scale: 1,
-//                 rotation: 0,
-//                 color: "#909399",
-//                 duration: 0.3,
-//                 ease: "power2.out"
-//             })
-//         }
-//         gsap.to(inputWrapper, {
-//             boxShadow: "0 0 0 0px rgba(64, 158, 255, 0)",
-//             duration: 0.3,
-//             ease: "power2.out"
-//         })
-//     }
-// }
 
 // 登录处理
 const handleLogin = async () => {
