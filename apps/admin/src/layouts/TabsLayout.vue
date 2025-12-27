@@ -1,5 +1,13 @@
 <template>
-    <el-tabs v-model="activeTabName" class="demo-tabs" @tab-click="handleClick" type="card" closable @tab-remove="remove">
+    <el-tabs
+        v-model="activeTabName"
+        class="tabs-container"
+        :class="{ 'tabs-dark': isDark }"
+        @tab-click="handleClick"
+        type="card"
+        closable
+        @tab-remove="remove"
+    >
         <el-tab-pane
             v-for="item in tabs"
             :key="item.url"
@@ -28,18 +36,22 @@
 </template>
 <script setup lang="ts">
 import {useTabsStore} from "@/store/tabs.ts"
-import { useUserStore } from "@/store/auth";
-import { storeToRefs } from 'pinia';
-import { useRouter,useRoute } from "vue-router";
-import { computed, watch } from "vue";
-const tabsStore=useTabsStore();
-const userStore=useUserStore();
+import { useUserStore } from "@/store/auth"
+import { useThemeStore } from "@/store/theme"
+import { storeToRefs } from 'pinia'
+import { useRouter,useRoute } from "vue-router"
+import { computed, watch } from "vue"
+
+const tabsStore=useTabsStore()
+const userStore=useUserStore()
+const themeStore=useThemeStore()
 const {menu}=storeToRefs(userStore)
+const { isDark } = storeToRefs(themeStore)
 const router=useRouter()
-const route=useRoute();
+const route=useRoute()
 
 const {tabs,currentTab}=storeToRefs(tabsStore)
-const {setCurrentTab,addTab,removeTab}=tabsStore;
+const {setCurrentTab,addTab,removeTab}=tabsStore
 
 // 计算属性用于 v-model 绑定
 const activeTabName = computed({
@@ -89,7 +101,30 @@ const remove = (TabPaneName: string) => {
 }
 </script>
 <style lang="less" scoped>
-    .demo-tabs{
-      ::v-deep .is-active{background-color: rgb(34, 136, 255) !important; color: #fff !important;}
+.tabs-container {
+    :deep(.is-active) {
+        background-color: var(--el-color-primary) !important;
+        color: #fff !important;
     }
+
+    &.tabs-dark {
+        :deep(.el-tabs__header) {
+            background-color: #1f1f1f;
+            border-bottom-color: #303030;
+        }
+
+        :deep(.el-tabs__item) {
+            color: #ffffffa6;
+            border-color: #303030;
+
+            &:hover {
+                color: #fff;
+            }
+        }
+
+        :deep(.el-tabs__nav) {
+            border-color: #303030;
+        }
+    }
+}
 </style>

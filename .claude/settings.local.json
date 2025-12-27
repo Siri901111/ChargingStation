@@ -15,7 +15,8 @@
       "Bash(pnpm --version:*)",
       "Bash(pnpm install:*)",
       "Bash(pnpm build:*)",
-      "Bash(pnpm --filter @charging/server build:*)"
+      "Bash(pnpm --filter @charging/server build:*)",
+      "Bash(pnpm --filter @charging/admin build:*)"
     ]
   }
 }
