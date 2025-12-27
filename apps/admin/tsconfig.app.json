@@ -1,0 +1,15 @@
+{
+  "extends": "@charging/tsconfig/vue.json",
+  "compilerOptions": {
+    "useDefineForClassFields": true,
+    "moduleDetection": "force",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+}

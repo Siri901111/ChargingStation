@@ -11,7 +11,11 @@
       "Bash(cat:*)",
       "Bash(if exist node_modules.cache rmdir /s /q node_modules.cache)",
       "Bash(if exist node_modules.tsx-cache rmdir /s /q node_modules.tsx-cache)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(pnpm --version:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm --filter @charging/server build:*)"
     ]
   }
 }
