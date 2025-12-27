@@ -78,11 +78,43 @@ const menulist = [
       url: "/system",
       icon: "Setting"
     },
-  
+
     {
       name: "个人中心",
       url: "/personal",
       icon: "User"
+    },
+    {
+      name: "前端监控",
+      url: "/webmonitor",
+      icon: "Monitor",
+      children: [
+        {
+          name: "监控概览",
+          url: "/webmonitor/overview",
+          icon: "DataAnalysis"
+        },
+        {
+          name: "性能监控",
+          url: "/webmonitor/performance",
+          icon: "Odometer"
+        },
+        {
+          name: "错误监控",
+          url: "/webmonitor/errors",
+          icon: "WarningFilled"
+        },
+        {
+          name: "行为分析",
+          url: "/webmonitor/behavior",
+          icon: "Pointer"
+        },
+        {
+          name: "网络请求",
+          url: "/webmonitor/network",
+          icon: "Connection"
+        }
+      ]
     },
 ]
 //运营专员的菜单
