@@ -42,11 +42,12 @@
     <el-dialog
         v-model="docDialogVisible"
         :title="currentCategory?.name"
-        width="80%"
+        width="85%"
         :close-on-click-modal="false"
         class="doc-dialog"
+        destroy-on-close
     >
-        <div class="doc-content" v-html="docContent"></div>
+        <div class="markdown-body" v-html="docContent"></div>
         <template #footer>
             <el-button @click="docDialogVisible = false">{{ t('common.close') }}</el-button>
         </template>
@@ -222,97 +223,226 @@ const openCategory = async (category: any) => {
     }
 }
 
-:deep(.doc-dialog) {
-    .doc-content {
-        max-height: 70vh;
-        overflow-y: auto;
-        padding: 20px;
-        background-color: var(--bg-container);
-        border-radius: 8px;
-        line-height: 1.8;
+// Markdown 样式 - 使用 GitHub 风格的样式
+:deep(.markdown-body) {
+    box-sizing: border-box;
+    min-width: 200px;
+    max-width: 100%;
+    margin: 0;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: 16px;
+    line-height: 1.6;
+    word-wrap: break-word;
+    color: var(--text-primary);
+    background-color: var(--bg-container);
+
+    .doc-section {
+        margin-bottom: 48px;
+
+        .doc-section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-primary);
+        }
+    }
+
+    .doc-divider {
+        margin: 48px 0;
+        border: none;
+        border-top: 1px solid var(--border-color);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        margin-top: 32px;
+        margin-bottom: 16px;
+        font-weight: 600;
+        line-height: 1.25;
+        color: var(--text-primary);
+    }
+
+    h1 {
+        font-size: 32px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    h2 {
+        font-size: 24px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-color-light);
+    }
+
+    h3 {
+        font-size: 20px;
+    }
+
+    h4 {
+        font-size: 18px;
+    }
+
+    h5 {
+        font-size: 16px;
+    }
+
+    h6 {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    p {
+        margin-bottom: 16px;
+        color: var(--text-primary);
+    }
+
+    ul, ol {
+        margin-bottom: 16px;
+        padding-left: 32px;
         color: var(--text-primary);
 
-        h1, h2, h3, h4, h5, h6 {
-            color: var(--text-primary);
-            margin-top: 24px;
-            margin-bottom: 16px;
-        }
+        li {
+            margin-bottom: 8px;
+            line-height: 1.6;
 
-        p {
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-
-        code {
-            background-color: var(--bg-base);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            color: var(--el-color-primary);
-        }
-
-        pre {
-            background-color: var(--bg-base);
-            padding: 16px;
-            border-radius: 8px;
-            overflow-x: auto;
-            border: 1px solid var(--border-color-light);
-
-            code {
-                background: none;
-                padding: 0;
-                color: var(--text-primary);
-            }
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 16px 0;
-
-            th, td {
-                padding: 12px;
-                border: 1px solid var(--border-color-light);
-                text-align: left;
-            }
-
-            th {
-                background-color: var(--bg-base);
-                font-weight: 600;
-                color: var(--text-primary);
-            }
-
-            td {
-                color: var(--text-secondary);
-            }
-        }
-
-        ul, ol {
-            padding-left: 24px;
-            margin-bottom: 12px;
-
-            li {
-                color: var(--text-secondary);
+            p {
                 margin-bottom: 8px;
             }
         }
+    }
 
-        blockquote {
-            border-left: 4px solid var(--el-color-primary);
-            padding-left: 16px;
-            margin: 16px 0;
-            color: var(--text-secondary);
-            background-color: var(--bg-base);
+    blockquote {
+        padding: 0 16px;
+        margin: 16px 0;
+        color: var(--text-secondary);
+        border-left: 4px solid var(--el-color-primary);
+        background-color: var(--bg-base);
+        border-radius: 4px;
+        padding: 12px 16px;
+
+        p {
+            margin: 0;
+        }
+    }
+
+    code {
+        padding: 2px 6px;
+        margin: 0 2px;
+        font-size: 85%;
+        background-color: var(--bg-base);
+        border-radius: 4px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        color: var(--el-color-danger);
+    }
+
+    pre {
+        padding: 16px;
+        overflow: auto;
+        font-size: 85%;
+        line-height: 1.45;
+        background-color: var(--bg-base);
+        border-radius: 8px;
+        margin-bottom: 16px;
+        border: 1px solid var(--border-color-light);
+
+        code {
+            display: inline;
+            max-width: auto;
+            padding: 0;
+            margin: 0;
+            overflow: visible;
+            line-height: inherit;
+            word-wrap: normal;
+            background-color: transparent;
+            border: 0;
+            color: var(--text-primary);
+        }
+    }
+
+    // Highlight.js 代码高亮样式
+    :deep(.hljs) {
+        display: block;
+        overflow-x: auto;
+        padding: 16px;
+        background: var(--bg-base);
+        color: var(--text-primary);
+        border-radius: 6px;
+    }
+
+    table {
+        display: block;
+        width: 100%;
+        overflow: auto;
+        margin: 16px 0;
+        border-collapse: collapse;
+        border-spacing: 0;
+
+        th, td {
             padding: 12px 16px;
-            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            text-align: left;
         }
 
-        .loading, .error {
-            text-align: center;
-            padding: 40px;
+        th {
+            font-weight: 600;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+        }
+
+        td {
             color: var(--text-secondary);
         }
+
+        tr {
+            background-color: var(--bg-container);
+            border-top: 1px solid var(--border-color);
+
+            &:nth-child(2n) {
+                background-color: var(--bg-base);
+            }
+        }
+    }
+
+    a {
+        color: var(--el-color-primary);
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        margin: 16px 0;
+    }
+
+    hr {
+        height: 1px;
+        padding: 0;
+        margin: 24px 0;
+        background-color: var(--border-color);
+        border: 0;
+    }
+
+    .loading, .error {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+}
+
+// Dark mode 适配
+.dark :deep(.markdown-body) {
+    .hljs {
+        background: #1e1e1e;
+        color: #d4d4d4;
     }
 }
 </style>
-

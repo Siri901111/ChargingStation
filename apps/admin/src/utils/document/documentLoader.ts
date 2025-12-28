@@ -1,92 +1,37 @@
 /**
  * 文档加载工具
- * 从docs文件夹加载Markdown文档并转换为HTML
+ * 使用 markdown-it 和 highlight.js 来渲染美观的 Markdown 文档
  */
 
+import MarkdownIt from 'markdown-it'
+import hljs from 'highlight.js'
+// 根据主题模式动态导入样式
+import 'highlight.js/styles/github.css'
+
+// 配置 markdown-it
+const md = new MarkdownIt({
+    html: true, // 启用HTML标签
+    linkify: true, // 自动将URL转换为链接
+    typographer: true, // 启用一些语言中性的替换 + 引号美化
+    highlight: function (str: string, lang?: string) {
+        if (lang && hljs.getLanguage(lang)) {
+            try {
+                return '<pre class="hljs"><code>' +
+                    hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+                    '</code></pre>';
+            } catch (__) {
+                // 忽略错误，使用默认渲染
+            }
+        }
+        return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+    }
+})
+
 /**
- * 简单的Markdown转HTML转换器
+ * 将Markdown转换为HTML
  */
-function markdownToHtml(markdown: string): string {
-    let html = markdown
-    
-    // 标题转换
-    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    
-    // 粗体和斜体
-    html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>')
-    
-    // 代码块
-    html = html.replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
-    html = html.replace(/`(.*?)`/gim, '<code>$1</code>')
-    
-    // 链接
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
-    
-    // 列表
-    html = html.replace(/^\* (.*$)/gim, '<li>$1</li>')
-    html = html.replace(/^- (.*$)/gim, '<li>$1</li>')
-    html = html.replace(/^(\d+)\. (.*$)/gim, '<li>$2</li>')
-    
-    // 段落
-    html = html.split('\n\n').map(para => {
-        if (!para.trim()) return ''
-        if (para.startsWith('<')) return para
-        return `<p>${para}</p>`
-    }).join('\n')
-    
-    // 表格处理（更完善的表格解析）
-    const lines = html.split('\n')
-    let inTable = false
-    let tableRows: string[] = []
-    let processedLines: string[] = []
-    
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (line.startsWith('|') && line.endsWith('|')) {
-            if (!inTable) {
-                inTable = true
-                tableRows = []
-            }
-            const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell)
-            // 跳过分隔行（如 |---|---|）
-            if (cells.every(cell => /^[-:]+$/.test(cell))) {
-                continue
-            }
-            const isHeader = tableRows.length === 0
-            const tag = isHeader ? 'th' : 'td'
-            const row = '<tr>' + cells.map(cell => `<${tag}>${cell}</${tag}>`).join('') + '</tr>'
-            tableRows.push(row)
-        } else {
-            if (inTable && tableRows.length > 0) {
-                processedLines.push('<table>' + tableRows.join('') + '</table>')
-                tableRows = []
-                inTable = false
-            }
-            processedLines.push(line)
-        }
-    }
-    
-    if (inTable && tableRows.length > 0) {
-        processedLines.push('<table>' + tableRows.join('') + '</table>')
-    }
-    
-    html = processedLines.join('\n')
-    
-    // 处理列表（需要包装在ul/ol中）
-    html = html.replace(/(<li>.*?<\/li>)/gim, (match) => {
-        if (!match.includes('<ul>') && !match.includes('<ol>')) {
-            return `<ul>${match}</ul>`
-        }
-        return match
-    })
-    
-    // 换行
-    html = html.replace(/\n/gim, '<br>')
-    
-    return html
+export function markdownToHtml(markdown: string): string {
+    return md.render(markdown)
 }
 
 /**
@@ -98,7 +43,6 @@ export async function getDocumentContent(files: string[]): Promise<string> {
             files.map(async (file) => {
                 try {
                     // 从public/docs目录加载文档
-                    // 文档应该在构建时或开发时通过脚本复制到public/docs
                     const response = await fetch(`/docs/${file}`)
                     
                     if (!response.ok) {
@@ -123,13 +67,13 @@ export async function getDocumentContent(files: string[]): Promise<string> {
             const html = markdownToHtml(content)
             return `
                 <div class="doc-section">
-                    <h2>${file}</h2>
+                    <h2 class="doc-section-title">${file}</h2>
                     <div class="doc-body">${html}</div>
                 </div>
             `
         })
 
-        return htmlContents.join('<hr style="margin: 32px 0; border: none; border-top: 1px solid var(--border-color-light);">')
+        return htmlContents.join('<hr class="doc-divider">')
     } catch (error) {
         console.error('Error loading documents:', error)
         throw error
@@ -143,4 +87,3 @@ export async function getSingleDocument(file: string): Promise<string> {
     const content = await getDocumentContent([file])
     return content
 }
-
