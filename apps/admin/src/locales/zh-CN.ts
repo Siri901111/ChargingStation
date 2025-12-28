@@ -75,6 +75,16 @@ export default {
         workspaceLoaded: '工作区已加载',
         workspaceSaved: '工作区已保存',
         load: '加载',
+        documentation: '文档中心',
+        searchDocument: '搜索文档...',
+        documents: '个文档',
+    },
+    doc: {
+        overview: '项目总览',
+        guides: '使用指南',
+        api: 'API文档',
+        design: '设计文档',
+        loadFailed: '文档加载失败',
     },
     common: {
         search: '搜索',

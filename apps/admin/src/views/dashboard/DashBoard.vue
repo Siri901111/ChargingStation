@@ -5,7 +5,7 @@
                 <div class="title">
                     <h3>今日设备运行状态</h3>
                     <p class="ml">更新时间:{{ updateTime }}</p>
-                    <el-icon color="#86909c" style="margin-left: 5px; cursor: pointer;" @click="refreshData">
+                    <el-icon :style="{ color: 'var(--text-tertiary)', marginLeft: '5px', cursor: 'pointer' }" @click="refreshData">
                         <Refresh />
                     </el-icon>
                 </div>
@@ -279,9 +279,9 @@ const formatNumber = (num: number) => {
 // 获取排名样式
 const getRankStyle = (index: number) => {
     const colors = [
-        { bg: 'rgb(103, 194, 58)', color: '#fff' },
-        { bg: 'rgb(64, 158, 255)', color: '#fff' },
-        { bg: 'rgb(230, 162, 60)', color: '#fff' }
+        { bg: 'var(--el-color-success)', color: '#fff' },
+        { bg: 'var(--el-color-primary)', color: '#fff' },
+        { bg: 'var(--el-color-warning)', color: '#fff' }
     ]
     if (index < 3) {
         return {
@@ -451,7 +451,7 @@ const setChartData2 = async () => {
             style: {
                 text: "营收占比",
                 fontSize: 20,
-                fill: "#333"
+                fill: "var(--text-primary)"
             }
         }
     })
@@ -534,8 +534,7 @@ useChart(chartRef3, setChartData3)
     margin-bottom: 20px;
 
     p {
-        color: #86909c;
-
+        color: var(--text-secondary);
     }
 }
 
@@ -563,7 +562,7 @@ useChart(chartRef3, setChartData3)
 
     p {
         margin-top: 10px;
-        color: #333;
+        color: var(--text-primary);
     }
 }
 
@@ -577,7 +576,7 @@ useChart(chartRef3, setChartData3)
         .rank {
             display: inline-block;
             font-weight: bold;
-            color: #666;
+            color: var(--text-secondary);
             width: 30px;
             height: 30px;
             border-radius: 50%;
@@ -588,15 +587,16 @@ useChart(chartRef3, setChartData3)
         .store-name {
             flex-grow: 1;
             padding: 0 10px;
+            color: var(--text-primary);
         }
 
         .sales {
-            color: #666;
+            color: var(--text-secondary);
         }
     }
 
     .ranking-item:nth-child(even) {
-        background-color: rgb(253, 246, 236);
+        background-color: var(--bg-base);
     }
 }
 </style>

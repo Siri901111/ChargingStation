@@ -181,7 +181,7 @@ onUnmounted(() => {
 .error-mask {
     p {
         margin: 10px 0;
-        color: #f56c6c;
+        color: var(--el-color-danger);
         text-align: center;
         padding: 0 20px;
     }

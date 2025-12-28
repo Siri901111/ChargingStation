@@ -36,13 +36,13 @@
                         </template>
                         <div v-if="scope.row.transactionRecords && scope.row.transactionRecords.length > 0">
                             <el-timeline style="max-width: 600px;">
-                                <el-timeline-item v-for="(item,index) in scope.row.transactionRecords" color="#0bbd87" :timestamp="item.transactionDate" :key="index">
+                                <el-timeline-item v-for="(item,index) in scope.row.transactionRecords" :color="'var(--el-color-success)'" :timestamp="item.transactionDate" :key="index">
                                     <p>消费金额：¥{{ item.transactionAmount }}</p>
                                     <p>消费类型：{{ item.transactionType }}</p>
                                 </el-timeline-item>
                             </el-timeline>
                         </div>
-                        <div v-else style="padding: 10px; color: #999;">
+                        <div v-else style="padding: 10px; color: var(--text-tertiary);">
                             暂无消费记录
                         </div>
                     </el-popover>

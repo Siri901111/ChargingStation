@@ -792,7 +792,7 @@ onMounted(() => {
 <style lang="less" scoped>
 .document-container {
     padding: 20px;
-    background-color: #f5f7fa;
+    background-color: var(--bg-base);
     min-height: calc(100vh - 60px);
 }
 
@@ -814,13 +814,13 @@ onMounted(() => {
                 margin: 0;
                 font-size: 24px;
                 font-weight: 600;
-                color: #303133;
+                color: var(--text-primary);
                 display: flex;
                 align-items: center;
                 gap: 10px;
                 
                 .title-icon {
-                    color: #409eff;
+                    color: var(--el-color-primary);
                 }
             }
             
@@ -870,7 +870,7 @@ onMounted(() => {
                     margin: 0 0 10px 0;
                     font-size: 18px;
                     font-weight: 600;
-                    color: #303133;
+                    color: var(--text-primary);
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
@@ -958,7 +958,7 @@ onMounted(() => {
                 margin: 0 0 15px 0;
                 font-size: 24px;
                 font-weight: 600;
-                color: #303133;
+                color: var(--text-primary);
             }
             
             .view-tags {

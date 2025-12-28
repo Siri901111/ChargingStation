@@ -219,14 +219,14 @@
       <el-row :gutter="20">
         <el-col :span="6">
           <router-link to="/webmonitor/errors" class="quick-entry-item">
-            <el-icon :size="40" color="#f56c6c"><CircleCloseFilled /></el-icon>
+            <el-icon :size="40" :style="{ color: 'var(--el-color-danger)' }"><CircleCloseFilled /></el-icon>
             <span>错误监控</span>
             <el-badge :value="overviewData.errorCount" :max="999" class="entry-badge" />
           </router-link>
         </el-col>
         <el-col :span="6">
           <router-link to="/webmonitor/performance" class="quick-entry-item">
-            <el-icon :size="40" color="#e6a23c"><Odometer /></el-icon>
+            <el-icon :size="40" :style="{ color: 'var(--el-color-warning)' }"><Odometer /></el-icon>
             <span>性能监控</span>
           </router-link>
         </el-col>

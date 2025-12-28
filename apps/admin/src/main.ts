@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import './style.less'
 import './assets/styles/tailwind.css'
+import './assets/styles/dark-mode.css'
 import App from './App.vue'
 import router from './router'
 import "@/router/guard"
@@ -13,8 +14,8 @@ import permission from './directives/permission'
 // import * as Sentry from "@sentry/vue";
 import { initMonitor, setMonitorUserId } from './monitor'
 import i18n from './locales'
-import { initWatermark } from './utils/watermark'
-import { initLockScreen } from './utils/lockScreen'
+import { initWatermark } from './utils/ui/watermark'
+import { initLockScreen } from './utils/ui/lockScreen'
 import { useUserStore } from './store/auth'
 
 const app = createApp(App);

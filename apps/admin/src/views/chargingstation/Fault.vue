@@ -43,7 +43,7 @@
                 <div class="btn">
                     <div class="divder"></div>
                     <div>
-                        <p class="fl ml" style="font-size: 12px;color: #999;">暂无预警</p>
+                        <p class="fl ml" style="font-size: 12px;color: var(--text-tertiary);">暂无预警</p>
                         <div class="fr" style="text-align: right;">
                             <el-button size="small" @click="openMaintenanceDialog(item.id)">维保记录</el-button>
 
@@ -69,9 +69,9 @@
                                         >
                                             <div style="line-height: 1.8;">
                                                 <p style="margin: 4px 0; font-weight: 500;">订单号：{{ record.orderNo || record.id }}</p>
-                                                <p style="margin: 4px 0;">金额：<span style="color: #409eff; font-weight: 500;">{{ record.money }}元</span></p>
+                                                <p style="margin: 4px 0;">金额：<span style="color: var(--el-color-primary); font-weight: 500;">{{ record.money }}元</span></p>
                                                 <p style="margin: 4px 0;">支付方式：{{ record.pay }}</p>
-                                                <p v-if="record.stationName" style="margin: 4px 0; color: #909399; font-size: 12px;">充电站：{{ record.stationName }}</p>
+                                                <p v-if="record.stationName" style="margin: 4px 0; color: var(--text-tertiary); font-size: 12px;">充电站：{{ record.stationName }}</p>
                                             </div>
                                         </el-timeline-item>
                                     </el-timeline>
@@ -279,7 +279,7 @@ const loadMaintenanceRecords = async (pileId: string | number) => {
     }
 
     .info {
-        color: #999;
+        color: var(--text-tertiary);
         margin-left: 30px;
         line-height: 26px;
         margin-top: -10px;

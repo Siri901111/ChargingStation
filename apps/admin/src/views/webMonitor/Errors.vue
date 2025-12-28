@@ -669,8 +669,8 @@ onBeforeUnmount(() => {
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background: #f0f0f0;
-        color: #909399;
+        background: var(--bg-base);
+        color: var(--text-tertiary);
         font-size: 12px;
         display: flex;
         align-items: center;
@@ -679,7 +679,7 @@ onBeforeUnmount(() => {
 
         &.top { background: #f56c6c; color: #fff; }
       }
-      .rank-page { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: #606266; }
+      .rank-page { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--text-secondary); }
       .rank-count { font-weight: bold; color: #f56c6c; }
     }
   }
@@ -691,15 +691,15 @@ onBeforeUnmount(() => {
       display: flex;
       align-items: flex-start;
       .error-icon { color: #f56c6c; margin-right: 8px; margin-top: 3px; flex-shrink: 0; }
-      .error-text { color: #303133; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .error-text { color: var(--text-primary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     }
 
     .error-detail {
       padding: 20px;
-      background: #fef0f0;
+      background: var(--bg-base);
       .error-message { color: #f56c6c; font-weight: 500; }
-      .error-stack { background: var(--bg-container, #fff); padding: 15px; border-radius: 4px; font-size: 12px; max-height: 300px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: #c45656; border-left: 3px solid #f56c6c; }
-      pre { background: var(--bg-container, #fff); padding: 10px; border-radius: 4px; font-size: 12px; max-height: 150px; overflow: auto; }
+      .error-stack { background: var(--bg-container); padding: 15px; border-radius: 4px; font-size: 12px; max-height: 300px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: var(--el-color-danger); border-left: 3px solid var(--el-color-danger); }
+      pre { background: var(--bg-container); padding: 10px; border-radius: 4px; font-size: 12px; max-height: 150px; overflow: auto; color: var(--text-primary); }
     }
 
     .pagination { margin-top: 20px; justify-content: flex-end; }
@@ -710,7 +710,7 @@ onBeforeUnmount(() => {
     min-height: 300px;
 
     .replay-header {
-      background: linear-gradient(135deg, #fef0f0 0%, #fff5f5 100%);
+      background: var(--bg-base);
       padding: 16px;
       border-radius: 8px;
       margin-bottom: 16px;

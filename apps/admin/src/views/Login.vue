@@ -846,7 +846,8 @@ const handleRegister = async () => {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: linear-gradient(135deg, #e8ecf1 0%, #d1d9e6 50%, #f0f4f8 100%);
+    background: var(--bg-base);
+    background-image: linear-gradient(135deg, var(--bg-base) 0%, var(--bg-container) 50%, var(--bg-base) 100%);
     display: flex;
     
     // 简约的几何装饰
@@ -1049,7 +1050,7 @@ const handleRegister = async () => {
     position: relative;
     display: flex;
     align-items: center;
-    background: #f5f7fa;
+        background: var(--bg-container);
     border-radius: 12px;
     padding: 0;
     transition: all 0.3s;
@@ -1058,8 +1059,8 @@ const handleRegister = async () => {
     width: 100%;
     
     &:hover {
-        background: #ecf5ff;
-        border-color: #b3d8ff;
+        background: var(--border-color-light);
+        border-color: var(--el-color-primary-light-5);
     }
     
     &:focus-within {
@@ -1192,7 +1193,7 @@ const handleRegister = async () => {
         top: 50%;
         width: 40%;
         height: 1px;
-        background: #e4e7ed;
+        background: var(--border-color);
     }
     
     &::before {

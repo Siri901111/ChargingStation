@@ -75,6 +75,16 @@ export default {
         workspaceLoaded: 'Workspace loaded',
         workspaceSaved: 'Workspace saved',
         load: 'Load',
+        documentation: 'Documentation',
+        searchDocument: 'Search documents...',
+        documents: 'documents',
+    },
+    doc: {
+        overview: 'Overview',
+        guides: 'Guides',
+        api: 'API Docs',
+        design: 'Design',
+        loadFailed: 'Failed to load document',
     },
     common: {
         search: 'Search',

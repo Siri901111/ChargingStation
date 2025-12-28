@@ -59,9 +59,11 @@ export default defineComponent({
     }
 }
 .el-menu-item:hover{
-    background-color:rgb(34, 136, 255) !important;color: #fff !important ;
+    background-color: var(--el-color-primary) !important;
+    color: #fff !important;
 }
 ::v-deep .el-sub-menu__title:hover{
-    background-color:rgb(34, 136, 255) !important;color: #fff !important ;
+    background-color: var(--el-color-primary) !important;
+    color: #fff !important;
 }
 </style>

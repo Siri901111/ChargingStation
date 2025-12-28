@@ -396,7 +396,7 @@ onBeforeUnmount(() => {
   .overview-cards { margin-bottom: 20px; }
 
   .perf-card {
-    background: var(--bg-container, #fff);
+    background: var(--bg-container);
     border-radius: 12px;
     padding: 20px 15px;
     text-align: center;
@@ -410,9 +410,9 @@ onBeforeUnmount(() => {
     &.poor { border-left-color: #f56c6c; .perf-score { color: #f56c6c; } }
 
     .perf-score { font-size: 28px; font-weight: bold; line-height: 1; }
-    .perf-unit { font-size: 14px; color: #909399; margin-top: 4px; }
-    .perf-label { font-size: 16px; font-weight: 600; color: #303133; margin-top: 10px; }
-    .perf-desc { font-size: 12px; color: #909399; margin-top: 4px; }
+    .perf-unit { font-size: 14px; color: var(--text-tertiary); margin-top: 4px; }
+    .perf-label { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-top: 10px; }
+    .perf-desc { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
   }
 
   .filter-card { margin-bottom: 20px; }
@@ -422,7 +422,7 @@ onBeforeUnmount(() => {
     margin-bottom: 20px;
     .vital-item {
       padding: 20px;
-      background: #f5f7fa;
+      background: var(--bg-base);
       border-radius: 8px;
       .vital-header { display: flex; align-items: center; margin-bottom: 15px; .vital-name { margin-left: 10px; font-weight: 600; font-size: 14px; } }
       .vital-thresholds {
@@ -435,13 +435,13 @@ onBeforeUnmount(() => {
           .value { font-weight: 600; }
         }
       }
-      .vital-desc { font-size: 13px; color: #606266; line-height: 1.5; }
+      .vital-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
     }
   }
 
   .data-card {
-    .card-header { display: flex; justify-content: space-between; align-items: center; .sample-count { font-size: 14px; color: #909399; } }
-    .expand-content { padding: 20px; background: var(--bg-base, #f5f7fa); pre { background: var(--bg-container, #fff); padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; } }
+    .card-header { display: flex; justify-content: space-between; align-items: center; .sample-count { font-size: 14px; color: var(--text-tertiary); } }
+    .expand-content { padding: 20px; background: var(--bg-base); pre { background: var(--bg-container); padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; } }
     .pagination { margin-top: 20px; justify-content: flex-end; }
   }
 }

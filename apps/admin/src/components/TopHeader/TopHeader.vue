@@ -16,6 +16,9 @@
             <!-- 消息通知 -->
             <NotificationBell />
 
+            <!-- 文档查看 -->
+            <DocumentViewer />
+
             <!-- 分隔线 -->
             <div class="divider"></div>
 
@@ -30,6 +33,7 @@ import HeaderActions from './components/HeaderActions.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import LocaleSwitcher from './components/LocaleSwitcher.vue'
 import NotificationBell from './components/NotificationBell.vue'
+import DocumentViewer from './components/DocumentViewer.vue'
 import UserMenu from './components/UserMenu.vue'
 </script>
 

@@ -362,21 +362,21 @@ const statCards = computed(() => [
         label: '待办事项',
         value: stats.value.todoCount,
         icon: Document,
-        color: '#409EFF'
+        color: 'var(--el-color-primary)'
     },
     {
         key: 'assigned',
         label: '指派给我',
         value: stats.value.assignedToMeCount,
         icon: Bell,
-        color: '#67C23A'
+        color: 'var(--el-color-success)'
     },
     {
         key: 'notice',
         label: '部门公告',
         value: stats.value.noticeCount,
         icon: List,
-        color: '#E6A23C'
+        color: 'var(--el-color-warning)'
     },
     {
         key: 'assignedByMe',
