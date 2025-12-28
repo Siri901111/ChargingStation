@@ -1063,7 +1063,7 @@ const handleRegister = async () => {
     }
     
     &:focus-within {
-        background: #ffffff;
+        background: var(--bg-container, #ffffff);
         border-color: #409eff;
     }
     

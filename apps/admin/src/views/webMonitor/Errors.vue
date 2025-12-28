@@ -698,8 +698,8 @@ onBeforeUnmount(() => {
       padding: 20px;
       background: #fef0f0;
       .error-message { color: #f56c6c; font-weight: 500; }
-      .error-stack { background: #fff; padding: 15px; border-radius: 4px; font-size: 12px; max-height: 300px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: #c45656; border-left: 3px solid #f56c6c; }
-      pre { background: #fff; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 150px; overflow: auto; }
+      .error-stack { background: var(--bg-container, #fff); padding: 15px; border-radius: 4px; font-size: 12px; max-height: 300px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: #c45656; border-left: 3px solid #f56c6c; }
+      pre { background: var(--bg-container, #fff); padding: 10px; border-radius: 4px; font-size: 12px; max-height: 150px; overflow: auto; }
     }
 
     .pagination { margin-top: 20px; justify-content: flex-end; }

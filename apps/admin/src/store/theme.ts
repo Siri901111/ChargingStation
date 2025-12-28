@@ -96,6 +96,13 @@ export const useThemeStore = defineStore("theme", () => {
 
         // 设置 data-theme 属性
         html.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+        
+        // 设置 Element Plus 暗黑模式类名
+        if (isDark.value) {
+            html.classList.add('dark')
+        } else {
+            html.classList.remove('dark')
+        }
 
         // 设置 Element Plus 主题色变量
         html.style.setProperty('--el-color-primary', colorPreset.primary)

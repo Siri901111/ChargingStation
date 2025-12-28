@@ -51,7 +51,7 @@ export default defineComponent({
 
 <style scoped lang="less">
 .is-active{
-    background-color: rgb(34, 136, 255);color: #fff !important;
+    background-color: rgb(34, 136, 255);
     div{
         span{
             color: #fff;

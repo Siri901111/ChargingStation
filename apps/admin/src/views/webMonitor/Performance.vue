@@ -396,7 +396,7 @@ onBeforeUnmount(() => {
   .overview-cards { margin-bottom: 20px; }
 
   .perf-card {
-    background: #fff;
+    background: var(--bg-container, #fff);
     border-radius: 12px;
     padding: 20px 15px;
     text-align: center;
@@ -441,7 +441,7 @@ onBeforeUnmount(() => {
 
   .data-card {
     .card-header { display: flex; justify-content: space-between; align-items: center; .sample-count { font-size: 14px; color: #909399; } }
-    .expand-content { padding: 20px; background: #f5f7fa; pre { background: #fff; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; } }
+    .expand-content { padding: 20px; background: var(--bg-base, #f5f7fa); pre { background: var(--bg-container, #fff); padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; } }
     .pagination { margin-top: 20px; justify-content: flex-end; }
   }
 }
