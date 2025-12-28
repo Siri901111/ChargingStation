@@ -38,7 +38,7 @@
 
         <!-- 水印 -->
         <div class="header-action" @click="toggleWatermark" :title="t('header.watermark')">
-            <el-icon :size="18"><Document /></el-icon>
+            <el-icon :size="18"><View /></el-icon>
         </div>
 
         <!-- 锁屏 -->
@@ -96,7 +96,7 @@
         </el-popover>
 
         <!-- 页面密度 -->
-        <el-popover placement="bottom" :width="200" trigger="click">
+        <!-- <el-popover placement="bottom" :width="200" trigger="click">
             <template #reference>
                 <div class="header-action" :title="t('header.pageDensity')">
                     <el-icon :size="18"><Grid /></el-icon>
@@ -115,7 +115,7 @@
                     <el-icon v-if="currentDensity === density.value" :size="14"><Check /></el-icon>
                 </div>
             </div>
-        </el-popover>
+        </el-popover> -->
 
         <!-- 导出配置 -->
         <div class="header-action" @click="handleExportConfig" :title="t('header.exportConfig')">
@@ -128,9 +128,9 @@
         </div>
 
         <!-- 复制系统信息 -->
-        <div class="header-action" @click="handleCopySystemInfo" :title="t('header.copySystemInfo')">
+        <!-- <div class="header-action" @click="handleCopySystemInfo" :title="t('header.copySystemInfo')">
             <el-icon :size="18"><DocumentCopy /></el-icon>
-        </div>
+        </div> -->
 
         <!-- 自动保存设置 -->
         <el-popover placement="bottom" :width="250" trigger="click">
@@ -157,7 +157,7 @@
         </el-popover>
 
         <!-- 通知设置 -->
-        <el-popover placement="bottom" :width="250" trigger="click">
+        <!-- <el-popover placement="bottom" :width="250" trigger="click">
             <template #reference>
                 <div class="header-action" :title="t('header.notificationSettings')">
                     <el-icon :size="18"><BellFilled /></el-icon>
@@ -173,10 +173,10 @@
                     <span style="margin-left: 8px;">{{ t('header.enableSound') }}</span>
                 </div>
             </div>
-        </el-popover>
+        </el-popover> -->
 
         <!-- 工作区管理 -->
-        <el-popover placement="bottom" :width="300" trigger="click">
+        <!-- <el-popover placement="bottom" :width="300" trigger="click">
             <template #reference>
                 <div class="header-action" :title="t('header.workspace')">
                     <el-icon :size="18"><Folder /></el-icon>
@@ -192,7 +192,7 @@
                     {{ t('header.saveWorkspace') }}
                 </el-button>
             </div>
-        </el-popover>
+        </el-popover> -->
     </div>
 
     <!-- 全局搜索弹窗 -->
