@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "lint": "eslint src --ext .ts,.vue",
     "typecheck": "vue-tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "copy-docs": "node scripts/copy-docs.js",
+    "predev": "npm run copy-docs",
+    "prebuild": "npm run copy-docs"
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",

@@ -153,7 +153,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import formatNumberToThousands from "@/utils/toThousands"
+import formatNumberToThousands from "@/utils/business/toThousands"
 import {ref,reactive} from "vue"
 import {getRevenueChartApi, getRevenueListApi} from "@/api/chargingstation"
 import { useChart } from "@/hooks/useChart";

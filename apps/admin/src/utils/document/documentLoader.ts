@@ -97,17 +97,23 @@ export async function getDocumentContent(files: string[]): Promise<string> {
         const contents = await Promise.all(
             files.map(async (file) => {
                 try {
-                    // 在生产环境中，这些文件应该通过API获取
-                    // 这里使用fetch从public/docs目录获取
+                    // 从public/docs目录加载文档
+                    // 文档应该在构建时或开发时通过脚本复制到public/docs
                     const response = await fetch(`/docs/${file}`)
+                    
                     if (!response.ok) {
-                        throw new Error(`Failed to load ${file}`)
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
                     }
+                    
                     const text = await response.text()
                     return { file, content: text }
                 } catch (error) {
                     console.error(`Error loading ${file}:`, error)
-                    return { file, content: `# ${file}\n\n文档加载失败` }
+                    const errorMsg = error instanceof Error ? error.message : '未知错误'
+                    return { 
+                        file, 
+                        content: `# ${file}\n\n## 文档加载失败\n\n**错误信息:** ${errorMsg}\n\n**解决方案：**\n\n1. 运行 \`npm run copy-docs\` 将docs文件夹复制到public目录\n2. 或者手动将项目根目录的 \`docs\` 文件夹复制到 \`apps/admin/public/docs\`\n3. 确保文件路径正确：\`${file}\`\n\n**提示：** 文档会在开发服务器启动时自动复制，如果未自动复制，请手动运行复制命令。` 
+                    }
                 }
             })
         )

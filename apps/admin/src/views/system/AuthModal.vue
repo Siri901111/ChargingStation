@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import { useUserStore } from '@/store/auth';
 import { storeToRefs } from 'pinia';
-import { transformMenu } from "@/utils/transformMenu"
+import { transformMenu } from "@/utils/business/transformMenu"
 import {setUserAuthApi} from "@/api/system"
 import { ref } from "vue"
 import { ElMessage } from 'element-plus';

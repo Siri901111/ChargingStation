@@ -9,5 +9,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, "./src")
     }
-  }
+  },
+  // 配置静态资源
+  publicDir: 'public'
 })
