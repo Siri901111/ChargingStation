@@ -13,6 +13,9 @@ import permission from './directives/permission'
 // import * as Sentry from "@sentry/vue";
 import { initMonitor, setMonitorUserId } from './monitor'
 import i18n from './locales'
+import { initWatermark } from './utils/watermark'
+import { initLockScreen } from './utils/lockScreen'
+import { useUserStore } from './store/auth'
 
 const app = createApp(App);
 
@@ -64,5 +67,19 @@ const savedUserId = sessionStorage.getItem("userId");
 if (savedUserId) {
   setMonitorUserId(savedUserId);
 }
+
+// 等待应用挂载后初始化水印和锁屏
+setTimeout(() => {
+  const userStore = useUserStore()
+  const username = userStore.username || ''
+  
+  // 初始化水印（如果之前启用过）
+  if (username) {
+    initWatermark(username)
+  }
+  
+  // 初始化锁屏（如果之前锁定过）
+  initLockScreen()
+}, 100)
 
 

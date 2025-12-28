@@ -94,6 +94,105 @@
                 <pre class="info-content">{{ systemInfoText }}</pre>
             </div>
         </el-popover>
+
+        <!-- 页面密度 -->
+        <el-popover placement="bottom" :width="200" trigger="click">
+            <template #reference>
+                <div class="header-action" :title="t('header.pageDensity')">
+                    <el-icon :size="18"><Grid /></el-icon>
+                </div>
+            </template>
+            <div class="density-panel">
+                <div
+                    v-for="density in densityOptions"
+                    :key="density.value"
+                    class="density-item"
+                    :class="{ active: currentDensity === density.value }"
+                    @click="handleDensityChange(density.value)"
+                >
+                    <el-icon :size="16"><component :is="density.icon" /></el-icon>
+                    <span>{{ t(density.label) }}</span>
+                    <el-icon v-if="currentDensity === density.value" :size="14"><Check /></el-icon>
+                </div>
+            </div>
+        </el-popover>
+
+        <!-- 导出配置 -->
+        <div class="header-action" @click="handleExportConfig" :title="t('header.exportConfig')">
+            <el-icon :size="18"><Download /></el-icon>
+        </div>
+
+        <!-- 打印 -->
+        <div class="header-action" @click="handlePrint" :title="t('header.print')">
+            <el-icon :size="18"><Printer /></el-icon>
+        </div>
+
+        <!-- 复制系统信息 -->
+        <div class="header-action" @click="handleCopySystemInfo" :title="t('header.copySystemInfo')">
+            <el-icon :size="18"><DocumentCopy /></el-icon>
+        </div>
+
+        <!-- 自动保存设置 -->
+        <el-popover placement="bottom" :width="250" trigger="click">
+            <template #reference>
+                <div class="header-action" :title="t('header.autoSave')">
+                    <el-icon :size="18"><FolderOpened /></el-icon>
+                </div>
+            </template>
+            <div class="autosave-panel">
+                <el-switch v-model="autoSaveEnabled" @change="handleAutoSaveChange" />
+                <span style="margin-left: 8px;">{{ t('header.autoSave') }}</span>
+                <el-input-number
+                    v-model="autoSaveInterval"
+                    :min="1"
+                    :max="60"
+                    size="small"
+                    style="width: 100%; margin-top: 12px;"
+                    @change="handleAutoSaveIntervalChange"
+                />
+                <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">
+                    {{ t('header.autoSaveInterval') }} ({{ t('common.minutes') }})
+                </div>
+            </div>
+        </el-popover>
+
+        <!-- 通知设置 -->
+        <el-popover placement="bottom" :width="250" trigger="click">
+            <template #reference>
+                <div class="header-action" :title="t('header.notificationSettings')">
+                    <el-icon :size="18"><BellFilled /></el-icon>
+                </div>
+            </template>
+            <div class="notification-panel">
+                <div class="notification-item">
+                    <el-switch v-model="notificationEnabled" @change="handleNotificationChange" />
+                    <span style="margin-left: 8px;">{{ t('header.enableNotification') }}</span>
+                </div>
+                <div class="notification-item" style="margin-top: 12px;">
+                    <el-switch v-model="notificationSound" @change="handleNotificationSoundChange" />
+                    <span style="margin-left: 8px;">{{ t('header.enableSound') }}</span>
+                </div>
+            </div>
+        </el-popover>
+
+        <!-- 工作区管理 -->
+        <el-popover placement="bottom" :width="300" trigger="click">
+            <template #reference>
+                <div class="header-action" :title="t('header.workspace')">
+                    <el-icon :size="18"><Folder /></el-icon>
+                </div>
+            </template>
+            <div class="workspace-panel">
+                <div class="workspace-title">{{ t('header.workspace') }}</div>
+                <div v-for="ws in workspaces" :key="ws.id" class="workspace-item">
+                    <span>{{ ws.name }}</span>
+                    <el-button text size="small" @click="handleLoadWorkspace(ws.id)">{{ t('common.load') }}</el-button>
+                </div>
+                <el-button type="primary" size="small" style="width: 100%; margin-top: 12px;" @click="handleSaveWorkspace">
+                    {{ t('header.saveWorkspace') }}
+                </el-button>
+            </div>
+        </el-popover>
     </div>
 
     <!-- 全局搜索弹窗 -->
@@ -156,15 +255,23 @@ import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/store/auth'
 import {
     Refresh, Search, FullScreen, Aim, ZoomIn, Document, Lock,
-    QuestionFilled, Delete, InfoFilled
+    QuestionFilled, Delete, InfoFilled, Grid, Download, Printer,
+    DocumentCopy, FolderOpened, BellFilled, Folder, Check, Menu, Expand
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { createWatermark, removeWatermark } from '@/utils/watermark'
-import { lockScreen } from '@/utils/lockScreen'
+import { createWatermark, removeWatermark, isWatermarkEnabled as checkWatermarkEnabled } from '@/utils/watermark'
+import { lockScreen, checkLocked } from '@/utils/lockScreen'
 import { getZoomLevel, setZoomLevel, zoomIn as zoomInUtil, zoomOut as zoomOutUtil, resetZoom as resetZoomUtil, initZoom } from '@/utils/pageZoom'
 import { getCacheSize, formatCacheSize, clearAllCache } from '@/utils/cache'
 import { getSystemInfo, formatSystemInfo } from '@/utils/systemInfo'
 import { getShortcutsByCategory } from '@/utils/shortcuts'
+import { setDensity, getDensity, initDensity, type DensityType } from '@/utils/pageDensity'
+import { downloadConfig } from '@/utils/exportConfig'
+import { printPage } from '@/utils/print'
+import { copyToClipboard } from '@/utils/copyToClipboard'
+import { setAutoSave, isAutoSaveEnabled, setAutoSaveInterval, getAutoSaveInterval } from '@/utils/autoSave'
+import { setNotificationEnabled, isNotificationEnabled, setNotificationSound, isNotificationSoundEnabled } from '@/utils/notificationSettings'
+import { getWorkspaces, saveWorkspace, setCurrentWorkspace, type Workspace } from '@/utils/workspace'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -193,7 +300,6 @@ const searchKeyword = ref('')
 const searchResults = ref<any[]>([])
 const selectedIndex = ref(0)
 const searchInputRef = ref()
-const isWatermarkEnabled = ref(false)
 
 const openSearch = () => {
     searchVisible.value = true
@@ -274,13 +380,17 @@ const resetZoom = () => {
 }
 
 // 水印
+const isWatermarkEnabled = ref(checkWatermarkEnabled())
+
 const toggleWatermark = () => {
     if (isWatermarkEnabled.value) {
         removeWatermark()
         isWatermarkEnabled.value = false
         ElMessage.success(t('header.watermarkDisabled'))
     } else {
-        createWatermark({ text: '充电站管理系统' })
+        // 使用用户名作为水印文本
+        const username = userStore.username || t('common.user')
+        createWatermark({ text: username })
         isWatermarkEnabled.value = true
         ElMessage.success(t('header.watermarkEnabled'))
     }
@@ -334,8 +444,97 @@ const handleKeydown = (e: KeyboardEvent) => {
     }
 }
 
+// 页面密度
+const currentDensity = ref<DensityType>(getDensity())
+const densityOptions = [
+    { value: 'compact' as DensityType, label: 'header.densityCompact', icon: Menu },
+    { value: 'default' as DensityType, label: 'header.densityDefault', icon: Grid },
+    { value: 'comfortable' as DensityType, label: 'header.densityComfortable', icon: Expand },
+]
+
+const handleDensityChange = (density: DensityType) => {
+    setDensity(density)
+    currentDensity.value = density
+    ElMessage.success(t('common.success'))
+}
+
+// 导出配置
+const handleExportConfig = () => {
+    downloadConfig()
+    ElMessage.success(t('header.configExported'))
+}
+
+// 打印
+const handlePrint = () => {
+    printPage()
+}
+
+// 复制系统信息
+const handleCopySystemInfo = async () => {
+    const success = await copyToClipboard(systemInfoText.value)
+    if (success) {
+        ElMessage.success(t('header.copied'))
+    } else {
+        ElMessage.error(t('header.copyFailed'))
+    }
+}
+
+// 自动保存
+const autoSaveEnabled = ref(isAutoSaveEnabled())
+const autoSaveInterval = ref(getAutoSaveInterval())
+
+const handleAutoSaveChange = (enabled: boolean) => {
+    setAutoSave(enabled)
+    ElMessage.success(t('common.success'))
+}
+
+const handleAutoSaveIntervalChange = (minutes: number) => {
+    setAutoSaveInterval(minutes)
+}
+
+// 通知设置
+const notificationEnabled = ref(isNotificationEnabled())
+const notificationSound = ref(isNotificationSoundEnabled())
+
+const handleNotificationChange = (enabled: boolean) => {
+    setNotificationEnabled(enabled)
+    ElMessage.success(t('common.success'))
+}
+
+const handleNotificationSoundChange = (enabled: boolean) => {
+    setNotificationSound(enabled)
+    ElMessage.success(t('common.success'))
+}
+
+// 工作区
+const workspaces = ref<Workspace[]>(getWorkspaces())
+
+const handleLoadWorkspace = (id: string) => {
+    setCurrentWorkspace(id)
+    ElMessage.success(t('header.workspaceLoaded'))
+    // 这里可以添加加载工作区布局的逻辑
+}
+
+const handleSaveWorkspace = () => {
+    ElMessageBox.prompt(t('header.workspaceName'), t('header.saveWorkspace'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+    }).then(({ value }) => {
+        const workspace: Workspace = {
+            id: Date.now().toString(),
+            name: value,
+            layout: {}, // 这里可以保存当前布局
+            createdAt: new Date().toISOString(),
+        }
+        saveWorkspace(workspace)
+        workspaces.value = getWorkspaces()
+        ElMessage.success(t('header.workspaceSaved'))
+    }).catch(() => {})
+}
+
 onMounted(() => {
     initZoom()
+    initDensity()
     zoomLevel.value = getZoomLevel()
     updateSystemInfo()
     document.addEventListener('fullscreenchange', handleFullscreenChange)

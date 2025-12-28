@@ -3,6 +3,9 @@
  * 参考字节跳动/腾讯中后台设计规范
  */
 
+const LOCK_SCREEN_STORAGE_KEY = 'lock-screen-enabled'
+const LOCK_SCREEN_PASSWORD_KEY = 'lock-screen-password'
+
 export interface LockScreenOptions {
     password?: string
     onUnlock?: (password: string) => boolean | Promise<boolean>
@@ -20,7 +23,14 @@ let isLocked = false
 export function lockScreen(options: LockScreenOptions = {}) {
     if (isLocked) return
 
+    // 保存密码到localStorage
+    if (options.password) {
+        localStorage.setItem(LOCK_SCREEN_PASSWORD_KEY, options.password)
+    }
+
     isLocked = true
+    localStorage.setItem(LOCK_SCREEN_STORAGE_KEY, 'true')
+
     const lockScreen = document.createElement('div')
     lockScreen.id = 'lock-screen'
     lockScreen.style.cssText = `
@@ -38,17 +48,25 @@ export function lockScreen(options: LockScreenOptions = {}) {
         color: white;
     `
 
+    // 使用国际化文本（这里先用占位符，实际使用时需要传入i18n函数）
+    const lockText = '屏幕已锁定'
+    const unlockText = '请输入密码解锁'
+    const placeholderText = '请输入密码'
+    const unlockBtnText = '解锁'
+    const errorText = '密码错误'
+    const emptyText = '请输入密码'
+
     lockScreen.innerHTML = `
         <div style="text-align: center; margin-bottom: 30px;">
             <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
-            <h2 style="font-size: 24px; margin: 0 0 8px 0;">屏幕已锁定</h2>
-            <p style="font-size: 14px; opacity: 0.8; margin: 0;">请输入密码解锁</p>
+            <h2 style="font-size: 24px; margin: 0 0 8px 0;">${lockText}</h2>
+            <p style="font-size: 14px; opacity: 0.8; margin: 0;">${unlockText}</p>
         </div>
         <div style="width: 320px;">
             <input 
                 id="lock-password-input" 
                 type="password" 
-                placeholder="请输入密码" 
+                placeholder="${placeholderText}" 
                 style="
                     width: 100%;
                     padding: 12px 16px;
@@ -75,7 +93,8 @@ export function lockScreen(options: LockScreenOptions = {}) {
                     cursor: pointer;
                     transition: all 0.3s;
                 "
-            >解锁</button>
+            >${unlockBtnText}</button>
+            <div id="lock-error-msg" style="color: #ff4d4f; font-size: 12px; margin-top: 8px; text-align: center; display: none;"></div>
         </div>
     `
 
@@ -84,27 +103,36 @@ export function lockScreen(options: LockScreenOptions = {}) {
 
     const input = lockScreen.querySelector('#lock-password-input') as HTMLInputElement
     const btn = lockScreen.querySelector('#lock-unlock-btn') as HTMLButtonElement
+    const errorMsg = lockScreen.querySelector('#lock-error-msg') as HTMLDivElement
 
     const handleUnlock = async () => {
         const password = input.value
         if (!password) {
-            alert('请输入密码')
+            errorMsg.textContent = emptyText
+            errorMsg.style.display = 'block'
             return
         }
+
+        errorMsg.style.display = 'none'
+
+        // 从localStorage获取保存的密码
+        const savedPassword = localStorage.getItem(LOCK_SCREEN_PASSWORD_KEY)
 
         if (options.onUnlock) {
             const result = await options.onUnlock(password)
             if (result) {
                 unlockScreen()
             } else {
-                alert('密码错误')
+                errorMsg.textContent = errorText
+                errorMsg.style.display = 'block'
                 input.value = ''
             }
-        } else if (options.password) {
-            if (password === options.password) {
+        } else if (savedPassword) {
+            if (password === savedPassword) {
                 unlockScreen()
             } else {
-                alert('密码错误')
+                errorMsg.textContent = errorText
+                errorMsg.style.display = 'block'
                 input.value = ''
             }
         } else {
@@ -118,6 +146,9 @@ export function lockScreen(options: LockScreenOptions = {}) {
             handleUnlock()
         }
     })
+    input.addEventListener('input', () => {
+        errorMsg.style.display = 'none'
+    })
 
     input.focus()
 }
@@ -129,9 +160,31 @@ export function unlockScreen() {
     if (!isLocked) return
 
     isLocked = false
+    localStorage.setItem(LOCK_SCREEN_STORAGE_KEY, 'false')
     if (lockScreenElement) {
         lockScreenElement.remove()
         lockScreenElement = null
+    }
+}
+
+/**
+ * 检查是否已锁定
+ */
+export function checkLocked(): boolean {
+    return isLocked || localStorage.getItem(LOCK_SCREEN_STORAGE_KEY) === 'true'
+}
+
+/**
+ * 初始化锁屏（页面加载时调用）
+ */
+export function initLockScreen() {
+    const locked = localStorage.getItem(LOCK_SCREEN_STORAGE_KEY) === 'true'
+    if (locked) {
+        isLocked = true
+        const savedPassword = localStorage.getItem(LOCK_SCREEN_PASSWORD_KEY)
+        if (savedPassword) {
+            lockScreen({ password: savedPassword })
+        }
     }
 }
 
@@ -153,12 +206,5 @@ export function clearAutoLock() {
         clearTimeout(autoLockTimer)
         autoLockTimer = null
     }
-}
-
-/**
- * 检查是否已锁定
- */
-export function checkLocked(): boolean {
-    return isLocked
 }
 

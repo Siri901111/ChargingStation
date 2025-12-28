@@ -3,6 +3,9 @@
  * 参考字节跳动/腾讯中后台设计规范
  */
 
+const WATERMARK_STORAGE_KEY = 'watermark-enabled'
+const WATERMARK_TEXT_KEY = 'watermark-text'
+
 export interface WatermarkOptions {
     text?: string
     fontSize?: number
@@ -15,7 +18,7 @@ export interface WatermarkOptions {
 }
 
 const defaultOptions: Required<WatermarkOptions> = {
-    text: '充电站管理系统',
+    text: '',
     fontSize: 16,
     fontFamily: 'Microsoft YaHei, Arial, sans-serif',
     color: '#000000',
@@ -26,6 +29,7 @@ const defaultOptions: Required<WatermarkOptions> = {
 }
 
 let watermarkInstance: HTMLDivElement | null = null
+let observer: MutationObserver | null = null
 
 /**
  * 创建水印
@@ -35,10 +39,20 @@ export function createWatermark(options: WatermarkOptions = {}) {
     removeWatermark()
 
     const opts = { ...defaultOptions, ...options }
+    
+    // 如果没有提供文本，从localStorage获取
+    if (!opts.text) {
+        opts.text = localStorage.getItem(WATERMARK_TEXT_KEY) || ''
+    }
+    
+    if (!opts.text) {
+        return null
+    }
+
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     
-    if (!ctx) return
+    if (!ctx) return null
 
     // 设置canvas尺寸
     const gapX = opts.gap[0]
@@ -49,9 +63,13 @@ export function createWatermark(options: WatermarkOptions = {}) {
     canvas.width = canvasWidth
     canvas.height = canvasHeight
 
+    // 根据主题调整颜色
+    const isDark = document.documentElement.classList.contains('dark')
+    const textColor = isDark ? '#ffffff' : opts.color
+
     // 设置文字样式
     ctx.font = `${opts.fontSize}px ${opts.fontFamily}`
-    ctx.fillStyle = opts.color
+    ctx.fillStyle = textColor
     ctx.globalAlpha = opts.opacity
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
@@ -80,12 +98,16 @@ export function createWatermark(options: WatermarkOptions = {}) {
     document.body.appendChild(watermark)
     watermarkInstance = watermark
 
+    // 保存到localStorage
+    localStorage.setItem(WATERMARK_STORAGE_KEY, 'true')
+    localStorage.setItem(WATERMARK_TEXT_KEY, opts.text)
+
     // 防止通过开发者工具删除水印
-    const observer = new MutationObserver((mutations) => {
+    observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.removedNodes.length) {
                 mutation.removedNodes.forEach((node) => {
-                    if (node === watermark) {
+                    if (node === watermark && document.body) {
                         document.body.appendChild(watermark)
                     }
                 })
@@ -108,6 +130,31 @@ export function removeWatermark() {
     if (watermarkInstance) {
         watermarkInstance.remove()
         watermarkInstance = null
+    }
+    if (observer) {
+        observer.disconnect()
+        observer = null
+    }
+    localStorage.setItem(WATERMARK_STORAGE_KEY, 'false')
+}
+
+/**
+ * 检查水印是否启用
+ */
+export function isWatermarkEnabled(): boolean {
+    return localStorage.getItem(WATERMARK_STORAGE_KEY) === 'true'
+}
+
+/**
+ * 初始化水印（页面加载时调用）
+ */
+export function initWatermark(username?: string) {
+    const enabled = isWatermarkEnabled()
+    if (enabled) {
+        const text = localStorage.getItem(WATERMARK_TEXT_KEY) || username || ''
+        if (text) {
+            createWatermark({ text })
+        }
     }
 }
 
