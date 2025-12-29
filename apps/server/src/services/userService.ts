@@ -150,6 +150,11 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
           ]
         },
         {
+          name: 'AI智能体',
+          url: '/ai-agent',
+          icon: 'MagicStick'
+        },
+        {
           name: '个人中心',
           url: '/personal',
           icon: 'User'
@@ -228,6 +233,11 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
           icon: 'Magnet'
         },
         {
+          name: 'AI智能体',
+          url: '/ai-agent',
+          icon: 'MagicStick'
+        },
+        {
           name: '个人中心',
           url: '/personal',
           icon: 'User'
@@ -236,7 +246,7 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
       btnAuth: ['add', 'edit']
     };
   }
-  
+
   // 普通用户权限 - 基础菜单，只有查看权限
   return {
     menulist: [

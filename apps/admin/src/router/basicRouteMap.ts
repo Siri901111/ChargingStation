@@ -106,6 +106,15 @@ const routes:RouteRecordRaw[]=[
                 name:"webmonitor-network",
                 component:()=>import("@/views/webMonitor/Network.vue"),
             },
+            // AI智能体模块
+            {
+                path:"/ai-agent",
+                name:"ai-agent",
+                component:()=>import("@/views/aiAgent/AIAgent.vue"),
+                meta:{
+                    needAuth:["admin","manager"]
+                }
+            },
         ]
     },
     {

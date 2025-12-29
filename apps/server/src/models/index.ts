@@ -12,6 +12,7 @@ import BillingTemplate from './BillingTemplate.js';
 import Document from './Document.js';
 import PileMaintenance from './PileMaintenance.js';
 import MonitorData from './MonitorData.js';
+import { AIAgent, KnowledgeBase, KnowledgeDocument, ChatSession, ChatMessage } from './AIAgent.js';
 
 // ==================== 模型关联关系设置 ====================
 
@@ -122,6 +123,28 @@ Document.belongsTo(User, {
   as: 'author'
 });
 
+// User (后台管理用户) 与 AIAgent (AI智能体) 关联关系
+// 一个用户可以创建多个智能体
+User.hasMany(AIAgent, {
+  foreignKey: 'creator_id',
+  as: 'agents'
+});
+AIAgent.belongsTo(User, {
+  foreignKey: 'creator_id',
+  as: 'creator'
+});
+
+// User (后台管理用户) 与 KnowledgeBase (知识库) 关联关系
+// 一个用户可以创建多个知识库
+User.hasMany(KnowledgeBase, {
+  foreignKey: 'creator_id',
+  as: 'knowledgeBases'
+});
+KnowledgeBase.belongsTo(User, {
+  foreignKey: 'creator_id',
+  as: 'creator'
+});
+
 // ==================== 导出模型 ====================
 export {
   User,
@@ -137,5 +160,10 @@ export {
   BillingTemplate,
   Document,
   PileMaintenance,
-  MonitorData
+  MonitorData,
+  AIAgent,
+  KnowledgeBase,
+  KnowledgeDocument,
+  ChatSession,
+  ChatMessage
 };
