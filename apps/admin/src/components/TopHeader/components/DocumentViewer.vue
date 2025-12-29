@@ -201,7 +201,17 @@ const categories = [
         count: 2,
         files: [
             'design/数据库设计文档.md',
-            'design/系统功能分析与扩展建议.md'
+            'design/系统功能分析与扩展建议.md',
+        ]
+    },
+    {
+        id: 'sdk',
+        name: t('doc.sdk'),
+        icon: Collection,
+        count: 2,
+        files: [
+            'sdk/request-sdk.md',
+            'sdk/monitor-sdk.md'
         ]
     }
 ]
