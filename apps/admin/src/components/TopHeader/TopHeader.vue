@@ -7,9 +7,6 @@
 
         <!-- 右侧功能区 -->
         <div class="header-right">
-            <!-- 主题切换 -->
-            <ThemeToggle />
-
             <!-- 语言切换 -->
             <LocaleSwitcher />
 
@@ -30,7 +27,6 @@
 
 <script setup lang="ts">
 import HeaderActions from './components/HeaderActions.vue'
-import ThemeToggle from './components/ThemeToggle.vue'
 import LocaleSwitcher from './components/LocaleSwitcher.vue'
 import NotificationBell from './components/NotificationBell.vue'
 import DocumentViewer from './components/DocumentViewer.vue'
@@ -44,9 +40,8 @@ import UserMenu from './components/UserMenu.vue'
     align-items: center;
     height: 56px;
     padding: 0 16px;
-    background-color: var(--bg-container);
-    border-bottom: 1px solid var(--border-color-light);
-    transition: all 0.3s ease;
+    background-color: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .header-left,
@@ -59,7 +54,7 @@ import UserMenu from './components/UserMenu.vue'
 .divider {
     width: 1px;
     height: 24px;
-    background-color: var(--border-color);
+    background-color: #d9d9d9;
     margin: 0 12px;
 }
 </style>

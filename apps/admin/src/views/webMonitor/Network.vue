@@ -502,8 +502,8 @@ onBeforeUnmount(() => {
     .duration-slow { color: #f56c6c; font-weight: 600; }
     .request-detail {
       padding: 20px;
-      background: var(--bg-base, #f5f7fa);
-      pre { background: var(--bg-container, #fff); padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; }
+      background: #f0f2f5;
+      pre { background: #ffffff; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; }
     }
     .pagination { margin-top: 20px; justify-content: flex-end; }
   }

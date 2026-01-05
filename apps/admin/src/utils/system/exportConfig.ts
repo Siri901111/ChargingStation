@@ -3,15 +3,10 @@
  * 参考字节跳动/腾讯中后台设计规范
  */
 
-import { useThemeStore } from '@/store/theme'
 import { getLocale } from '@/locales'
 import { useUserStore } from '@/store/auth'
 
 export interface SystemConfig {
-    theme: {
-        mode: string
-        color: string
-    }
     locale: string
     user: {
         username: string
@@ -24,14 +19,9 @@ export interface SystemConfig {
  * 导出系统配置为JSON
  */
 export function exportConfig(): string {
-    const themeStore = useThemeStore()
     const userStore = useUserStore()
-    
+
     const config: SystemConfig = {
-        theme: {
-            mode: themeStore.themeMode,
-            color: themeStore.themeColor,
-        },
         locale: getLocale(),
         user: {
             username: userStore.username,
@@ -39,7 +29,7 @@ export function exportConfig(): string {
         },
         timestamp: new Date().toISOString(),
     }
-    
+
     return JSON.stringify(config, null, 2)
 }
 
@@ -56,4 +46,3 @@ export function downloadConfig() {
     link.click()
     URL.revokeObjectURL(url)
 }
-

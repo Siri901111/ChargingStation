@@ -46,8 +46,7 @@ const currentMenuName = computed(() => {
 <style scoped lang="less">
 .menu-wrapper {
     height: 100%;
-    background-color: var(--bg-container);
-    transition: background-color 0.3s ease;
+    background-color: #ffffff;
 }
 
 .logo {
@@ -56,14 +55,13 @@ const currentMenuName = computed(() => {
     align-items: center;
     height: 56px;
     padding: 8px 0;
-    border-bottom: 1px solid var(--border-color-light);
+    border-bottom: 1px solid #f0f0f0;
 
     .logo-title {
         font-size: 18px;
         font-weight: 600;
-        color: var(--text-primary);
+        color: rgba(0, 0, 0, 0.88);
         margin-left: 8px;
-        transition: color 0.3s ease;
     }
 }
 
@@ -72,27 +70,25 @@ const currentMenuName = computed(() => {
     background-color: transparent;
 
     :deep(.el-menu-item) {
-        color: var(--text-secondary);
-        transition: all 0.3s ease;
+        color: rgba(0, 0, 0, 0.65);
 
         &:hover {
-            background-color: var(--border-color-light);
-            color: var(--text-primary);
+            background-color: #f0f0f0;
+            color: rgba(0, 0, 0, 0.88);
         }
 
         &.is-active {
             color: var(--el-color-primary);
-            background-color: var(--theme-color-light);
+            background-color: #ecf5ff;
         }
     }
 
     :deep(.el-sub-menu__title) {
-        color: var(--text-secondary);
-        transition: all 0.3s ease;
+        color: rgba(0, 0, 0, 0.65);
 
         &:hover {
-            background-color: var(--border-color-light);
-            color: var(--text-primary);
+            background-color: #f0f0f0;
+            color: rgba(0, 0, 0, 0.88);
         }
     }
 

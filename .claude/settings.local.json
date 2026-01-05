@@ -16,7 +16,10 @@
       "Bash(pnpm install:*)",
       "Bash(pnpm build:*)",
       "Bash(pnpm --filter @charging/server build:*)",
-      "Bash(pnpm --filter @charging/admin build:*)"
+      "Bash(pnpm --filter @charging/admin build:*)",
+      "Bash(tree:*)",
+      "Bash(del \"C:\\\\Users\\\\Lenovo\\\\Desktop\\\\毕业论文\\\\chargingStation\\\\apps\\\\admin\\\\src\\\\components\\\\TopHeader\\\\components\\\\ThemeToggle.vue\")",
+      "Bash(rm:*)"
     ]
   }
 }

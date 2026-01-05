@@ -102,9 +102,8 @@ const remove = (TabPaneName: string) => {
 
 <style lang="less" scoped>
 .tabs-wrapper {
-    background-color: var(--bg-container);
-    border-bottom: 1px solid var(--border-color-light);
-    transition: all 0.3s ease;
+    background-color: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .tabs-nav {
@@ -119,15 +118,14 @@ const remove = (TabPaneName: string) => {
     }
 
     :deep(.el-tabs__item) {
-        color: var(--text-secondary);
-        border: 1px solid var(--border-color-light);
+        color: rgba(0, 0, 0, 0.65);
+        border: 1px solid #f0f0f0;
         border-bottom: none;
         background-color: transparent;
-        transition: all 0.3s ease;
         margin-right: 4px;
 
         &:hover {
-            color: var(--text-primary);
+            color: rgba(0, 0, 0, 0.88);
         }
 
         &.is-active {

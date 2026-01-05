@@ -65,7 +65,7 @@
             </div>
         </template>
 
-        <div class="typora-container" :class="{ 'dark-mode': isDarkMode }">
+        <div class="typora-container">
             <!-- 侧边目录 -->
             <aside class="typora-sidebar" v-if="showSidebar && tocList.length > 0">
                 <div class="sidebar-header">
@@ -127,8 +127,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useThemeStore } from '@/store/theme'
-import { storeToRefs } from 'pinia'
 import {
     Document, Search, ArrowRight, Collection, Guide, Setting,
     DataAnalysis, FullScreen, Close, Menu, Top
@@ -137,8 +135,6 @@ import { ElMessage } from 'element-plus'
 import { getDocumentContent, extractToc } from '@/utils/document/documentLoader'
 
 const { t } = useI18n()
-const themeStore = useThemeStore()
-const { isDark } = storeToRefs(themeStore)
 
 const searchKeyword = ref('')
 const docDialogVisible = ref(false)
@@ -149,8 +145,6 @@ const isFullscreen = ref(false)
 const showSidebar = ref(true)
 const tocList = ref<{ id: string; text: string; level: number }[]>([])
 const mainContentRef = ref<HTMLElement | null>(null)
-
-const isDarkMode = computed(() => isDark.value)
 
 const categories = [
     {
@@ -279,11 +273,11 @@ watch(docDialogVisible, (val) => {
     padding: 0 8px;
     border-radius: 6px;
     cursor: pointer;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
     transition: all 0.2s ease;
 
     &:hover {
-        background-color: var(--border-color-light);
+        background-color: #f0f0f0;
         color: var(--el-color-primary);
     }
 }
@@ -295,13 +289,13 @@ watch(docDialogVisible, (val) => {
 
 .doc-header {
     padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color-light);
+    border-bottom: 1px solid #f0f0f0;
     margin-bottom: 12px;
 
     h3 {
         font-size: 16px;
         font-weight: 600;
-        color: var(--text-primary);
+        color: rgba(0, 0, 0, 0.88);
         margin: 0;
     }
 }
@@ -320,11 +314,11 @@ watch(docDialogVisible, (val) => {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
-    background-color: var(--bg-container);
-    border: 1px solid var(--border-color-light);
+    background-color: #ffffff;
+    border: 1px solid #f0f0f0;
 
     &:hover {
-        background-color: var(--border-color-light);
+        background-color: #f0f0f0;
         border-color: var(--el-color-primary);
         transform: translateX(4px);
     }
@@ -335,13 +329,13 @@ watch(docDialogVisible, (val) => {
         .category-name {
             font-size: 14px;
             font-weight: 500;
-            color: var(--text-primary);
+            color: rgba(0, 0, 0, 0.88);
             margin-bottom: 4px;
         }
 
         .category-count {
             font-size: 12px;
-            color: var(--text-tertiary);
+            color: rgba(0, 0, 0, 0.45);
         }
     }
 }
@@ -356,7 +350,7 @@ watch(docDialogVisible, (val) => {
     .dialog-title {
         font-size: 18px;
         font-weight: 600;
-        color: var(--text-primary);
+        color: rgba(0, 0, 0, 0.88);
     }
 
     .dialog-actions {
@@ -372,7 +366,7 @@ watch(docDialogVisible, (val) => {
 
     .file-count {
         font-size: 13px;
-        color: var(--text-tertiary);
+        color: rgba(0, 0, 0, 0.45);
     }
 }
 
@@ -380,30 +374,21 @@ watch(docDialogVisible, (val) => {
 .typora-container {
     display: flex;
     height: calc(85vh - 140px);
-    background-color: var(--bg-container);
+    background-color: #ffffff;
     border-radius: 8px;
     overflow: hidden;
     position: relative;
-
-    &.dark-mode {
-        background-color: #1e1e1e;
-    }
 }
 
 // 侧边目录
 .typora-sidebar {
     width: 260px;
     min-width: 260px;
-    background-color: var(--bg-base);
-    border-right: 1px solid var(--border-color-light);
+    background-color: #f0f2f5;
+    border-right: 1px solid #f0f0f0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-
-    .dark-mode & {
-        background-color: #252526;
-        border-color: #3c3c3c;
-    }
 
     .sidebar-header {
         display: flex;
@@ -412,12 +397,8 @@ watch(docDialogVisible, (val) => {
         padding: 16px;
         font-weight: 600;
         font-size: 14px;
-        color: var(--text-primary);
-        border-bottom: 1px solid var(--border-color-light);
-
-        .dark-mode & {
-            border-color: #3c3c3c;
-        }
+        color: rgba(0, 0, 0, 0.88);
+        border-bottom: 1px solid #f0f0f0;
     }
 
     .toc-nav {
@@ -429,13 +410,13 @@ watch(docDialogVisible, (val) => {
             display: block;
             padding: 8px 16px;
             font-size: 13px;
-            color: var(--text-secondary);
+            color: rgba(0, 0, 0, 0.65);
             text-decoration: none;
             transition: all 0.2s;
             border-left: 3px solid transparent;
 
             &:hover {
-                background-color: var(--border-color-light);
+                background-color: #f0f0f0;
                 color: var(--el-color-primary);
             }
 
@@ -462,10 +443,6 @@ watch(docDialogVisible, (val) => {
     overflow-y: auto;
     padding: 32px 48px;
     scroll-behavior: smooth;
-
-    .dark-mode & {
-        background-color: #1e1e1e;
-    }
 }
 
 // 悬浮工具栏
@@ -489,10 +466,6 @@ watch(docDialogVisible, (val) => {
     color: #333;
     word-wrap: break-word;
 
-    .dark-mode & {
-        color: #d4d4d4;
-    }
-
     // 文档文章
     .doc-article {
         margin-bottom: 64px;
@@ -510,7 +483,7 @@ watch(docDialogVisible, (val) => {
         .doc-article-title {
             font-size: 28px;
             font-weight: 700;
-            color: var(--text-primary);
+            color: rgba(0, 0, 0, 0.88);
             margin: 0 0 12px 0;
             line-height: 1.3;
         }
@@ -518,9 +491,9 @@ watch(docDialogVisible, (val) => {
         .doc-article-meta {
             .doc-file-path {
                 font-size: 13px;
-                color: var(--text-tertiary);
+                color: rgba(0, 0, 0, 0.45);
                 font-family: 'SF Mono', Consolas, monospace;
-                background: var(--bg-base);
+                background: #f0f2f5;
                 padding: 4px 8px;
                 border-radius: 4px;
             }
@@ -530,7 +503,7 @@ watch(docDialogVisible, (val) => {
     .doc-separator {
         margin: 48px 0;
         border: none;
-        border-top: 2px dashed var(--border-color);
+        border-top: 2px dashed #d9d9d9;
     }
 
     // 标题样式 - Typora 风格
@@ -539,13 +512,13 @@ watch(docDialogVisible, (val) => {
         margin-bottom: 16px;
         font-weight: 600;
         line-height: 1.4;
-        color: var(--text-primary);
+        color: rgba(0, 0, 0, 0.88);
         position: relative;
 
         .header-anchor {
             position: absolute;
             left: -24px;
-            color: var(--text-tertiary);
+            color: rgba(0, 0, 0, 0.45);
             font-weight: 400;
             opacity: 0;
             transition: opacity 0.2s;
@@ -560,20 +533,20 @@ watch(docDialogVisible, (val) => {
     h1 {
         font-size: 2em;
         padding-bottom: 12px;
-        border-bottom: 1px solid var(--border-color-light);
+        border-bottom: 1px solid #f0f0f0;
         margin-top: 0;
     }
 
     h2 {
         font-size: 1.5em;
         padding-bottom: 8px;
-        border-bottom: 1px solid var(--border-color-light);
+        border-bottom: 1px solid #f0f0f0;
     }
 
     h3 { font-size: 1.25em; }
     h4 { font-size: 1.1em; }
     h5 { font-size: 1em; }
-    h6 { font-size: 0.9em; color: var(--text-secondary); }
+    h6 { font-size: 0.9em; color: rgba(0, 0, 0, 0.65); }
 
     // 段落
     p {
@@ -602,16 +575,12 @@ watch(docDialogVisible, (val) => {
         background-color: #fff3bf;
         padding: 2px 4px;
         border-radius: 3px;
-
-        .dark-mode & {
-            background-color: #5c4d1e;
-        }
     }
 
     // 删除线
     del {
         text-decoration: line-through;
-        color: var(--text-tertiary);
+        color: rgba(0, 0, 0, 0.45);
     }
 
     // 列表
@@ -653,7 +622,7 @@ watch(docDialogVisible, (val) => {
         }
 
         &.checked {
-            color: var(--text-tertiary);
+            color: rgba(0, 0, 0, 0.45);
             text-decoration: line-through;
         }
     }
@@ -665,11 +634,7 @@ watch(docDialogVisible, (val) => {
         border-left: 4px solid var(--el-color-primary);
         background-color: #f8f9fa;
         border-radius: 0 8px 8px 0;
-        color: var(--text-secondary);
-
-        .dark-mode & {
-            background-color: #2d2d2d;
-        }
+        color: rgba(0, 0, 0, 0.65);
 
         p {
             margin: 0;
@@ -677,7 +642,7 @@ watch(docDialogVisible, (val) => {
 
         blockquote {
             margin-top: 12px;
-            border-left-color: var(--border-color);
+            border-left-color: #d9d9d9;
         }
     }
 
@@ -687,12 +652,7 @@ watch(docDialogVisible, (val) => {
         border-radius: 8px;
         overflow: hidden;
         background-color: #fafafa;
-        border: 1px solid var(--border-color-light);
-
-        .dark-mode & {
-            background-color: #1e1e1e;
-            border-color: #3c3c3c;
-        }
+        border: 1px solid #f0f0f0;
 
         .code-header {
             display: flex;
@@ -700,26 +660,21 @@ watch(docDialogVisible, (val) => {
             justify-content: space-between;
             padding: 8px 16px;
             background-color: #f0f0f0;
-            border-bottom: 1px solid var(--border-color-light);
-
-            .dark-mode & {
-                background-color: #2d2d2d;
-                border-color: #3c3c3c;
-            }
+            border-bottom: 1px solid #f0f0f0;
 
             .code-lang {
                 font-size: 12px;
                 font-weight: 500;
-                color: var(--text-secondary);
+                color: rgba(0, 0, 0, 0.65);
                 text-transform: uppercase;
             }
 
             .copy-btn {
                 padding: 4px 12px;
                 font-size: 12px;
-                color: var(--text-secondary);
+                color: rgba(0, 0, 0, 0.65);
                 background-color: transparent;
-                border: 1px solid var(--border-color);
+                border: 1px solid #d9d9d9;
                 border-radius: 4px;
                 cursor: pointer;
                 transition: all 0.2s;
@@ -758,11 +713,6 @@ watch(docDialogVisible, (val) => {
         background-color: #f5f5f5;
         border-radius: 4px;
         color: #e83e8c;
-
-        .dark-mode & {
-            background-color: #2d2d2d;
-            color: #ce9178;
-        }
     }
 
     // 表格 - Typora 风格
@@ -770,7 +720,7 @@ watch(docDialogVisible, (val) => {
         margin: 16px 0;
         overflow-x: auto;
         border-radius: 8px;
-        border: 1px solid var(--border-color-light);
+        border: 1px solid #f0f0f0;
 
         .typora-table {
             width: 100%;
@@ -780,21 +730,17 @@ watch(docDialogVisible, (val) => {
             th, td {
                 padding: 12px 16px;
                 text-align: left;
-                border-bottom: 1px solid var(--border-color-light);
+                border-bottom: 1px solid #f0f0f0;
             }
 
             th {
                 font-weight: 600;
                 background-color: #fafafa;
-                color: var(--text-primary);
-
-                .dark-mode & {
-                    background-color: #2d2d2d;
-                }
+                color: rgba(0, 0, 0, 0.88);
             }
 
             td {
-                color: var(--text-secondary);
+                color: rgba(0, 0, 0, 0.65);
             }
 
             tr:last-child td {
@@ -803,10 +749,6 @@ watch(docDialogVisible, (val) => {
 
             tr:hover td {
                 background-color: #f5f7fa;
-
-                .dark-mode & {
-                    background-color: #2d2d2d;
-                }
             }
         }
     }
@@ -826,7 +768,7 @@ watch(docDialogVisible, (val) => {
         figcaption {
             margin-top: 12px;
             font-size: 14px;
-            color: var(--text-tertiary);
+            color: rgba(0, 0, 0, 0.45);
             font-style: italic;
         }
     }
@@ -835,7 +777,7 @@ watch(docDialogVisible, (val) => {
     hr {
         margin: 32px 0;
         border: none;
-        border-top: 1px solid var(--border-color-light);
+        border-top: 1px solid #f0f0f0;
     }
 
     // 自定义容器 - 类似 VuePress 风格
@@ -858,35 +800,30 @@ watch(docDialogVisible, (val) => {
             background-color: #e6f7ff;
             border-color: #1890ff;
             .custom-container-title { color: #1890ff; }
-            .dark-mode & { background-color: #111d2c; }
         }
 
         &.warning {
             background-color: #fffbe6;
             border-color: #faad14;
             .custom-container-title { color: #faad14; }
-            .dark-mode & { background-color: #2b2111; }
         }
 
         &.danger {
             background-color: #fff2f0;
             border-color: #ff4d4f;
             .custom-container-title { color: #ff4d4f; }
-            .dark-mode & { background-color: #2a1215; }
         }
 
         &.info {
             background-color: #f4f4f5;
             border-color: #909399;
             .custom-container-title { color: #909399; }
-            .dark-mode & { background-color: #262626; }
         }
 
         &.success {
             background-color: #f6ffed;
             border-color: #52c41a;
             .custom-container-title { color: #52c41a; }
-            .dark-mode & { background-color: #162312; }
         }
     }
 
@@ -894,14 +831,14 @@ watch(docDialogVisible, (val) => {
     .custom-details {
         margin: 16px 0;
         padding: 12px 16px;
-        background-color: var(--bg-base);
+        background-color: #f0f2f5;
         border-radius: 8px;
-        border: 1px solid var(--border-color-light);
+        border: 1px solid #f0f0f0;
 
         summary {
             font-weight: 600;
             cursor: pointer;
-            color: var(--text-primary);
+            color: rgba(0, 0, 0, 0.88);
             outline: none;
 
             &:hover {
@@ -912,7 +849,7 @@ watch(docDialogVisible, (val) => {
         &[open] summary {
             margin-bottom: 12px;
             padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color-light);
+            border-bottom: 1px solid #f0f0f0;
         }
     }
 
@@ -920,9 +857,9 @@ watch(docDialogVisible, (val) => {
     .footnotes {
         margin-top: 48px;
         padding-top: 24px;
-        border-top: 1px solid var(--border-color-light);
+        border-top: 1px solid #f0f0f0;
         font-size: 14px;
-        color: var(--text-secondary);
+        color: rgba(0, 0, 0, 0.65);
 
         hr { display: none; }
 
@@ -943,7 +880,7 @@ watch(docDialogVisible, (val) => {
     .loading {
         padding: 48px;
         text-align: center;
-        color: var(--text-tertiary);
+        color: rgba(0, 0, 0, 0.45);
     }
 }
 </style>

@@ -27,9 +27,8 @@ import TabsLayout from "@/layouts/TabsLayout.vue"
 
 .aside-container {
     height: 100vh;
-    background-color: var(--bg-container);
-    border-right: 1px solid var(--border-color-light);
-    transition: all 0.3s ease;
+    background-color: #ffffff;
+    border-right: 1px solid #f0f0f0;
     overflow: hidden;
 }
 
@@ -47,9 +46,8 @@ import TabsLayout from "@/layouts/TabsLayout.vue"
 
 .main-container {
     flex: 1;
-    background-color: var(--bg-base);
+    background-color: #f0f2f5;
     overflow: auto;
-    transition: background-color 0.3s ease;
     padding: 0;
 }
 </style>

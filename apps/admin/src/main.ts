@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
 import './style.less'
 import './assets/styles/tailwind.css'
-import './assets/styles/dark-mode.css'
 import App from './App.vue'
 import router from './router'
 import "@/router/guard"

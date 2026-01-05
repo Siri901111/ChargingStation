@@ -87,11 +87,11 @@ onMounted(() => {
     padding: 0 8px;
     border-radius: 6px;
     cursor: pointer;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
     transition: all 0.2s ease;
 
     &:hover {
-        background-color: var(--border-color-light);
+        background-color: #f0f0f0;
         color: var(--el-color-primary);
     }
 }
@@ -107,7 +107,7 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid var(--border-color-light);
+    border-bottom: 1px solid #f0f0f0;
     font-weight: 500;
 }
 
@@ -119,29 +119,29 @@ onMounted(() => {
 
 .notice-item {
     padding: 12px 16px;
-    border-bottom: 1px solid var(--border-color-light);
+    border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
     transition: background-color 0.2s;
 
     &:hover {
-        background-color: var(--border-color-light);
+        background-color: #f0f0f0;
     }
 
     &.unread {
-        background-color: var(--theme-color-light);
+        background-color: #ecf5ff;
         border-left: 3px solid var(--el-color-primary);
     }
 
     .notice-title {
         font-size: 14px;
         font-weight: 500;
-        color: var(--text-primary);
+        color: rgba(0, 0, 0, 0.88);
         margin-bottom: 4px;
     }
 
     .notice-content {
         font-size: 12px;
-        color: var(--text-secondary);
+        color: rgba(0, 0, 0, 0.65);
         margin-bottom: 4px;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -152,14 +152,14 @@ onMounted(() => {
 
     .notice-time {
         font-size: 11px;
-        color: var(--text-tertiary);
+        color: rgba(0, 0, 0, 0.45);
     }
 }
 
 .notice-footer {
     padding: 8px 16px;
     text-align: center;
-    border-top: 1px solid var(--border-color-light);
+    border-top: 1px solid #f0f0f0;
 }
 </style>
 

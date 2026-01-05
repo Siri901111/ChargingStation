@@ -53,11 +53,11 @@ const handleLocaleChange = (loc: LocaleType) => {
     padding: 0 8px;
     border-radius: 6px;
     cursor: pointer;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
     transition: all 0.2s ease;
 
     &:hover {
-        background-color: var(--border-color-light);
+        background-color: #f0f0f0;
         color: var(--el-color-primary);
     }
 }
@@ -79,16 +79,16 @@ const handleLocaleChange = (loc: LocaleType) => {
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
     transition: all 0.2s ease;
 
     &:hover {
-        background-color: var(--border-color-light);
-        color: var(--text-primary);
+        background-color: #f0f0f0;
+        color: rgba(0, 0, 0, 0.88);
     }
 
     &.active {
-        background-color: var(--theme-color-light);
+        background-color: #ecf5ff;
         color: var(--el-color-primary);
     }
 }

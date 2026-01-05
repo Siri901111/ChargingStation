@@ -644,7 +644,7 @@ onBeforeUnmount(() => {
 
     .tracking-content {
       .tracking-stat-card {
-        background: var(--bg-base, #f5f7fa);
+        background: #f0f2f5;
         padding: 16px;
         border-radius: 8px;
         text-align: center;
@@ -758,8 +758,8 @@ onBeforeUnmount(() => {
     }
     .expand-content {
       padding: 20px;
-      background: var(--bg-base, #f5f7fa);
-      pre { background: var(--bg-container, #fff); padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; }
+      background: #f0f2f5;
+      pre { background: #ffffff; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; }
     }
     .text-gray { color: #909399; }
     .clickable-user {

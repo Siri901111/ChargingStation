@@ -42,7 +42,7 @@
                                 </el-timeline-item>
                             </el-timeline>
                         </div>
-                        <div v-else style="padding: 10px; color: var(--text-tertiary);">
+                        <div v-else style="padding: 10px; color: rgba(0, 0, 0, 0.45);">
                             暂无消费记录
                         </div>
                     </el-popover>

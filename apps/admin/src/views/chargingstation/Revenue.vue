@@ -288,7 +288,7 @@ onMounted(()=>{
         line-height: 30px;
         margin-right: 20px;
     }
-    h4{color: var(--text-secondary);}
+    h4{color: rgba(0, 0, 0, 0.65);}
 }
 .total{
     display: flex;

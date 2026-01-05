@@ -80,7 +80,7 @@ onMounted(() => {
     align-items: center;
     gap: 4px;
     cursor: pointer;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
     font-size: 14px;
     transition: color 0.2s;
 

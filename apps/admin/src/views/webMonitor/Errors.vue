@@ -669,8 +669,8 @@ onBeforeUnmount(() => {
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background: var(--bg-base);
-        color: var(--text-tertiary);
+        background: #f0f2f5;
+        color: rgba(0, 0, 0, 0.45);
         font-size: 12px;
         display: flex;
         align-items: center;
@@ -679,7 +679,7 @@ onBeforeUnmount(() => {
 
         &.top { background: #f56c6c; color: #fff; }
       }
-      .rank-page { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--text-secondary); }
+      .rank-page { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: rgba(0, 0, 0, 0.65); }
       .rank-count { font-weight: bold; color: #f56c6c; }
     }
   }
@@ -691,15 +691,15 @@ onBeforeUnmount(() => {
       display: flex;
       align-items: flex-start;
       .error-icon { color: #f56c6c; margin-right: 8px; margin-top: 3px; flex-shrink: 0; }
-      .error-text { color: var(--text-primary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .error-text { color: rgba(0, 0, 0, 0.88); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     }
 
     .error-detail {
       padding: 20px;
-      background: var(--bg-base);
+      background: #f0f2f5;
       .error-message { color: #f56c6c; font-weight: 500; }
-      .error-stack { background: var(--bg-container); padding: 15px; border-radius: 4px; font-size: 12px; max-height: 300px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: var(--el-color-danger); border-left: 3px solid var(--el-color-danger); }
-      pre { background: var(--bg-container); padding: 10px; border-radius: 4px; font-size: 12px; max-height: 150px; overflow: auto; color: var(--text-primary); }
+      .error-stack { background: #ffffff; padding: 15px; border-radius: 4px; font-size: 12px; max-height: 300px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: var(--el-color-danger); border-left: 3px solid var(--el-color-danger); }
+      pre { background: #ffffff; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 150px; overflow: auto; color: rgba(0, 0, 0, 0.88); }
     }
 
     .pagination { margin-top: 20px; justify-content: flex-end; }
@@ -710,7 +710,7 @@ onBeforeUnmount(() => {
     min-height: 300px;
 
     .replay-header {
-      background: var(--bg-base);
+      background: #f0f2f5;
       padding: 16px;
       border-radius: 8px;
       margin-bottom: 16px;

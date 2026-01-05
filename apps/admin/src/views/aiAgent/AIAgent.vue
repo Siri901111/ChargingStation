@@ -550,7 +550,7 @@ onMounted(() => {
 <style lang="less" scoped>
 .ai-agent-container {
     padding: 20px;
-    background-color: var(--bg-base);
+    background-color: #f0f2f5;
     min-height: calc(100vh - 60px);
 }
 
@@ -572,7 +572,7 @@ onMounted(() => {
                 margin: 0;
                 font-size: 24px;
                 font-weight: 600;
-                color: var(--text-primary);
+                color: rgba(0, 0, 0, 0.88);
                 display: flex;
                 align-items: center;
                 gap: 10px;
@@ -635,7 +635,7 @@ onMounted(() => {
                     margin: 0 0 8px 0;
                     font-size: 16px;
                     font-weight: 600;
-                    color: var(--text-primary);
+                    color: rgba(0, 0, 0, 0.88);
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;

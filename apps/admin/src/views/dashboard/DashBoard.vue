@@ -5,7 +5,7 @@
                 <div class="title">
                     <h3>今日设备运行状态</h3>
                     <p class="ml">更新时间:{{ updateTime }}</p>
-                    <el-icon :style="{ color: 'var(--text-tertiary)', marginLeft: '5px', cursor: 'pointer' }" @click="refreshData">
+                    <el-icon :style="{ color: 'rgba(0,0,0,0.45)', marginLeft: '5px', cursor: 'pointer' }" @click="refreshData">
                         <Refresh />
                     </el-icon>
                 </div>
@@ -451,7 +451,7 @@ const setChartData2 = async () => {
             style: {
                 text: "营收占比",
                 fontSize: 20,
-                fill: "var(--text-primary)"
+                fill: "rgba(0, 0, 0, 0.88)"
             }
         }
     })
@@ -534,7 +534,7 @@ useChart(chartRef3, setChartData3)
     margin-bottom: 20px;
 
     p {
-        color: var(--text-secondary);
+        color: rgba(0, 0, 0, 0.65);
     }
 }
 
@@ -562,7 +562,7 @@ useChart(chartRef3, setChartData3)
 
     p {
         margin-top: 10px;
-        color: var(--text-primary);
+        color: rgba(0, 0, 0, 0.88);
     }
 }
 
@@ -576,7 +576,7 @@ useChart(chartRef3, setChartData3)
         .rank {
             display: inline-block;
             font-weight: bold;
-            color: var(--text-secondary);
+            color: rgba(0, 0, 0, 0.65);
             width: 30px;
             height: 30px;
             border-radius: 50%;
@@ -587,16 +587,16 @@ useChart(chartRef3, setChartData3)
         .store-name {
             flex-grow: 1;
             padding: 0 10px;
-            color: var(--text-primary);
+            color: rgba(0, 0, 0, 0.88);
         }
 
         .sales {
-            color: var(--text-secondary);
+            color: rgba(0, 0, 0, 0.65);
         }
     }
 
     .ranking-item:nth-child(even) {
-        background-color: var(--bg-base);
+        background-color: #f0f2f5;
     }
 }
 </style>

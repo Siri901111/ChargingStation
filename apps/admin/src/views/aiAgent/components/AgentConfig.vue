@@ -1056,7 +1056,7 @@ onMounted(() => {
     flex: 1;
     padding: 20px;
     overflow: hidden;
-    border-right: 1px solid var(--border-color-light);
+    border-right: 1px solid #f0f0f0;
 
     .config-tabs {
         height: 100%;

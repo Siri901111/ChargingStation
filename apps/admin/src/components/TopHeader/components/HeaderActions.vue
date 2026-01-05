@@ -150,7 +150,7 @@
                     style="width: 100%; margin-top: 12px;"
                     @change="handleAutoSaveIntervalChange"
                 />
-                <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">
+                <div style="font-size: 12px; color: rgba(0, 0, 0, 0.45); margin-top: 4px;">
                     {{ t('header.autoSaveInterval') }} ({{ t('common.minutes') }})
                 </div>
             </div>
@@ -563,11 +563,11 @@ onUnmounted(() => {
     padding: 0 8px;
     border-radius: 6px;
     cursor: pointer;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
     transition: all 0.2s ease;
 
     &:hover {
-        background-color: var(--border-color-light);
+        background-color: #f0f0f0;
         color: var(--el-color-primary);
     }
 }
@@ -581,7 +581,7 @@ onUnmounted(() => {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 12px;
-    color: var(--text-primary);
+    color: rgba(0, 0, 0, 0.88);
 }
 
 .zoom-actions {
@@ -600,7 +600,7 @@ onUnmounted(() => {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 16px;
-    color: var(--text-primary);
+    color: rgba(0, 0, 0, 0.88);
 }
 
 .shortcuts-category {
@@ -614,7 +614,7 @@ onUnmounted(() => {
 .category-title {
     font-size: 14px;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
     margin-bottom: 8px;
 }
 
@@ -623,7 +623,7 @@ onUnmounted(() => {
     align-items: center;
     justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px solid var(--border-color-light);
+    border-bottom: 1px solid #f0f0f0;
 
     &:last-child {
         border-bottom: none;
@@ -632,16 +632,16 @@ onUnmounted(() => {
 
 .shortcut-key {
     padding: 4px 8px;
-    background-color: var(--border-color-light);
+    background-color: #f0f0f0;
     border-radius: 4px;
     font-family: monospace;
     font-size: 12px;
-    color: var(--text-primary);
+    color: rgba(0, 0, 0, 0.88);
 }
 
 .shortcut-desc {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
 }
 
 .cache-panel {
@@ -650,7 +650,7 @@ onUnmounted(() => {
 
 .cache-info {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
 }
 
 .system-info-panel {
@@ -663,16 +663,16 @@ onUnmounted(() => {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 12px;
-    color: var(--text-primary);
+    color: rgba(0, 0, 0, 0.88);
 }
 
 .info-content {
     font-size: 12px;
-    color: var(--text-secondary);
+    color: rgba(0, 0, 0, 0.65);
     line-height: 1.6;
     white-space: pre-wrap;
     word-break: break-all;
-    background-color: var(--bg-base);
+    background-color: #f0f2f5;
     padding: 12px;
     border-radius: 4px;
 }
@@ -694,7 +694,7 @@ onUnmounted(() => {
 
     &:hover,
     &.active {
-        background-color: var(--border-color-light);
+        background-color: #f0f0f0;
     }
 
     .search-item-info {
@@ -704,12 +704,12 @@ onUnmounted(() => {
     .search-item-name {
         font-size: 14px;
         font-weight: 500;
-        color: var(--text-primary);
+        color: rgba(0, 0, 0, 0.88);
     }
 
     .search-item-path {
         font-size: 12px;
-        color: var(--text-tertiary);
+        color: rgba(0, 0, 0, 0.45);
     }
 }
 
@@ -717,7 +717,7 @@ onUnmounted(() => {
 .search-tip {
     padding: 32px;
     text-align: center;
-    color: var(--text-tertiary);
+    color: rgba(0, 0, 0, 0.45);
 }
 
 .search-footer {
@@ -726,13 +726,13 @@ onUnmounted(() => {
     gap: 24px;
     margin-top: 16px;
     padding-top: 16px;
-    border-top: 1px solid var(--border-color-light);
+    border-top: 1px solid #f0f0f0;
     font-size: 12px;
-    color: var(--text-tertiary);
+    color: rgba(0, 0, 0, 0.45);
 
     kbd {
         padding: 2px 6px;
-        background-color: var(--border-color-light);
+        background-color: #f0f0f0;
         border-radius: 4px;
         font-family: monospace;
     }
