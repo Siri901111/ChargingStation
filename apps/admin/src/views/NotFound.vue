@@ -1,142 +1,213 @@
 <template>
-<p>wiggle your mouse around.</p>
-<div class="content">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-1.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-2.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-3.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-4.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-5.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-6.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-7.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-8.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-1.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-2.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-3.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-4.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-5.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-6.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-7.png" alt="">
-  <img class="flair" src="https://assets.codepen.io/16327/Revised+Flair-8.png" alt="">
-</div>
-</template>
+    <div class="page" ref="page" @mousemove="onMove" @mouseleave="onLeave">
+      <!-- 背景线条 -->
+      <div class="bg">
+        <span v-for="i in 14" :key="i" class="line"></span>
+      </div>
   
-<script>
-import gsap from 'gsap';
-function playAnimation(shape) {
- // the timeline
-  let tl = gsap.timeline();
-  tl.from(shape,{
-    opacity: 0,
-    scale: 0,
-    ease: "elastic.out(1,0.3)",
+      <!-- 主体 -->
+      <div class="content" ref="content">
+        <div class="num" ref="num404">
+          <span>4</span>
+          <span>0</span>
+          <span>4</span>
+        </div>
+  
+        <div class="text" ref="text">
+          PAGE NOT FOUND
+        </div>
+  
+        <button class="btn" @click="goHome">
+          BACK HOME
+        </button>
+      </div>
+    </div>
+  </template>
+  
+  <script setup>
+  import { ref, onMounted, onBeforeUnmount } from 'vue'
+  import { useRouter } from 'vue-router'
+  import gsap from 'gsap'
+
+  const router = useRouter()
+  const page = ref(null)
+  const content = ref(null)
+  const num404 = ref(null)
+  const text = ref(null)
+  
+  let introTL = null
+  
+  /* ================= 初始化动画 ================= */
+  onMounted(() => {
+    gsap.set(num404.value.children, {
+      rotationX: -90,
+      opacity: 0,
+      transformOrigin: '50% 50% -140'
+    })
+  
+    gsap.set(text.value, { opacity: 0, y: 16 })
+  
+    gsap.set('.bg .line', {
+      scaleY: 0,
+      transformOrigin: 'top'
+    })
+  
+    introTL = gsap.timeline({ defaults: { ease: 'power3.out' } })
+  
+    introTL
+      .addLabel('start')
+      .to('.bg .line', {
+        scaleY: 1,
+        duration: 1.8,
+        stagger: 0.08,
+        ease: 'power2.out'
+      }, 'start')
+      .to(num404.value.children, {
+        rotationX: 0,
+        opacity: 1,
+        duration: 1.3,
+        stagger: 0.15
+      }, 'start+=0.3')
+      .to(text.value, {
+        opacity: 1,
+        y: 0,
+        duration: 1
+      }, 'start+=1')
+  
+    // 呼吸感
+    gsap.to(num404.value, {
+      y: -10,
+      duration: 4,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut'
+    })
   })
-  .to(shape,{
-    rotation: "random([-360, 360])",
-  }, "<")
-  .to(shape,{
-    y: "120vh",
-    ease: "back.in(.4)",
-    duration: 1,
-  },0)
   
-}
-
-/* --------------------------------
-
-The other stuff...
-
-------------------------------------*/
-let flair = gsap.utils.toArray(".flair");
-let gap = 100; // if you're nosy though, this number spaces the 'lil shapes out
-let index = 0;
-let wrapper = gsap.utils.wrap(0, flair.length);
-gsap.defaults({duration: 1})
-
-let mousePos = { x: 0, y: 0 };
-let lastMousePos = mousePos;
-let cachedMousePos = mousePos;
-
-window.addEventListener("mousemove", (e) => {
-  mousePos = {
-    x: e.x,
-    y: e.y
-  };
-});
-
-gsap.ticker.add(ImageTrail);
-
-function ImageTrail() {
-  let travelDistance = Math.hypot(
-    lastMousePos.x - mousePos.x,
-    lastMousePos.y - mousePos.y
-  );
-
-  // keep the previous mouse position for animation
-  cachedMousePos.x = gsap.utils.interpolate(
-    cachedMousePos.x || mousePos.x,
-    mousePos.x,
-    0.1
-  );
-  cachedMousePos.y = gsap.utils.interpolate(
-    cachedMousePos.y || mousePos.y,
-    mousePos.y,
-    0.1
-  );
-
-  if (travelDistance > gap) {
-    animateImage();
-    lastMousePos = mousePos;
+  /* ================= 鼠标 3D 视差 ================= */
+  const onMove = (e) => {
+    const { innerWidth, innerHeight } = window
+    const x = (e.clientX / innerWidth - 0.5) * 2
+    const y = (e.clientY / innerHeight - 0.5) * 2
+  
+    gsap.to(content.value, {
+      rotationY: x * 8,
+      rotationX: -y * 8,
+      x: x * 20,
+      y: y * 20,
+      duration: 0.8,
+      ease: 'power3.out'
+    })
+  
+    gsap.to('.bg .line', {
+      x: x * 40,
+      duration: 1.2,
+      ease: 'power3.out'
+    })
   }
-}
-
-function animateImage() {
-  let wrappedIndex = wrapper(index);
-
-  console.log(index, flair.length);
-
-  let img = flair[wrappedIndex];
-  gsap.killTweensOf(img);
   
-  gsap.set(img, {
-    clearProps: "all",
-  });
+  const onLeave = () => {
+    gsap.to([content.value, '.bg .line'], {
+      x: 0,
+      y: 0,
+      rotationX: 0,
+      rotationY: 0,
+      duration: 1.2,
+      ease: 'power3.out'
+    })
+  }
   
-
-  gsap.set(img, {
-    opacity: 1,
-    left: mousePos.x,
-    top: mousePos.y,
-    xPercent: -50,
-    yPercent: -50,
-  });
-
-  playAnimation(img);
-
-  index++;
-}
-
-
-</script>
-<style>
-.flair {
-  position: fixed;
-  opacity: 0;
-  width: 50px;
-}
-
-body {
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-}
-
-
-h1 {
-  font-size: 8vw
-}
-</style>
+  /* ================= 离开 ================= */
+  onBeforeUnmount(() => {
+    introTL && introTL.kill()
+  })
+  
+  const goHome = () => {
+    router.back()
+    console.log('go home')
+  }
+  </script>
+  
+  <style scoped>
+  .page {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background: #0b0b0b;
+    color: #ffffff;
+    overflow: hidden;
+    font-family:
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF Pro Display",
+      "Inter",
+      "Segoe UI",
+      sans-serif;
+  }
+  
+  /* 背景线条 */
+  .bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    gap: 4vw;
+    justify-content: center;
+    opacity: 0.12;
+  }
+  
+  .bg .line {
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, #fff, transparent);
+  }
+  
+  /* 主体 */
+  .content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    perspective: 1200px;
+  }
+  
+  .num {
+    display: flex;
+    font-size: 25vw;
+    font-weight: 800;
+    letter-spacing: -1.4vw;
+    line-height: 1;
+  }
+  
+  .num span {
+    display: inline-block;
+  }
+  
+  .text {
+    margin-top: 18px;
+    font-size: 18px;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+  }
+  
+  .btn {
+    margin-top: 42px;
+    padding: 10px 26px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.35);
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.25em;
+    font-size: 12px;
+    transition: all 0.35s;
+  }
+  
+  .btn:hover {
+    background: #fff;
+    color: #000;
+  }
+  </style>
+  
