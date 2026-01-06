@@ -149,11 +149,11 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
             },
           ]
         },
-        {
-          name: 'AI智能体',
-          url: '/ai-agent',
-          icon: 'MagicStick'
-        },
+        // {
+        //   name: 'AI智能体',
+        //   url: '/ai-agent',
+        //   icon: 'MagicStick'
+        // },
         {
           name: '个人中心',
           url: '/personal',
