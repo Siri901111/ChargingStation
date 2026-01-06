@@ -102,7 +102,7 @@
 
         <!-- 角落数字 -->
         <div class="corner corner-tl" ref="cornerTL">01</div>
-        <div class="corner corner-br" ref="cornerBR">2024</div>
+        <div class="corner corner-br" ref="cornerBR">2026</div>
 
         <!-- 主内容 -->
         <div class="container">
@@ -113,7 +113,7 @@
                     <span class="label-line"></span>
                 </div>
                 <h1 class="brand-title">
-                    <span class="char" v-for="(c, i) in '新能源充电站管理平台'" :key="i">{{ c }}</span>
+                    <span class="char" v-for="(c, i) in '新能源汽车充电站监控管理系统'" :key="i">{{ c }}</span>
                 </h1>
                 <p class="brand-sub" ref="subRef">Smart · Efficient · Reliable</p>
             </div>
@@ -399,15 +399,15 @@ onMounted(() => {
 
         tl
             .to('.line', { scaleY: 1, duration: 0.2, stagger: 0.08 })
-            .to([decor1.value, decor2.value], { opacity: 1, scale: 1, duration: 0.2, stagger: 0.1 }, '-=0.8')
-            .to([decor3.value, decor4.value], { opacity: 1, x: 0, duration: 0.3, stagger: 0.1 }, '-=0.7')
-            .to([cornerTL.value, cornerBR.value], { opacity: 1, duration: 0.4 }, '-=0.5')
-            .to([sideLeft.value, sideRight.value], { opacity: 1, duration: 0.4 }, '-=0.4')
+            .to([decor1.value, decor2.value], { opacity: 1, scale: 1, duration: 0.2, stagger: 0.1 }, '-=0.9')
+            .to([decor3.value, decor4.value], { opacity: 1, x: 0, duration: 0.2, stagger: 0.1 }, '-=0.8')
+            .to([cornerTL.value, cornerBR.value], { opacity: 1, duration: 0.4 }, '-=0.7')
+            .to([sideLeft.value, sideRight.value], { opacity: 1, duration: 0.4 }, '-=0.5')
             .to(labelRef.value, { opacity: 1, duration: 0.4 }, '-=0.6')
-            .to('.label-line', { scaleX: 1, duration: 0.5 }, '-=0.3')
-            .to('.char', { opacity: 1, y: 0, duration: 0.8, stagger: 0.08 }, '-=0.4')
-            .to(subRef.value, { opacity: 1, y: 0, duration: 0.5 }, '-=0.4')
-            .to('.input-wrap', { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 }, '-=0.3')
+            .to('.label-line', { scaleX: 1, duration: 0.5 }, '-=0.4')
+            .to('.char', { opacity: 1, y: 0, duration: 0.8, stagger: 0.06 }, '-=0.7')
+            .to(subRef.value, { opacity: 1, y: 0, duration: 0.5 }, '-=0.5')
+            .to('.input-wrap', { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 }, '-=0.4')
             .to(btnRef.value, { opacity: 1, y: 0, duration: 0.5 }, '-=0.3')
             .to(footerRef.value, { opacity: 1, duration: 0.4 }, '-=0.2')
             .to('.footer-line', { scaleX: 1, duration: 0.5 }, '-=0.3')
@@ -679,7 +679,7 @@ onBeforeUnmount(() => {
 /* 角落数字 */
 .corner {
     position: absolute;
-    font-size: 12px;
+    font-size: 20px;
     font-weight: 500;
     color: #ccc;
     letter-spacing: 0.1em;
@@ -768,7 +768,7 @@ onBeforeUnmount(() => {
 }
 
 .brand-title {
-    font-size: 52px;
+    font-size: 38px;
     font-weight: 600;
     color: #1a1a1a;
     margin: 0 0 12px;
