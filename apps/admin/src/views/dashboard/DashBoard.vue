@@ -109,36 +109,60 @@
             <el-card class="mt">
                 <template #header>
                     <div class="card-header">
-                        <h1>常用功能</h1>
+                        <h1>快捷入口 & 系统状态</h1>
                     </div>
                 </template>
-                <div class="quick mt mb">
-                    <el-row>
-                        <el-col :span="4">
-                            <img :src="repair">
-                            <p>设备维修</p>
-                        </el-col>
-                        <el-col :span="4">
-                            <img :src="daily">
-                            <p>每日日报</p>
-                        </el-col>
-                        <el-col :span="4">
-                            <img :src="progress">
-                            <p>任务进度</p>
-                        </el-col>
-                        <el-col :span="4">
-                            <img :src="total">
-                            <p>营收占比</p>
-                        </el-col>
-                        <el-col :span="4">
-                            <img :src="money">
-                            <p>营收统计</p>
-                        </el-col>
-                        <el-col :span="4">
-                            <img :src="remain">
-                            <p>代办事项</p>
-                        </el-col>
-                    </el-row>
+                <div class="quick-section">
+                    <!-- 快捷入口 -->
+                    <div class="quick-links">
+                        <div class="quick-link-item" @click="$router.push('/chargingstation/monitor')">
+                            <div class="quick-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <el-icon :size="24"><OfficeBuilding /></el-icon>
+                            </div>
+                            <span>充电站管理</span>
+                        </div>
+                        <div class="quick-link-item" @click="$router.push('chargingstation/fault')">
+                            <div class="quick-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                <el-icon :size="24"><Connection /></el-icon>
+                            </div>
+                            <span>充电桩管理</span>
+                        </div>
+                        <div class="quick-link-item" @click="$router.push('operations/orders')">
+                            <div class="quick-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                <el-icon :size="24"><List /></el-icon>
+                            </div>
+                            <span>订单查询</span>
+                        </div>
+                        <div class="quick-link-item" @click="$router.push('/alarm')">
+                            <div class="quick-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                                <el-icon :size="24"><Bell /></el-icon>
+                            </div>
+                            <span>故障报警</span>
+                        </div>
+                    </div>
+
+                    <!-- 系统状态 -->
+                    <div class="system-status">
+                        <div class="status-item">
+                            <div class="status-dot online"></div>
+                            <span class="status-label">系统状态</span>
+                            <span class="status-value">运行正常</span>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-dot online"></div>
+                            <span class="status-label">数据库</span>
+                            <span class="status-value">已连接</span>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-dot online"></div>
+                            <span class="status-label">API服务</span>
+                            <span class="status-value">响应正常</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">系统版本</span>
+                            <span class="status-value">v1.0.0</span>
+                        </div>
+                    </div>
                 </div>
             </el-card>
             <el-card class="mt">
@@ -215,19 +239,13 @@
 import flash from "@/assets/flash.png"
 import flash2 from "@/assets/flash2.png"
 import flash3 from "@/assets/flash3.png"
-import repair from "@/assets/repair.png"
-import progress from "@/assets/progress.png"
-import remain from "@/assets/remain.png"
-import total from "@/assets/total.png"
-import money from "@/assets/money.png"
-import daily from "@/assets/daily.png"
 import { ref, reactive, onMounted } from "vue"
 import { useChart } from "@/hooks/useChart"
-import { 
-    getElectricityStatsApi, 
-    getRevenueRatioApi, 
+import {
+    getElectricityStatsApi,
+    getRevenueRatioApi,
     getDeviceOverviewApi,
-    getDeviceStatusApi 
+    getDeviceStatusApi
 } from "@/api/dashboard"
 import { getAlarmListApi } from "@/api/alarm"
 import { ElMessage } from "element-plus"
@@ -237,10 +255,10 @@ const chartRef2 = ref(null)
 const chartRef3 = ref(null)
 
 // 更新时间
-const updateTime = ref(new Date().toLocaleString('zh-CN', { 
-    year: 'numeric', 
-    month: '2-digit', 
-    day: '2-digit' 
+const updateTime = ref(new Date().toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
 }))
 
 // 设备状态数据
@@ -294,10 +312,10 @@ const getRankStyle = (index: number) => {
 
 // 刷新数据
 const refreshData = async () => {
-    updateTime.value = new Date().toLocaleString('zh-CN', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit' 
+    updateTime.value = new Date().toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
     })
     await loadDeviceStatus()
     await loadRevenueRanking()
@@ -555,15 +573,106 @@ useChart(chartRef3, setChartData3)
     }
 }
 
-.quick {
+// 卡片头部
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
-    margin-top: 30px;
-    text-align: center;
+// 快捷入口 & 系统状态
+.quick-section {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+}
 
-    p {
-        margin-top: 10px;
-        color: rgba(0, 0, 0, 0.88);
+.quick-links {
+    display: flex;
+    gap: 24px;
+    flex: 1;
+}
+
+.quick-link-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    background: #fafafa;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     }
+
+    .quick-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+    }
+
+    span {
+        font-size: 14px;
+        color: #333;
+        font-weight: 500;
+    }
+}
+
+.system-status {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    min-width: 200px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+
+        &.online {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        &.offline {
+            background: #ef4444;
+        }
+    }
+
+    .status-label {
+        color: #666;
+        flex: 1;
+    }
+
+    .status-value {
+        color: #333;
+        font-weight: 500;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 .ranking-list {
