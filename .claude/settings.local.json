@@ -21,7 +21,8 @@
       "Bash(del \"C:\\\\Users\\\\Lenovo\\\\Desktop\\\\毕业论文\\\\chargingStation\\\\apps\\\\admin\\\\src\\\\components\\\\TopHeader\\\\components\\\\ThemeToggle.vue\")",
       "Bash(rm:*)",
       "Bash(npm view:*)",
-      "Bash(npm run dev:h5:*)"
+      "Bash(npm run dev:h5:*)",
+      "Bash(node scripts/generate-png-icons.js:*)"
     ]
   }
 }

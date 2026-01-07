@@ -1,15 +1,17 @@
 <template>
   <view class="page">
-    <!-- 自定义导航栏 -->
-    <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
+    <!-- 自定义导航栏 - 极简风格 -->
+    <view class="nav-bar safe-top" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="nav-content">
-        <view class="location" @click="handleLocationClick">
-          <text class="iconfont icon-location"></text>
+        <!-- 定位 -->
+        <view class="location touchable" @click="handleLocationClick">
+          <view class="icon icon-location icon-sm"></view>
           <text class="location-text">{{ locationStore.locationText }}</text>
-          <text class="iconfont icon-arrow-down"></text>
+          <view class="icon icon-arrow-down icon-xs"></view>
         </view>
-        <view class="search-box" @click="handleSearchClick">
-          <text class="iconfont icon-search"></text>
+        <!-- 搜索 -->
+        <view class="search-box touchable" @click="handleSearchClick">
+          <view class="icon icon-search icon-sm"></view>
           <text class="search-placeholder">搜索充电站</text>
         </view>
       </view>
@@ -19,101 +21,149 @@
     <scroll-view
       class="content"
       scroll-y
+      enhanced
+      :show-scrollbar="false"
       refresher-enabled
       :refresher-triggered="refreshing"
       @refresherrefresh="onRefresh"
       :style="{ paddingTop: navBarHeight + 'px' }"
     >
-      <!-- 正在充电提示 -->
-      <view v-if="chargingStore.isCharging" class="charging-tip card" @click="goToCharging">
+      <!-- 正在充电卡片 - 高级渐变 -->
+      <view v-if="chargingStore.isCharging" class="charging-card slide-up" @click="goToCharging">
+        <view class="charging-indicator">
+          <view class="pulse-ring"></view>
+          <view class="icon icon-charging-filled icon-lg"></view>
+        </view>
         <view class="charging-info">
-          <view class="charging-icon">
-            <text class="iconfont icon-charging"></text>
-          </view>
-          <view class="charging-detail">
-            <text class="charging-title">正在充电中</text>
+          <view class="charging-header">
+            <text class="charging-status">充电中</text>
             <text class="charging-station">{{ chargingStore.chargingStatus?.stationName }}</text>
           </view>
+          <view class="charging-metrics">
+            <view class="metric">
+              <text class="metric-value font-num">{{ chargingStore.chargingStatus?.electricity?.toFixed(1) || '0.0' }}</text>
+              <text class="metric-unit">kWh</text>
+            </view>
+            <view class="metric-divider"></view>
+            <view class="metric">
+              <text class="metric-value font-num">¥{{ chargingStore.chargingAmount.toFixed(2) }}</text>
+              <text class="metric-unit">费用</text>
+            </view>
+          </view>
         </view>
-        <view class="charging-action">
-          <text class="charging-amount">¥{{ chargingStore.chargingAmount.toFixed(2) }}</text>
-          <text class="iconfont icon-arrow-right"></text>
+        <view class="icon icon-arrow-right icon-sm"></view>
+      </view>
+
+      <!-- 快捷入口 - 极简网格 -->
+      <view class="quick-section">
+        <view class="quick-grid">
+          <view class="quick-item touchable" @click="handleScan">
+            <view class="quick-icon scan">
+              <view class="icon icon-scan icon-xl"></view>
+            </view>
+            <text class="quick-label">扫码充电</text>
+          </view>
+          <view class="quick-item touchable" @click="goToMap">
+            <view class="quick-icon map">
+              <view class="icon icon-map icon-xl"></view>
+            </view>
+            <text class="quick-label">附近站点</text>
+          </view>
+          <view class="quick-item touchable" @click="goToOrders">
+            <view class="quick-icon order">
+              <view class="icon icon-order icon-xl"></view>
+            </view>
+            <text class="quick-label">充电记录</text>
+          </view>
+          <view class="quick-item touchable" @click="goToWallet">
+            <view class="quick-icon wallet">
+              <view class="icon icon-wallet icon-xl"></view>
+            </view>
+            <text class="quick-label">账户余额</text>
+          </view>
         </view>
       </view>
 
-      <!-- 快捷入口 -->
-      <view class="quick-entry card">
-        <view class="entry-item" @click="handleScan">
-          <view class="entry-icon scan">
-            <text class="iconfont icon-scan"></text>
+      <!-- 会员卡片 - 简约深色 -->
+      <view class="member-card touchable" v-if="userStore.isLoggedIn" @click="goToMine">
+        <view class="member-left">
+          <view class="member-avatar">
+            <image
+              :src="userStore.userInfo?.avatar || '/static/avatar/default.png'"
+              mode="aspectFill"
+            />
           </view>
-          <text class="entry-text">扫码充电</text>
+          <view class="member-info">
+            <text class="member-name">{{ userStore.displayName }}</text>
+            <view class="member-tag">
+              <view class="icon icon-star-filled icon-xs"></view>
+              <text>{{ userStore.userInfo?.cardType || '普通会员' }}</text>
+            </view>
+          </view>
         </view>
-        <view class="entry-item" @click="goToMap">
-          <view class="entry-icon map">
-            <text class="iconfont icon-map"></text>
-          </view>
-          <text class="entry-text">附近站点</text>
-        </view>
-        <view class="entry-item" @click="goToOrders">
-          <view class="entry-icon order">
-            <text class="iconfont icon-order"></text>
-          </view>
-          <text class="entry-text">充电记录</text>
-        </view>
-        <view class="entry-item" @click="goToWallet">
-          <view class="entry-icon wallet">
-            <text class="iconfont icon-wallet"></text>
-          </view>
-          <text class="entry-text">我的钱包</text>
+        <view class="member-right">
+          <text class="balance-label">余额</text>
+          <text class="balance-value font-num">¥{{ userStore.balance.toFixed(2) }}</text>
         </view>
       </view>
 
-      <!-- 附近站点 -->
+      <!-- 附近站点 - 精致列表 -->
       <view class="section">
         <view class="section-header">
           <text class="section-title">附近站点</text>
-          <view class="section-more" @click="goToMap">
-            <text>查看更多</text>
-            <text class="iconfont icon-arrow-right"></text>
+          <view class="section-action touchable" @click="goToMap">
+            <text>全部</text>
+            <view class="icon icon-arrow-right icon-xs"></view>
           </view>
         </view>
 
-        <view v-if="loading" class="loading-wrap">
+        <view v-if="loading" class="loading">
           <text>加载中...</text>
         </view>
 
         <view v-else-if="nearbyStations.length === 0" class="empty">
-          <text class="empty-text">暂无附近站点</text>
+          <view class="icon icon-map icon-3xl empty-icon"></view>
+          <text class="empty-title">暂无附近站点</text>
+          <text class="empty-desc">请检查定位权限或稍后重试</text>
         </view>
 
         <view v-else class="station-list">
           <view
-            v-for="station in nearbyStations"
+            v-for="(station, index) in nearbyStations"
             :key="station.id"
-            class="station-card card"
+            class="station-item slide-up"
+            :style="{ animationDelay: `${index * 80}ms` }"
             @click="goToStationDetail(station.id)"
           >
-            <view class="station-info">
-              <view class="station-name">{{ station.name }}</view>
-              <view class="station-address line-clamp-1">{{ station.address || station.city }}</view>
-              <view class="station-tags">
-                <text class="tag tag-primary" v-if="station.fastFree > 0">快充空闲{{ station.fastFree }}</text>
-                <text class="tag tag-warning" v-if="station.slowFree > 0">慢充空闲{{ station.slowFree }}</text>
+            <view class="station-content">
+              <view class="station-header">
+                <text class="station-name">{{ station.name }}</text>
+                <text class="station-distance font-num" v-if="station.distance">
+                  {{ formatDistance(station.distance) }}
+                </text>
               </view>
-            </view>
-            <view class="station-right">
-              <view class="station-distance" v-if="station.distance">
-                {{ formatDistance(station.distance) }}
-              </view>
-              <view class="station-price" v-if="station.price">
-                <text class="price-value">¥{{ station.price }}</text>
-                <text class="price-unit">/度</text>
+              <text class="station-address truncate">{{ station.address || station.city }}</text>
+              <view class="station-footer">
+                <view class="station-tags">
+                  <view class="tag tag-jade" v-if="station.fastFree > 0">
+                    快充 {{ station.fastFree }}
+                  </view>
+                  <view class="tag tag-grey" v-if="station.slowFree > 0">
+                    慢充 {{ station.slowFree }}
+                  </view>
+                </view>
+                <view class="station-price" v-if="station.price">
+                  <text class="price-value font-num">¥{{ station.price }}</text>
+                  <text class="price-unit">/度</text>
+                </view>
               </view>
             </view>
           </view>
         </view>
       </view>
+
+      <!-- 底部留白 -->
+      <view class="bottom-space"></view>
     </scroll-view>
   </view>
 </template>
@@ -142,17 +192,13 @@ const nearbyStations = ref<Station[]>([])
 
 // 初始化
 onMounted(() => {
-  // 获取状态栏高度
   const systemInfo = uni.getSystemInfoSync()
   statusBarHeight.value = systemInfo.statusBarHeight || 0
   navBarHeight.value = statusBarHeight.value + 44
-
-  // 获取位置和站点
   initData()
 })
 
 onShow(() => {
-  // 检查充电状态
   if (userStore.isLoggedIn) {
     chargingStore.fetchChargingStatus()
   }
@@ -172,7 +218,6 @@ async function initData() {
 // 获取附近站点
 async function fetchNearbyStations() {
   if (!locationStore.currentLocation) return
-
   try {
     const { latitude, longitude } = locationStore.currentLocation
     const res = await stationApi.getNearbyStations({
@@ -207,28 +252,21 @@ function handleSearchClick() {
 // 扫码充电
 function handleScan() {
   if (!userStore.checkLoginAndNavigate()) return
-
   // #ifdef MP-WEIXIN
   uni.scanCode({
     onlyFromCamera: true,
     success: (res) => {
-      // 解析二维码，跳转充电页面
       uni.navigateTo({
         url: `/pages/scan/index?code=${encodeURIComponent(res.result)}`,
       })
     },
-    fail: () => {
-      uni.showToast({ title: '扫码失败', icon: 'none' })
-    },
   })
   // #endif
-
   // #ifdef H5
   uni.navigateTo({ url: '/pages/scan/index' })
   // #endif
 }
 
-// 跳转页面
 function goToMap() {
   uni.switchTab({ url: PAGE_PATH.MAP })
 }
@@ -243,6 +281,10 @@ function goToWallet() {
   uni.navigateTo({ url: PAGE_PATH.WALLET })
 }
 
+function goToMine() {
+  uni.switchTab({ url: PAGE_PATH.MINE })
+}
+
 function goToCharging() {
   uni.navigateTo({ url: PAGE_PATH.CHARGING })
 }
@@ -255,38 +297,48 @@ function goToStationDetail(id: number) {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  background-color: var(--bg-color);
+  background: var(--bg-page);
 }
 
+// ==================== 导航栏 ====================
 .nav-bar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  background: var(--bg-card);
 }
 
 .nav-content {
   display: flex;
   align-items: center;
   height: 88rpx;
-  padding: 0 24rpx;
+  padding: 0 var(--space-4);
+  gap: var(--space-3);
 }
 
 .location {
   display: flex;
   align-items: center;
-  color: #FFFFFF;
-  font-size: 26rpx;
-  margin-right: 20rpx;
+  gap: var(--space-1);
+
+  .icon-location {
+    color: var(--jade);
+  }
 
   .location-text {
-    max-width: 120rpx;
+    max-width: 140rpx;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin: 0 8rpx;
+  }
+
+  .icon-arrow-down {
+    opacity: 0.5;
   }
 }
 
@@ -294,15 +346,19 @@ function goToStationDetail(id: number) {
   flex: 1;
   display: flex;
   align-items: center;
-  height: 64rpx;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 32rpx;
-  padding: 0 24rpx;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 26rpx;
+  height: 68rpx;
+  padding: 0 var(--space-4);
+  background: var(--ink-02);
+  border-radius: var(--radius-full);
+  gap: var(--space-2);
 
-  .iconfont {
-    margin-right: 12rpx;
+  .icon-search {
+    opacity: 0.4;
+  }
+
+  .search-placeholder {
+    font-size: var(--text-sm);
+    color: var(--text-placeholder);
   }
 }
 
@@ -310,193 +366,358 @@ function goToStationDetail(id: number) {
   height: 100vh;
 }
 
-// 充电提示
-.charging-tip {
+// ==================== 充电中卡片 ====================
+.charging-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(135deg, #4CAF50, #2E7D32);
-  color: #FFFFFF;
-  margin: 20rpx;
-
-  .charging-info {
-    display: flex;
-    align-items: center;
-  }
-
-  .charging-icon {
-    width: 80rpx;
-    height: 80rpx;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 20rpx;
-
-    .iconfont {
-      font-size: 40rpx;
-    }
-  }
-
-  .charging-title {
-    font-size: 30rpx;
-    font-weight: bold;
-  }
-
-  .charging-station {
-    font-size: 24rpx;
-    opacity: 0.8;
-    margin-top: 8rpx;
-  }
-
-  .charging-action {
-    display: flex;
-    align-items: center;
-  }
-
-  .charging-amount {
-    font-size: 36rpx;
-    font-weight: bold;
-    margin-right: 10rpx;
-  }
+  margin: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(135deg, var(--ink-90) 0%, var(--ink-80) 100%);
+  border-radius: var(--radius-xl);
+  gap: var(--space-4);
 }
 
-// 快捷入口
-.quick-entry {
-  display: flex;
-  justify-content: space-around;
-  padding: 30rpx 0;
-  margin: 20rpx;
-}
-
-.entry-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.entry-icon {
-  width: 100rpx;
-  height: 100rpx;
-  border-radius: 24rpx;
+.charging-indicator {
+  position: relative;
+  width: 96rpx;
+  height: 96rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16rpx;
 
-  .iconfont {
-    font-size: 48rpx;
-    color: #FFFFFF;
+  .pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(184, 153, 111, 0.15);
+    animation: pulse 2s ease-out infinite;
+  }
+
+  .icon {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.charging-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.charging-header {
+  margin-bottom: var(--space-2);
+
+  .charging-status {
+    display: inline-block;
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--gold);
+    background: rgba(184, 153, 111, 0.2);
+    border-radius: var(--radius-xs);
+    margin-right: var(--space-2);
+  }
+
+  .charging-station {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+.charging-metrics {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.metric {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+
+  .metric-value {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold);
+    color: var(--paper);
+  }
+
+  .metric-unit {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.metric-divider {
+  width: 1rpx;
+  height: 48rpx;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.charging-card > .icon-arrow-right {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+// ==================== 快捷入口 ====================
+.quick-section {
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.quick-grid {
+  display: flex;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5) var(--space-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.quick-icon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .icon {
+    color: var(--paper);
   }
 
   &.scan {
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    background: var(--ink-90);
   }
 
   &.map {
-    background: linear-gradient(135deg, #2196F3, #1565C0);
+    background: var(--jade);
   }
 
   &.order {
-    background: linear-gradient(135deg, #FF9800, #E65100);
+    background: var(--gold);
   }
 
   &.wallet {
-    background: linear-gradient(135deg, #9C27B0, #6A1B9A);
+    background: var(--cyan);
   }
 }
 
-.entry-text {
-  font-size: 24rpx;
+.quick-label {
+  font-size: var(--text-xs);
   color: var(--text-secondary);
+  letter-spacing: var(--tracking-wide);
 }
 
-// 区块
+// ==================== 会员卡片 ====================
+.member-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 var(--space-4) var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(135deg, var(--ink-100) 0%, var(--ink-80) 100%);
+  border-radius: var(--radius-xl);
+}
+
+.member-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.member-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2rpx solid rgba(255, 255, 255, 0.15);
+
+  image {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.member-info {
+  .member-name {
+    display: block;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--paper);
+    margin-bottom: var(--space-1);
+  }
+
+  .member-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4rpx;
+    font-size: var(--text-xs);
+    color: var(--gold-light);
+  }
+}
+
+.member-right {
+  text-align: right;
+
+  .balance-label {
+    display: block;
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: var(--space-1);
+  }
+
+  .balance-value {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    color: var(--paper);
+  }
+}
+
+// ==================== 区块 ====================
 .section {
-  padding: 0 20rpx;
+  padding: 0 var(--space-4);
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20rpx;
+  margin-bottom: var(--space-4);
 }
 
 .section-title {
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-wide);
 }
 
-.section-more {
+.section-action {
   display: flex;
   align-items: center;
-  color: var(--text-placeholder);
-  font-size: 24rpx;
+  gap: 4rpx;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
 
-  .iconfont {
-    margin-left: 8rpx;
+// ==================== 站点列表 ====================
+.station-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.station-item {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+  transition: all var(--duration-fast) var(--ease-out);
+
+  &:active {
+    transform: scale(0.98);
+    background: var(--ink-02);
   }
 }
 
-// 站点卡片
-.station-card {
+.station-content {
   display: flex;
-  justify-content: space-between;
-  padding: 24rpx;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.station-info {
-  flex: 1;
+.station-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .station-name {
-  font-size: 30rpx;
-  font-weight: bold;
-  margin-bottom: 10rpx;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.station-distance {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
 }
 
 .station-address {
-  font-size: 24rpx;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
-  margin-bottom: 16rpx;
+  line-height: var(--leading-snug);
+}
+
+.station-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-1);
 }
 
 .station-tags {
   display: flex;
-  gap: 16rpx;
-}
-
-.station-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-
-.station-distance {
-  font-size: 24rpx;
-  color: var(--text-secondary);
+  gap: var(--space-2);
 }
 
 .station-price {
+  display: flex;
+  align-items: baseline;
+  gap: 2rpx;
+
   .price-value {
-    font-size: 32rpx;
-    font-weight: bold;
-    color: var(--primary-color);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--jade);
   }
 
   .price-unit {
-    font-size: 22rpx;
+    font-size: var(--text-xs);
     color: var(--text-secondary);
   }
 }
 
-.loading-wrap {
-  display: flex;
-  justify-content: center;
-  padding: 40rpx;
-  color: var(--text-placeholder);
+// ==================== 空状态 ====================
+.empty {
+  padding: var(--space-16) var(--space-5);
+}
+
+.empty-icon {
+  color: var(--ink-15);
+  margin-bottom: var(--space-5);
+}
+
+.empty-title {
+  font-size: var(--text-lg);
+  color: var(--text-regular);
+  margin-bottom: var(--space-2);
+}
+
+.empty-desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+// ==================== 底部留白 ====================
+.bottom-space {
+  height: 160rpx;
 }
 </style>

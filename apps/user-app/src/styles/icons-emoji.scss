@@ -1,0 +1,80 @@
+/**
+ * 图标样式 - 纯 CSS 实现 + Unicode 字符
+ * 兼容性最好，无需加载字体文件
+ */
+
+.iconfont {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  vertical-align: middle;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==================== TabBar 图标 ==================== */
+.icon-home::before { content: "🏠"; }
+.icon-home-filled::before { content: "🏠"; }
+.icon-map::before { content: "🗺️"; }
+.icon-map-filled::before { content: "🗺️"; }
+.icon-scan::before { content: "📷"; }
+.icon-scan-filled::before { content: "📷"; }
+.icon-order::before { content: "📋"; }
+.icon-order-filled::before { content: "📋"; }
+.icon-mine::before { content: "👤"; }
+.icon-mine-filled::before { content: "👤"; }
+
+/* ==================== 导航图标 ==================== */
+.icon-location::before { content: "📍"; }
+.icon-navigation::before { content: "🧭"; }
+.icon-search::before { content: "🔍"; }
+.icon-close::before { content: "✕"; font-weight: bold; }
+.icon-arrow-left::before { content: "‹"; font-size: 1.5em; font-weight: bold; }
+.icon-arrow-right::before { content: "›"; font-size: 1.5em; font-weight: bold; }
+.icon-arrow-down::before { content: "⌄"; font-size: 1.2em; }
+.icon-arrow-up::before { content: "⌃"; font-size: 1.2em; }
+
+/* ==================== 充电相关 ==================== */
+.icon-charging::before { content: "⚡"; }
+.icon-charging-pile::before { content: "🔌"; }
+.icon-charging-station::before { content: "⛽"; }
+.icon-flash::before { content: "⚡"; }
+.icon-battery::before { content: "🔋"; }
+
+/* ==================== 用户功能 ==================== */
+.icon-wallet::before { content: "💰"; }
+.icon-phone::before { content: "📱"; }
+.icon-wechat::before { content: "💬"; color: #07C160; }
+.icon-alipay::before { content: "💳"; color: #1677FF; }
+.icon-star::before { content: "☆"; }
+.icon-star-filled::before { content: "★"; color: #FFB800; }
+.icon-coupon::before { content: "🎫"; }
+.icon-invoice::before { content: "🧾"; }
+.icon-car::before { content: "🚗"; }
+.icon-chart::before { content: "📊"; }
+
+/* ==================== 状态图标 ==================== */
+.icon-check::before { content: "✓"; font-weight: bold; }
+.icon-check-circle::before { content: "✅"; }
+.icon-close-circle::before { content: "❌"; }
+.icon-info::before { content: "ℹ️"; }
+.icon-info-circle::before { content: "ℹ️"; }
+.icon-warning::before { content: "⚠️"; }
+.icon-clock::before { content: "🕐"; }
+
+/* ==================== 其他功能 ==================== */
+.icon-settings::before { content: "⚙️"; }
+.icon-feedback::before { content: "💭"; }
+.icon-email::before { content: "📧"; }
+.icon-share::before { content: "📤"; }
+.icon-copy::before { content: "📋"; }
+.icon-edit::before { content: "✏️"; }
+.icon-delete::before { content: "🗑️"; }
+.icon-refresh::before { content: "🔄"; }
+.icon-filter::before { content: "🔽"; }
+.icon-sort::before { content: "↕️"; }
