@@ -16,13 +16,13 @@ const envMap: Record<string, EnvConfig> = {
   development: {
     baseUrl: 'http://localhost:3001/api/mobile',
     wsUrl: 'ws://localhost:3001',
-    amapKey: 'YOUR_AMAP_KEY',
+    amapKey: 'a862837e7b21b1d9e9ca11a4447524b9',
     debug: true,
   },
   production: {
     baseUrl: 'https://api.example.com/api/mobile',
     wsUrl: 'wss://api.example.com',
-    amapKey: 'YOUR_AMAP_KEY',
+    amapKey: 'a862837e7b21b1d9e9ca11a4447524b9',
     debug: false,
   },
 }

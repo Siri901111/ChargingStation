@@ -208,8 +208,14 @@ onShow(() => {
 async function initData() {
   loading.value = true
   try {
-    await locationStore.getCurrentLocation()
+    // 获取位置（失败时会使用默认位置）
+    const location = await locationStore.getCurrentLocation()
+    console.log('📍 当前位置:', location)
+
+    // 无论定位成功与否都尝试获取站点
     await fetchNearbyStations()
+  } catch (error) {
+    console.error('初始化数据失败', error)
   } finally {
     loading.value = false
   }
@@ -217,18 +223,25 @@ async function initData() {
 
 // 获取附近站点
 async function fetchNearbyStations() {
-  if (!locationStore.currentLocation) return
+  // 使用当前位置或默认位置
+  const location = locationStore.currentLocation || {
+    latitude: 28.1963,
+    longitude: 112.9822,
+  }
+
   try {
-    const { latitude, longitude } = locationStore.currentLocation
+    console.log('🔍 获取附近站点, 坐标:', location.latitude, location.longitude)
     const res = await stationApi.getNearbyStations({
-      latitude,
-      longitude,
-      radius: 5000,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      radius: 10000, // 扩大搜索范围到10km
       pageSize: 5,
     })
-    nearbyStations.value = res.list
+    console.log('📋 获取到站点:', res)
+    nearbyStations.value = res.list || []
   } catch (error) {
     console.error('获取附近站点失败', error)
+    nearbyStations.value = []
   }
 }
 

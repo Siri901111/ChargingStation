@@ -1,16 +1,29 @@
 /**
  * 位置状态管理
+ * 使用高德地图 API 进行定位和逆地理编码
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { STORAGE_KEYS } from '@/constants'
 import { setStorage, getStorage } from '@/utils/storage'
+import config from '@/config'
 
 export interface Location {
   latitude: number
   longitude: number
   address?: string
   city?: string
+  district?: string  // 区县
+  street?: string    // 街道
+}
+
+// 默认位置：长沙市中心（用于开发测试）
+const DEFAULT_LOCATION: Location = {
+  latitude: 28.1963,
+  longitude: 112.9822,
+  address: '长沙市芙蓉区五一广场',
+  city: '长沙市',
+  district: '芙蓉区',
 }
 
 export const useLocationStore = defineStore('location', () => {
@@ -21,97 +34,151 @@ export const useLocationStore = defineStore('location', () => {
 
   // Getters
   const hasLocation = computed(() => !!currentLocation.value)
+
+  // 显示在左上角的位置文本（优先显示区县）
   const locationText = computed(() => {
+    if (isLocating.value) return '定位中...'
     if (!currentLocation.value) return '定位中...'
-    return currentLocation.value.address || currentLocation.value.city || '未知位置'
+
+    const loc = currentLocation.value
+    // 优先显示：区县 > 城市 > 完整地址
+    if (loc.district) return loc.district
+    if (loc.city) return loc.city
+    if (loc.address) return loc.address.slice(0, 10)
+    return '未知位置'
   })
 
   // Actions
   /**
-   * 获取当前位置
+   * 获取当前位置（使用高德地图 API）
    */
   async function getCurrentLocation(): Promise<Location | null> {
     isLocating.value = true
     locationError.value = ''
 
     try {
-      // 先检查缓存
+      // 先使用缓存显示
       const cached = getStorage<Location>(STORAGE_KEYS.LOCATION)
-      if (cached) {
+      if (cached && cached.latitude) {
         currentLocation.value = cached
       }
 
-      const res = await new Promise<UniApp.GetLocationSuccess>((resolve, reject) => {
-        uni.getLocation({
-          type: 'gcj02',
-          isHighAccuracy: true,
-          success: resolve,
-          fail: reject,
-        })
-      })
-
-      const location: Location = {
-        latitude: res.latitude,
-        longitude: res.longitude,
+      // #ifdef H5
+      // H5 环境：先获取浏览器定位坐标，再用高德逆地理编码
+      const coords = await getBrowserLocation()
+      if (coords) {
+        console.log('📍 浏览器定位坐标:', coords)
+        // 使用高德逆地理编码获取详细地址
+        const addressInfo = await reverseGeocodeByAmap(coords.latitude, coords.longitude)
+        const location: Location = {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          ...addressInfo,
+        }
+        currentLocation.value = location
+        setStorage(STORAGE_KEYS.LOCATION, location)
+        console.log('📍 高德逆地理编码结果:', location)
+        return location
       }
+      // #endif
 
-      // 逆地理编码获取地址
-      try {
-        const addressInfo = await reverseGeocode(res.latitude, res.longitude)
-        location.address = addressInfo.address
-        location.city = addressInfo.city
-      } catch {
-        console.error('逆地理编码失败')
-      }
+      // 定位失败，使用默认位置
+      throw new Error('定位失败')
 
-      currentLocation.value = location
-      setStorage(STORAGE_KEYS.LOCATION, location)
-
-      return location
     } catch (error) {
-      locationError.value = '定位失败，请检查定位权限'
-      uni.showToast({
-        title: '定位失败，请检查权限',
-        icon: 'none',
-      })
-      return null
+      console.warn('定位失败，使用默认位置（长沙）', error)
+      locationError.value = '定位失败'
+
+      // 使用默认位置（长沙）
+      currentLocation.value = DEFAULT_LOCATION
+      setStorage(STORAGE_KEYS.LOCATION, DEFAULT_LOCATION)
+
+      return DEFAULT_LOCATION
     } finally {
       isLocating.value = false
     }
   }
 
   /**
-   * 逆地理编码
+   * 获取浏览器原生定位坐标
+   */
+  function getBrowserLocation(): Promise<{ latitude: number; longitude: number } | null> {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        console.warn('浏览器不支持定位')
+        resolve(null)
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          })
+        },
+        (error) => {
+          console.warn('浏览器定位失败:', error.message)
+          resolve(null)
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000, // 5分钟缓存
+        }
+      )
+    })
+  }
+
+  /**
+   * 使用高德 Web API 逆地理编码
+   */
+  async function reverseGeocodeByAmap(
+    latitude: number,
+    longitude: number
+  ): Promise<{ address: string; city: string; district: string; street: string }> {
+    const defaultResult = { address: '', city: '', district: '', street: '' }
+
+    try {
+      // 使用高德逆地理编码 API
+      const url = `https://restapi.amap.com/v3/geocode/regeo?key=${config.amapKey}&location=${longitude},${latitude}&extensions=base`
+
+      const response = await fetch(url)
+      const data = await response.json()
+
+      console.log('📍 高德逆地理编码响应:', data)
+
+      if (data.status === '1' && data.regeocode) {
+        const regeocode = data.regeocode
+        const addressComponent = regeocode.addressComponent || {}
+
+        return {
+          address: regeocode.formatted_address || '',
+          city: addressComponent.city || addressComponent.province || '',
+          district: addressComponent.district || '',
+          street: addressComponent.street || addressComponent.township || '',
+        }
+      }
+
+      return defaultResult
+    } catch (error) {
+      console.error('高德逆地理编码失败:', error)
+      return defaultResult
+    }
+  }
+
+  /**
+   * 逆地理编码（兼容多平台）
    */
   async function reverseGeocode(
     latitude: number,
     longitude: number
   ): Promise<{ address: string; city: string }> {
-    // 这里使用 uni-app 的逆地理编码能力
-    // 实际项目中可以调用高德/腾讯地图 API
-    return new Promise((resolve, reject) => {
-      // #ifdef MP-WEIXIN
-      const qqmapsdk = uni.requireNativePlugin?.('qqmap-wx-jssdk')
-      if (qqmapsdk) {
-        qqmapsdk.reverseGeocoder({
-          location: { latitude, longitude },
-          success: (res: { result: { address: string; ad_info: { city: string } } }) => {
-            resolve({
-              address: res.result.address,
-              city: res.result.ad_info.city,
-            })
-          },
-          fail: reject,
-        })
-      } else {
-        resolve({ address: '', city: '' })
-      }
-      // #endif
-
-      // #ifdef H5
-      resolve({ address: '', city: '' })
-      // #endif
-    })
+    const result = await reverseGeocodeByAmap(latitude, longitude)
+    return {
+      address: result.address,
+      city: result.city,
+    }
   }
 
   /**
@@ -138,6 +205,7 @@ export const useLocationStore = defineStore('location', () => {
     // Actions
     getCurrentLocation,
     reverseGeocode,
+    reverseGeocodeByAmap,
     openLocationSetting,
   }
 })

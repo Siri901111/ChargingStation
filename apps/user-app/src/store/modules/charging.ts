@@ -68,16 +68,23 @@ export const useChargingStore = defineStore('charging', () => {
    * 获取充电状态
    */
   async function fetchChargingStatus() {
-    const status = await chargingApi.getChargingStatus()
-    if (status) {
-      isCharging.value = true
-      chargingStatus.value = status
-      connectWebSocket(status.orderId)
-    } else {
+    try {
+      const status = await chargingApi.getChargingStatus()
+      if (status) {
+        isCharging.value = true
+        chargingStatus.value = status
+        connectWebSocket(status.orderId)
+      } else {
+        isCharging.value = false
+        chargingStatus.value = null
+      }
+      return status
+    } catch (error) {
+      console.warn('获取充电状态失败', error)
       isCharging.value = false
       chargingStatus.value = null
+      return null
     }
-    return status
   }
 
   /**

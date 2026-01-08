@@ -193,6 +193,7 @@ router.post('/user/recharge', authMiddleware, async (req, res) => {
 });
 
 // ==================== 站点相关 ====================
+// 注意：特定路由必须在参数化路由之前定义
 
 /**
  * 获取附近站点
@@ -235,7 +236,34 @@ router.get('/station/search', async (req, res) => {
 });
 
 /**
- * 获取站点详情
+ * 获取热门站点（必须在 /station/:id 之前定义）
+ */
+router.get('/station/hot', async (req, res) => {
+  try {
+    const city = req.query.city as string;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+    const result = await getHotStations(city, limit);
+    res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 获取站点充电桩列表（必须在 /station/:id 之前定义）
+ */
+router.get('/station/:id/piles', async (req, res) => {
+  try {
+    const stationId = parseInt(req.params.id);
+    const result = await getStationPiles(stationId);
+    res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 获取站点详情（参数化路由放在最后）
  */
 router.get('/station/:id', async (req, res) => {
   try {
@@ -250,39 +278,12 @@ router.get('/station/:id', async (req, res) => {
 });
 
 /**
- * 获取站点充电桩列表
- */
-router.get('/station/:id/piles', async (req, res) => {
-  try {
-    const stationId = parseInt(req.params.id);
-    const result = await getStationPiles(stationId);
-    res.json(success(result));
-  } catch (err: any) {
-    res.json(error(err.message));
-  }
-});
-
-/**
  * 获取充电桩详情
  */
 router.get('/pile/:id', async (req, res) => {
   try {
     const pileId = parseInt(req.params.id);
     const result = await getPileDetail(pileId);
-    res.json(success(result));
-  } catch (err: any) {
-    res.json(error(err.message));
-  }
-});
-
-/**
- * 获取热门站点
- */
-router.get('/station/hot', async (req, res) => {
-  try {
-    const city = req.query.city as string;
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-    const result = await getHotStations(city, limit);
     res.json(success(result));
   } catch (err: any) {
     res.json(error(err.message));
@@ -389,6 +390,19 @@ router.get('/order/list', authMiddleware, async (req, res) => {
 });
 
 /**
+ * 获取订单统计（必须在 /order/:orderNo 之前定义）
+ */
+router.get('/order/statistics', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const result = await getOrderStatistics(userId);
+    res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
  * 获取订单详情
  */
 router.get('/order/:orderNo', authMiddleware, async (req, res) => {
@@ -439,19 +453,6 @@ router.post('/order/:orderNo/refund', authMiddleware, async (req, res) => {
     const { orderNo } = req.params;
     const { reason } = req.body;
     const result = await refundOrder(orderNo, userId, reason);
-    res.json(success(result));
-  } catch (err: any) {
-    res.json(error(err.message));
-  }
-});
-
-/**
- * 获取订单统计
- */
-router.get('/order/statistics', authMiddleware, async (req, res) => {
-  try {
-    const userId = (req as any).userId;
-    const result = await getOrderStatistics(userId);
     res.json(success(result));
   } catch (err: any) {
     res.json(error(err.message));
