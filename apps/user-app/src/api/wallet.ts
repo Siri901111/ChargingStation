@@ -49,6 +49,21 @@ export const walletApi = {
   },
 
   /**
+   * 测试充值（仅开发环境）
+   * 直接增加余额，无需支付
+   */
+  testRecharge(params: { amount: number; giftAmount?: number }) {
+    return http.post<{
+      success: boolean
+      message: string
+      amount: number
+      giftAmount: number
+      totalAdd: number
+      newBalance: number
+    }>('/test/recharge', params)
+  },
+
+  /**
    * 获取充值记录
    */
   getRechargeRecords(params?: { page?: number; pageSize?: number }) {

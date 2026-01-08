@@ -99,6 +99,16 @@ Order.belongsTo(ChargingUser, {
   as: 'chargingUser'
 });
 
+// Order (订单) 与 Pile (充电桩) 关联关系
+Pile.hasMany(Order, {
+  foreignKey: 'pile_id',
+  as: 'orders'
+});
+Order.belongsTo(Pile, {
+  foreignKey: 'pile_id',
+  as: 'pile'
+});
+
 // User (后台管理用户) 关联关系
 // 后台管理用户与角色的关联
 

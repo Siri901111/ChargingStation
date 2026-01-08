@@ -36,6 +36,12 @@ import {
   refundOrder,
   getOrderStatistics,
 } from '../services/mobileOrderService.js';
+import {
+  initCityStations,
+  initTestUserOrders,
+  testRecharge,
+  initAllTestData,
+} from '../utils/initTestData.js';
 
 const router = express.Router();
 
@@ -362,14 +368,19 @@ router.get('/charging/history', authMiddleware, async (req, res) => {
 router.get('/order/list', authMiddleware, async (req, res) => {
   try {
     const userId = (req as any).userId;
+    const statusStr = req.query.status as string;
     const params = {
       userId,
-      status: req.query.status !== undefined ? parseInt(req.query.status as string) : undefined,
+      status: statusStr !== undefined && statusStr !== '' && statusStr !== 'undefined' ? parseInt(statusStr) : undefined,
       page: req.query.page ? parseInt(req.query.page as string) : 1,
       pageSize: req.query.pageSize ? parseInt(req.query.pageSize as string) : 10,
       startDate: req.query.startDate as string,
       endDate: req.query.endDate as string,
     };
+    // 如果解析后是 NaN，设为 undefined
+    if (params.status !== undefined && isNaN(params.status)) {
+      params.status = undefined;
+    }
     const result = await getOrderList(params);
     res.json(success(result));
   } catch (err: any) {
@@ -442,6 +453,83 @@ router.get('/order/statistics', authMiddleware, async (req, res) => {
     const userId = (req as any).userId;
     const result = await getOrderStatistics(userId);
     res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+// ==================== 测试/开发接口 ====================
+
+/**
+ * 测试充值（仅开发环境）
+ * 模拟充值，直接增加余额
+ */
+router.post('/test/recharge', authMiddleware, async (req, res) => {
+  try {
+    // 检查是否为开发环境
+    if (process.env.NODE_ENV !== 'development') {
+      return res.json(error('此接口仅在开发环境可用'));
+    }
+
+    const userId = (req as any).userId;
+    const { amount, giftAmount = 0 } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.json(error('充值金额必须大于0'));
+    }
+
+    const result = await testRecharge(userId, amount, giftAmount);
+    res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 初始化测试数据（仅开发环境）
+ * 初始化长沙和天津的充电站数据
+ */
+router.post('/test/init-stations', async (req, res) => {
+  try {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.json(error('此接口仅在开发环境可用'));
+    }
+
+    await initCityStations();
+    res.json(success({ message: '长沙和天津充电站数据初始化完成' }));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 为测试用户创建订单（仅开发环境）
+ */
+router.post('/test/init-orders', async (req, res) => {
+  try {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.json(error('此接口仅在开发环境可用'));
+    }
+
+    const { phone = '19282249442' } = req.body;
+    await initTestUserOrders(phone);
+    res.json(success({ message: `用户 ${phone} 订单数据初始化完成` }));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 初始化所有测试数据（仅开发环境）
+ */
+router.post('/test/init-all', async (req, res) => {
+  try {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.json(error('此接口仅在开发环境可用'));
+    }
+
+    await initAllTestData();
+    res.json(success({ message: '所有测试数据初始化完成' }));
   } catch (err: any) {
     res.json(error(err.message));
   }

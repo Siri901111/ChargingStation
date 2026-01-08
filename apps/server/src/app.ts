@@ -6,6 +6,7 @@ import './models/index.js'; // 导入所有模型
 import { User, ChargingUser } from './models/index.js';
 import { initDefaultUser } from './utils/initData.js';
 import { initMockData } from './utils/initMockData.js';
+import { initAllTestData } from './utils/initTestData.js';
 
 dotenv.config();
 
@@ -129,17 +130,18 @@ async function updateExistingUsersData() {
 // 手动添加缺失的列（避免alter导致的索引问题）
 async function addMissingColumnsIfNeeded() {
   try {
+    const queries: string[] = [];
+
     // 处理 charging_user 表
     const [chargingUserResults] = await sequelize.query(`
-      SELECT COLUMN_NAME 
-      FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_SCHEMA = DATABASE() 
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = 'charging_user'
     `) as any[];
-    
+
     const chargingUserColumns = chargingUserResults.map((r: any) => r.COLUMN_NAME);
-    const queries: string[] = [];
-    
+
     // 检查并添加 charging_user 表缺失的字段
     if (!chargingUserColumns.includes('card_type')) {
       queries.push(`ALTER TABLE charging_user ADD COLUMN card_type VARCHAR(20) DEFAULT '普通卡' COMMENT '卡类型：普通卡、VIP卡、季卡'`);
@@ -150,17 +152,17 @@ async function addMissingColumnsIfNeeded() {
     if (!chargingUserColumns.includes('valid_until')) {
       queries.push(`ALTER TABLE charging_user ADD COLUMN valid_until DATETIME COMMENT '有效期至'`);
     }
-    
+
     // 处理 user 表
     const [userResults] = await sequelize.query(`
-      SELECT COLUMN_NAME 
-      FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_SCHEMA = DATABASE() 
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = 'user'
     `) as any[];
-    
+
     const userColumns = userResults.map((r: any) => r.COLUMN_NAME);
-    
+
     // 检查并添加 user 表缺失的字段
     if (!userColumns.includes('address')) {
       queries.push(`ALTER TABLE user ADD COLUMN address VARCHAR(200) COMMENT '地址'`);
@@ -174,17 +176,75 @@ async function addMissingColumnsIfNeeded() {
     if (!userColumns.includes('avatar')) {
       queries.push(`ALTER TABLE user ADD COLUMN avatar VARCHAR(500) COMMENT '头像URL'`);
     }
-    
+
+    // 处理 order 表
+    const [orderResults] = await sequelize.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'order'
+    `) as any[];
+
+    const orderColumns = orderResults.map((r: any) => r.COLUMN_NAME);
+
+    // 检查并添加 order 表缺失的字段
+    if (!orderColumns.includes('pile_id')) {
+      queries.push(`ALTER TABLE \`order\` ADD COLUMN pile_id BIGINT COMMENT '充电桩ID'`);
+    }
+    if (!orderColumns.includes('pay_time')) {
+      queries.push(`ALTER TABLE \`order\` ADD COLUMN pay_time DATETIME COMMENT '支付时间'`);
+    }
+
+    // 处理 pile 表
+    const [pileResults] = await sequelize.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'pile'
+    `) as any[];
+
+    const pileColumns = pileResults.map((r: any) => r.COLUMN_NAME);
+
+    // 检查并添加 pile 表缺失的字段
+    if (!pileColumns.includes('name')) {
+      queries.push(`ALTER TABLE pile ADD COLUMN name VARCHAR(50) COMMENT '充电桩名称'`);
+    }
+    if (!pileColumns.includes('price')) {
+      queries.push(`ALTER TABLE pile ADD COLUMN price DECIMAL(10,2) COMMENT '价格 元/度'`);
+    }
+
+    // 处理 station 表
+    const [stationResults] = await sequelize.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'station'
+    `) as any[];
+
+    const stationColumns = stationResults.map((r: any) => r.COLUMN_NAME);
+
+    // 检查并添加 station 表缺失的字段
+    if (!stationColumns.includes('address')) {
+      queries.push(`ALTER TABLE station ADD COLUMN address VARCHAR(200) COMMENT '详细地址'`);
+    }
+
     // 执行所有添加字段的SQL
     for (const query of queries) {
-      await sequelize.query(query);
+      try {
+        await sequelize.query(query);
+      } catch (e: any) {
+        // 忽略字段已存在的错误
+        if (!e.message?.includes('Duplicate column')) {
+          console.warn(`⚠️  执行失败: ${query}`, e.message);
+        }
+      }
     }
-    
+
     if (queries.length > 0) {
-      console.log(`✅ 已添加 ${queries.length} 个缺失的字段`);
+      console.log(`✅ 已检查/添加 ${queries.length} 个字段`);
     }
   } catch (error) {
-    console.error('⚠️  添加缺失字段时出错（可能字段已存在）:', error);
+    console.error('⚠️  添加缺失字段时出错:', error);
   }
 }
 
@@ -252,6 +312,15 @@ sequelize.authenticate()
       } else {
         console.log('ℹ️  数据库已有数据，跳过Mock数据初始化');
         console.log('💡 提示：如需强制重新初始化，请在 .env 文件中设置 FORCE_INIT_MOCK=true');
+      }
+
+      // 初始化移动端测试数据（长沙天津充电站 + 测试用户订单）
+      if (process.env.NODE_ENV === 'development') {
+        try {
+          await initAllTestData();
+        } catch (e) {
+          console.log('ℹ️  移动端测试数据已存在或初始化失败');
+        }
       }
     } catch (error) {
       console.error('❌ 数据初始化失败:', error);

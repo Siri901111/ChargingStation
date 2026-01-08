@@ -9,11 +9,13 @@ Order.init(
     user_id: { type: DataTypes.BIGINT, allowNull: false },
     equipment_no: { type: DataTypes.STRING(64) },
     station_id: { type: DataTypes.BIGINT },
+    pile_id: { type: DataTypes.BIGINT }, // 充电桩ID
     date: { type: DataTypes.DATE },
     start_time: { type: DataTypes.DATE },
     end_time: { type: DataTypes.DATE },
     money: { type: DataTypes.DECIMAL(10, 2) },
     pay: { type: DataTypes.STRING(20) },
+    pay_time: { type: DataTypes.DATE }, // 支付时间
     status: { type: DataTypes.TINYINT },
   },
   {
