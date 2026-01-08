@@ -6,7 +6,7 @@
  */
 
 // 设计系统核心 - 变量、基础样式、组件
-@import './design-system.scss';
+@use './design-system.scss';
 
 // 图标系统 - 精致线性图标
-@import './icons.scss';
+@use './icons.scss';

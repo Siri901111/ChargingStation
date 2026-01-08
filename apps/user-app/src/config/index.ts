@@ -14,13 +14,13 @@ interface EnvConfig {
 
 const envMap: Record<string, EnvConfig> = {
   development: {
-    baseUrl: 'http://localhost:3000/api',
-    wsUrl: 'ws://localhost:3000',
+    baseUrl: 'http://localhost:3001/api/mobile',
+    wsUrl: 'ws://localhost:3001',
     amapKey: 'YOUR_AMAP_KEY',
     debug: true,
   },
   production: {
-    baseUrl: 'https://api.example.com/api',
+    baseUrl: 'https://api.example.com/api/mobile',
     wsUrl: 'wss://api.example.com',
     amapKey: 'YOUR_AMAP_KEY',
     debug: false,

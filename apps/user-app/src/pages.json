@@ -3,7 +3,7 @@
     {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "首页",
+        "navigationBarTitleText": "",
         "navigationStyle": "custom",
         "enablePullDownRefresh": true
       }
@@ -11,22 +11,23 @@
     {
       "path": "pages/map/index",
       "style": {
-        "navigationBarTitleText": "充电地图",
-        "navigationStyle": "custom"
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": false
       }
     },
     {
       "path": "pages/scan/index",
       "style": {
         "navigationBarTitleText": "扫码充电",
-        "navigationBarBackgroundColor": "#4CAF50",
-        "navigationBarTextStyle": "white"
+        "navigationStyle": "custom",
+        "disableScroll": false
       }
     },
     {
       "path": "pages/charging/index",
       "style": {
-        "navigationBarTitleText": "充电中",
+        "navigationBarTitleText": "",
         "navigationStyle": "custom",
         "disableScroll": true
       }
@@ -34,40 +35,48 @@
     {
       "path": "pages/order/index",
       "style": {
-        "navigationBarTitleText": "我的订单",
+        "navigationBarTitleText": "充电订单",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
         "enablePullDownRefresh": true
       }
     },
     {
       "path": "pages/order/detail",
       "style": {
-        "navigationBarTitleText": "订单详情"
+        "navigationBarTitleText": "订单详情",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black"
       }
     },
     {
       "path": "pages/mine/index",
       "style": {
-        "navigationBarTitleText": "我的",
+        "navigationBarTitleText": "",
         "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/station/detail",
       "style": {
-        "navigationBarTitleText": "站点详情",
+        "navigationBarTitleText": "",
         "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/wallet/index",
       "style": {
-        "navigationBarTitleText": "我的钱包"
+        "navigationBarTitleText": "我的钱包",
+        "navigationBarBackgroundColor": "#1A1A1A",
+        "navigationBarTextStyle": "white"
       }
     },
     {
       "path": "pages/wallet/recharge",
       "style": {
-        "navigationBarTitleText": "充值"
+        "navigationBarTitleText": "充值",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black"
       }
     }
   ],
@@ -78,14 +87,16 @@
         {
           "path": "login",
           "style": {
-            "navigationBarTitleText": "登录",
+            "navigationBarTitleText": "",
             "navigationStyle": "custom"
           }
         },
         {
           "path": "bindPhone",
           "style": {
-            "navigationBarTitleText": "绑定手机号"
+            "navigationBarTitleText": "绑定手机号",
+            "navigationBarBackgroundColor": "#FFFFFF",
+            "navigationBarTextStyle": "black"
           }
         }
       ]
@@ -96,19 +107,41 @@
         {
           "path": "index",
           "style": {
-            "navigationBarTitleText": "设置"
+            "navigationBarTitleText": "设置",
+            "navigationBarBackgroundColor": "#FFFFFF",
+            "navigationBarTextStyle": "black"
           }
         },
         {
           "path": "about",
           "style": {
-            "navigationBarTitleText": "关于我们"
+            "navigationBarTitleText": "关于我们",
+            "navigationBarBackgroundColor": "#FFFFFF",
+            "navigationBarTextStyle": "black"
           }
         },
         {
           "path": "feedback",
           "style": {
-            "navigationBarTitleText": "意见反馈"
+            "navigationBarTitleText": "意见反馈",
+            "navigationBarBackgroundColor": "#FFFFFF",
+            "navigationBarTextStyle": "black"
+          }
+        },
+        {
+          "path": "agreement",
+          "style": {
+            "navigationBarTitleText": "用户协议",
+            "navigationBarBackgroundColor": "#FFFFFF",
+            "navigationBarTextStyle": "black"
+          }
+        },
+        {
+          "path": "privacy",
+          "style": {
+            "navigationBarTitleText": "隐私政策",
+            "navigationBarBackgroundColor": "#FFFFFF",
+            "navigationBarTextStyle": "black"
           }
         }
       ]
@@ -116,14 +149,17 @@
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "智能充电",
+    "navigationBarTitleText": "智充",
     "navigationBarBackgroundColor": "#FFFFFF",
-    "backgroundColor": "#F5F5F5",
-    "backgroundTextStyle": "dark"
+    "backgroundColor": "#FAF9F7",
+    "backgroundTextStyle": "dark",
+    "mp-alipay": {
+      "transparentTitle": "auto"
+    }
   },
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#4CAF50",
+    "color": "#737373",
+    "selectedColor": "#1A1A1A",
     "borderStyle": "white",
     "backgroundColor": "#FFFFFF",
     "list": [
@@ -137,7 +173,7 @@
         "pagePath": "pages/map/index",
         "iconPath": "static/tabbar/map.png",
         "selectedIconPath": "static/tabbar/map-active.png",
-        "text": "地图"
+        "text": "站点"
       },
       {
         "pagePath": "pages/scan/index",

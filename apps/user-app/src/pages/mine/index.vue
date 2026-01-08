@@ -1,106 +1,189 @@
 <template>
-  <view class="page">
-    <!-- 用户信息头部 -->
-    <view class="user-header" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="user-info" @click="handleUserClick">
-        <image
-          class="avatar"
-          :src="userStore.userInfo?.avatar || '/static/avatar/default.png'"
-          mode="aspectFill"
-        />
-        <view class="user-detail" v-if="userStore.isLoggedIn">
-          <text class="nickname">{{ userStore.displayName }}</text>
-          <text class="phone">{{ maskPhone(userStore.phone) }}</text>
+  <view class="page safe-area">
+    <!-- 顶部状态栏占位 -->
+    <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+
+    <!-- 页面标题 -->
+    <view class="page-header">
+      <text class="page-title">我的</text>
+    </view>
+
+    <!-- 用户信息卡片 -->
+    <view class="user-section">
+      <view class="user-card" @click="handleUserClick">
+        <!-- 未登录态 -->
+        <view v-if="!userStore.isLoggedIn" class="user-guest">
+          <view class="avatar-wrapper">
+            <view class="avatar-placeholder">
+              <text class="avatar-icon">👤</text>
+            </view>
+          </view>
+          <view class="guest-info">
+            <text class="guest-title">点击登录</text>
+            <text class="guest-desc">登录后享受更多服务</text>
+          </view>
+          <view class="arrow-icon">
+            <text>›</text>
+          </view>
         </view>
-        <view class="user-detail" v-else>
-          <text class="nickname">点击登录</text>
-          <text class="phone">登录后享受更多服务</text>
+
+        <!-- 已登录态 -->
+        <view v-else class="user-logged">
+          <view class="avatar-wrapper">
+            <image
+              class="avatar-img"
+              :src="userStore.userInfo?.avatar || defaultAvatar"
+              mode="aspectFill"
+            />
+            <view class="avatar-badge">✓</view>
+          </view>
+          <view class="user-info">
+            <text class="user-name">{{ userStore.displayName }}</text>
+            <view class="user-meta">
+              <view class="member-tag">
+                <text>{{ userStore.userInfo?.cardType || '普通会员' }}</text>
+              </view>
+              <text class="user-phone">{{ maskPhone(userStore.phone) }}</text>
+            </view>
+          </view>
+          <view class="arrow-icon">
+            <text>›</text>
+          </view>
         </view>
-        <text class="iconfont icon-arrow-right"></text>
       </view>
 
-      <!-- 会员卡信息 -->
-      <view class="member-card" v-if="userStore.isLoggedIn && userStore.userInfo?.memberCardNo">
-        <view class="card-info">
-          <text class="card-type">{{ userStore.userInfo.cardType || '普通会员' }}</text>
-          <text class="card-no">{{ userStore.userInfo.memberCardNo }}</text>
+      <!-- 数据统计 - 仅登录后显示 -->
+      <view v-if="userStore.isLoggedIn" class="stats-card">
+        <view class="stat-item" @click="goToWallet">
+          <text class="stat-value">{{ userStore.balance.toFixed(2) }}</text>
+          <text class="stat-label">余额(元)</text>
         </view>
-        <view class="card-balance">
-          <text class="balance-label">余额</text>
-          <text class="balance-value">¥{{ userStore.balance.toFixed(2) }}</text>
+        <view class="stat-divider"></view>
+        <view class="stat-item" @click="goToOrders">
+          <text class="stat-value">{{ orderCount }}</text>
+          <text class="stat-label">累计充电</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item" @click="goToStatistics">
+          <text class="stat-value">{{ totalElectricity }}</text>
+          <text class="stat-label">总电量(度)</text>
         </view>
       </view>
     </view>
 
-    <!-- 快捷功能 -->
-    <view class="quick-actions card">
-      <view class="action-item" @click="goToPage(PAGE_PATH.WALLET)">
-        <view class="action-icon">
-          <text class="iconfont icon-wallet"></text>
+    <!-- 快捷入口 -->
+    <view class="quick-section">
+      <view class="quick-grid">
+        <view class="quick-item" @click="goToWallet">
+          <view class="quick-icon wallet-icon">
+            <text>💰</text>
+          </view>
+          <text class="quick-label">钱包</text>
         </view>
-        <text class="action-text">钱包</text>
-      </view>
-      <view class="action-item" @click="goToPage(PAGE_PATH.ORDER)">
-        <view class="action-icon">
-          <text class="iconfont icon-order"></text>
+        <view class="quick-item" @click="goToOrders">
+          <view class="quick-icon order-icon">
+            <text>📋</text>
+          </view>
+          <text class="quick-label">订单</text>
         </view>
-        <text class="action-text">订单</text>
-      </view>
-      <view class="action-item" @click="handleFavorites">
-        <view class="action-icon">
-          <text class="iconfont icon-star"></text>
+        <view class="quick-item" @click="handleFavorites">
+          <view class="quick-icon favorite-icon">
+            <text>⭐</text>
+          </view>
+          <text class="quick-label">收藏</text>
         </view>
-        <text class="action-text">收藏</text>
-      </view>
-      <view class="action-item" @click="handleCoupon">
-        <view class="action-icon">
-          <text class="iconfont icon-coupon"></text>
+        <view class="quick-item" @click="handleCoupon">
+          <view class="quick-icon coupon-icon">
+            <text>🎫</text>
+          </view>
+          <text class="quick-label">优惠券</text>
         </view>
-        <text class="action-text">优惠券</text>
       </view>
     </view>
 
-    <!-- 菜单列表 -->
-    <view class="menu-list card">
-      <view class="menu-item" @click="handleStatistics">
-        <text class="iconfont icon-chart menu-icon"></text>
-        <text class="menu-text">充电统计</text>
-        <text class="iconfont icon-arrow-right"></text>
+    <!-- 服务列表 -->
+    <view class="list-section">
+      <view class="section-header">
+        <text class="section-title">服务</text>
       </view>
-      <view class="menu-item" @click="handleInvoice">
-        <text class="iconfont icon-invoice menu-icon"></text>
-        <text class="menu-text">发票管理</text>
-        <text class="iconfont icon-arrow-right"></text>
-      </view>
-      <view class="menu-item" @click="handleVehicle">
-        <text class="iconfont icon-car menu-icon"></text>
-        <text class="menu-text">我的车辆</text>
-        <text class="iconfont icon-arrow-right"></text>
+      <view class="list-card">
+        <view class="list-item" @click="goToStatistics">
+          <view class="item-left">
+            <text class="item-emoji">📊</text>
+            <text class="item-text">充电统计</text>
+          </view>
+          <view class="item-right">
+            <text class="item-hint">查看充电数据</text>
+            <text class="item-arrow">›</text>
+          </view>
+        </view>
+        <view class="list-item" @click="handleInvoice">
+          <view class="item-left">
+            <text class="item-emoji">🧾</text>
+            <text class="item-text">发票管理</text>
+          </view>
+          <view class="item-right">
+            <text class="item-arrow">›</text>
+          </view>
+        </view>
+        <view class="list-item" @click="handleVehicle">
+          <view class="item-left">
+            <text class="item-emoji">🚗</text>
+            <text class="item-text">我的车辆</text>
+          </view>
+          <view class="item-right">
+            <text class="item-arrow">›</text>
+          </view>
+        </view>
       </view>
     </view>
 
-    <view class="menu-list card">
-      <view class="menu-item" @click="goToPage('/pages-sub/settings/feedback')">
-        <text class="iconfont icon-feedback menu-icon"></text>
-        <text class="menu-text">意见反馈</text>
-        <text class="iconfont icon-arrow-right"></text>
+    <!-- 其他设置 -->
+    <view class="list-section">
+      <view class="section-header">
+        <text class="section-title">其他</text>
       </view>
-      <view class="menu-item" @click="goToPage('/pages-sub/settings/about')">
-        <text class="iconfont icon-info menu-icon"></text>
-        <text class="menu-text">关于我们</text>
-        <text class="iconfont icon-arrow-right"></text>
-      </view>
-      <view class="menu-item" @click="goToPage('/pages-sub/settings/index')">
-        <text class="iconfont icon-settings menu-icon"></text>
-        <text class="menu-text">设置</text>
-        <text class="iconfont icon-arrow-right"></text>
+      <view class="list-card">
+        <view class="list-item" @click="goToFeedback">
+          <view class="item-left">
+            <text class="item-emoji">💬</text>
+            <text class="item-text">意见反馈</text>
+          </view>
+          <view class="item-right">
+            <text class="item-arrow">›</text>
+          </view>
+        </view>
+        <view class="list-item" @click="goToAbout">
+          <view class="item-left">
+            <text class="item-emoji">ℹ️</text>
+            <text class="item-text">关于我们</text>
+          </view>
+          <view class="item-right">
+            <text class="item-hint">v1.0.0</text>
+            <text class="item-arrow">›</text>
+          </view>
+        </view>
+        <view class="list-item" @click="goToSettings">
+          <view class="item-left">
+            <text class="item-emoji">⚙️</text>
+            <text class="item-text">设置</text>
+          </view>
+          <view class="item-right">
+            <text class="item-arrow">›</text>
+          </view>
+        </view>
       </view>
     </view>
 
     <!-- 退出登录 -->
-    <view class="logout-btn" v-if="userStore.isLoggedIn" @click="handleLogout">
-      退出登录
+    <view v-if="userStore.isLoggedIn" class="logout-section">
+      <view class="logout-btn" @click="handleLogout">
+        <text>退出登录</text>
+      </view>
     </view>
+
+    <!-- 底部安全区域 -->
+    <view class="bottom-safe"></view>
   </view>
 </template>
 
@@ -108,79 +191,99 @@
 import { ref, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/modules/user'
+import { orderApi } from '@/api/order'
 import { PAGE_PATH } from '@/constants'
 import { maskPhone } from '@/utils'
 
-// Store
 const userStore = useUserStore()
 
-// 状态
 const statusBarHeight = ref(0)
+const orderCount = ref(0)
+const totalElectricity = ref('0.0')
+const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'
 
-// 初始化
 onMounted(() => {
   const systemInfo = uni.getSystemInfoSync()
   statusBarHeight.value = systemInfo.statusBarHeight || 0
 })
 
 onShow(() => {
-  // 刷新用户信息
   if (userStore.isLoggedIn) {
     userStore.fetchUserInfo()
+    fetchStatistics()
   }
 })
 
-// 点击用户信息
+async function fetchStatistics() {
+  try {
+    const stats = await orderApi.getOrderStatistics()
+    orderCount.value = stats.totalCount
+    totalElectricity.value = stats.totalElectricity.toFixed(1)
+  } catch (error) {
+    console.error('获取统计失败', error)
+  }
+}
+
 function handleUserClick() {
   if (!userStore.isLoggedIn) {
     uni.navigateTo({ url: PAGE_PATH.LOGIN })
   } else {
-    // 跳转到个人资料页面
-    uni.showToast({ title: '功能开发中', icon: 'none' })
+    uni.showToast({ title: '个人资料编辑中', icon: 'none' })
   }
 }
 
-// 跳转页面
-function goToPage(path: string) {
+function goToWallet() {
   if (!userStore.checkLoginAndNavigate()) return
-  uni.navigateTo({ url: path })
+  uni.navigateTo({ url: PAGE_PATH.WALLET })
 }
 
-// 收藏站点
+function goToOrders() {
+  if (!userStore.checkLoginAndNavigate()) return
+  uni.switchTab({ url: PAGE_PATH.ORDER })
+}
+
+function goToStatistics() {
+  if (!userStore.checkLoginAndNavigate()) return
+  uni.showToast({ title: '功能开发中', icon: 'none' })
+}
+
 function handleFavorites() {
   if (!userStore.checkLoginAndNavigate()) return
   uni.showToast({ title: '功能开发中', icon: 'none' })
 }
 
-// 优惠券
 function handleCoupon() {
   if (!userStore.checkLoginAndNavigate()) return
   uni.showToast({ title: '功能开发中', icon: 'none' })
 }
 
-// 充电统计
-function handleStatistics() {
-  if (!userStore.checkLoginAndNavigate()) return
-  uni.showToast({ title: '功能开发中', icon: 'none' })
-}
-
-// 发票管理
 function handleInvoice() {
   if (!userStore.checkLoginAndNavigate()) return
   uni.showToast({ title: '功能开发中', icon: 'none' })
 }
 
-// 我的车辆
 function handleVehicle() {
   if (!userStore.checkLoginAndNavigate()) return
   uni.showToast({ title: '功能开发中', icon: 'none' })
 }
 
-// 退出登录
+function goToFeedback() {
+  uni.navigateTo({ url: '/pages-sub/settings/feedback' })
+}
+
+function goToAbout() {
+  uni.navigateTo({ url: '/pages-sub/settings/about' })
+}
+
+function goToSettings() {
+  uni.navigateTo({ url: '/pages-sub/settings/index' })
+}
+
 function handleLogout() {
   uni.showModal({
     title: '确认退出',
     content: '确定要退出登录吗？',
+    confirmColor: '#1A1A1A',
     success: (res) => {
       if (res.confirm) {
         userStore.logout()
@@ -192,173 +295,342 @@ function handleLogout() {
 </script>
 
 <style lang="scss" scoped>
+/* 页面容器 */
 .page {
   min-height: 100vh;
-  background-color: var(--bg-color);
-  padding-bottom: 50rpx;
+  background: #FAF9F7;
 }
 
-.user-header {
-  background: linear-gradient(135deg, #4CAF50, #2E7D32);
-  padding-bottom: 40rpx;
+.status-bar {
+  background: transparent;
+}
+
+/* 页面标题 */
+.page-header {
+  padding: 24rpx 40rpx 32rpx;
+}
+
+.page-title {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: 2rpx;
+}
+
+/* 用户区域 */
+.user-section {
+  padding: 0 32rpx;
+  margin-bottom: 32rpx;
+}
+
+.user-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03);
+}
+
+/* 未登录态 */
+.user-guest {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-wrapper {
+  position: relative;
+  margin-right: 28rpx;
+  flex-shrink: 0;
+}
+
+.avatar-placeholder {
+  width: 120rpx;
+  height: 120rpx;
+  background: linear-gradient(135deg, #F5F5F5 0%, #E8E8E8 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-icon {
+  font-size: 48rpx;
+}
+
+.guest-info {
+  flex: 1;
+}
+
+.guest-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 8rpx;
+}
+
+.guest-desc {
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.arrow-icon {
+  font-size: 40rpx;
+  color: #CCCCCC;
+  font-weight: 300;
+}
+
+/* 已登录态 */
+.user-logged {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-img {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #F5F5F5;
+}
+
+.avatar-badge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 32rpx;
+  height: 32rpx;
+  background: #5A8F7B;
+  border-radius: 50%;
+  border: 4rpx solid #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18rpx;
+  color: #FFFFFF;
 }
 
 .user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 12rpx;
+}
+
+.user-meta {
   display: flex;
   align-items: center;
-  padding: 30rpx;
-
-  .avatar {
-    width: 120rpx;
-    height: 120rpx;
-    border-radius: 50%;
-    border: 4rpx solid rgba(255, 255, 255, 0.3);
-    margin-right: 24rpx;
-  }
-
-  .user-detail {
-    flex: 1;
-  }
-
-  .nickname {
-    display: block;
-    font-size: 36rpx;
-    font-weight: bold;
-    color: #FFFFFF;
-    margin-bottom: 8rpx;
-  }
-
-  .phone {
-    font-size: 26rpx;
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .iconfont {
-    font-size: 32rpx;
-    color: rgba(255, 255, 255, 0.6);
-  }
+  gap: 16rpx;
 }
 
-.member-card {
-  display: flex;
-  justify-content: space-between;
+.member-tag {
+  display: inline-flex;
   align-items: center;
-  margin: 0 30rpx;
-  padding: 24rpx 30rpx;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 16rpx;
-  backdrop-filter: blur(10px);
+  padding: 6rpx 16rpx;
+  background: rgba(184, 153, 111, 0.1);
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  color: #B8996F;
+  font-weight: 500;
 }
 
-.card-info {
-  .card-type {
-    display: block;
-    font-size: 28rpx;
-    color: #FFFFFF;
-    font-weight: bold;
-    margin-bottom: 8rpx;
-  }
-
-  .card-no {
-    font-size: 24rpx;
-    color: rgba(255, 255, 255, 0.8);
-  }
+.user-phone {
+  font-size: 26rpx;
+  color: #999999;
 }
 
-.card-balance {
-  text-align: right;
-
-  .balance-label {
-    display: block;
-    font-size: 24rpx;
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 8rpx;
-  }
-
-  .balance-value {
-    font-size: 40rpx;
-    font-weight: bold;
-    color: #FFFFFF;
-  }
-}
-
-.quick-actions {
+/* 数据统计卡片 */
+.stats-card {
   display: flex;
-  justify-content: space-around;
-  margin: -30rpx 24rpx 24rpx;
-  padding: 30rpx 0;
-  position: relative;
-  z-index: 10;
+  align-items: center;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 40rpx 20rpx;
+  margin-top: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03);
 }
 
-.action-item {
+.stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 8rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.stat-divider {
+  width: 1rpx;
+  height: 60rpx;
+  background: #F0F0F0;
+}
+
+/* 快捷入口 */
+.quick-section {
+  padding: 0 32rpx;
+  margin-bottom: 32rpx;
+}
+
+.quick-grid {
+  display: flex;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03);
+}
+
+.quick-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 16rpx;
 }
 
-.action-icon {
-  width: 80rpx;
-  height: 80rpx;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.2));
+.quick-icon {
+  width: 88rpx;
+  height: 88rpx;
   border-radius: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12rpx;
-
-  .iconfont {
-    font-size: 40rpx;
-    color: var(--primary-color);
-  }
+  font-size: 36rpx;
 }
 
-.action-text {
+.wallet-icon {
+  background: linear-gradient(135deg, #2D2D2D 0%, #1A1A1A 100%);
+}
+
+.order-icon {
+  background: linear-gradient(135deg, #6BA58E 0%, #5A8F7B 100%);
+}
+
+.favorite-icon {
+  background: linear-gradient(135deg, #C9B08B 0%, #B8996F 100%);
+}
+
+.coupon-icon {
+  background: linear-gradient(135deg, #D6736A 0%, #C4554A 100%);
+}
+
+.quick-label {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: #666666;
 }
 
-.menu-list {
-  margin: 0 24rpx 24rpx;
-  padding: 0;
+/* 列表区域 */
+.list-section {
+  padding: 0 32rpx;
+  margin-bottom: 24rpx;
 }
 
-.menu-item {
+.section-header {
+  padding: 16rpx 8rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #999999;
+  letter-spacing: 2rpx;
+}
+
+.list-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03);
+}
+
+.list-item {
   display: flex;
   align-items: center;
-  padding: 28rpx 24rpx;
-  border-bottom: 1rpx solid var(--border-color);
+  justify-content: space-between;
+  padding: 36rpx 40rpx;
+  border-bottom: 1rpx solid #F5F5F5;
+  transition: background 0.2s;
+}
 
-  &:last-child {
-    border-bottom: none;
-  }
+.list-item:last-child {
+  border-bottom: none;
+}
 
-  .menu-icon {
-    font-size: 40rpx;
-    color: var(--primary-color);
-    margin-right: 20rpx;
-  }
+.list-item:active {
+  background: #FAFAFA;
+}
 
-  .menu-text {
-    flex: 1;
-    font-size: 28rpx;
-  }
+.item-left {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
 
-  .icon-arrow-right {
-    font-size: 28rpx;
-    color: var(--text-placeholder);
-  }
+.item-emoji {
+  font-size: 36rpx;
+}
+
+.item-text {
+  font-size: 30rpx;
+  color: #1A1A1A;
+}
+
+.item-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.item-hint {
+  font-size: 26rpx;
+  color: #CCCCCC;
+}
+
+.item-arrow {
+  font-size: 32rpx;
+  color: #CCCCCC;
+  font-weight: 300;
+}
+
+/* 退出登录 */
+.logout-section {
+  padding: 40rpx 32rpx;
 }
 
 .logout-btn {
-  margin: 40rpx 24rpx;
-  height: 88rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #FFFFFF;
-  border-radius: 44rpx;
+  height: 96rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
   font-size: 30rpx;
-  color: var(--danger-color);
+  color: #C4554A;
+  font-weight: 500;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03);
+  transition: all 0.2s;
+}
+
+.logout-btn:active {
+  background: #FFF5F4;
+  transform: scale(0.98);
+}
+
+/* 底部安全区域 */
+.bottom-safe {
+  height: 120rpx;
 }
 </style>

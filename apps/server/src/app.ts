@@ -46,6 +46,7 @@ import mapRoutes from './routes/mapRoutes.js';
 import pileRoutes from './routes/pileRoutes.js';
 import monitorDataRoutes from './routes/monitorDataRoutes.js';
 import aiAgentRoutes from './routes/aiAgentRoutes.js';
+import mobileRoutes from './routes/mobileRoutes.js';
 app.use('/api', userRoutes);
 app.use('/api/stations', stationRoutes);
 app.use('/api', revenueRoutes);
@@ -60,6 +61,7 @@ app.use('/api', mapRoutes);
 app.use('/api', pileRoutes);
 app.use('/api/monitor', monitorDataRoutes);
 app.use('/api/ai-agent', aiAgentRoutes);
+app.use('/api/mobile', mobileRoutes); // 移动端API
 
 // 兼容前端的报警列表API路径
 app.use('/api', alarmRoutes);
