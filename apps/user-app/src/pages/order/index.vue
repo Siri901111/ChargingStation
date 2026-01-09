@@ -246,6 +246,7 @@ async function handlePay(orderNo: string) {
 .page {
   min-height: 100vh;
   background-color: var(--bg-color);
+  padding-right: 25px !important;
 }
 
 .tabs {
@@ -254,6 +255,7 @@ async function handlePay(orderNo: string) {
   padding: 0 24rpx;
   position: sticky;
   top: 0;
+  width: 110%;
   z-index: 10;
 }
 

@@ -9,36 +9,39 @@ if (!fs.existsSync(tabbarDir)) {
   fs.mkdirSync(tabbarDir, { recursive: true })
 }
 
-const normalColor = '#999999'
-const activeColor = '#4CAF50'
+// 使用设计系统的颜色，更协调高级
+const normalColor = '#A6A6A6'  // 未选中：浅灰
+const activeColor = '#5A8F7B'  // 选中：翡翠绿（主题色）
 
-// SVG 图标定义 - 使用简洁的路径
+// SVG 图标定义 - 使用清晰的线性图标路径，优化设计
 const svgIcons = {
   home: {
-    // 首页 - 房子图标
-    path: `<path d="M12 2L2 12h3v9h6v-6h2v6h6v-9h3L12 2z"/>`,
+    // 首页 - 房子图标（优化版，更清晰）
+    path: `<path d="M9 21V13.6c0-.56 0-.84.109-1.054a1 1 0 01.437-.437C9.76 12 10.04 12 10.6 12h2.8c.56 0 .84 0 1.054.109a1 1 0 01.437.437C15 12.76 15 13.04 15 13.6V21M11.018 2.764L4.235 8.039c-.453.353-.68.529-.843.75a2 2 0 00-.318.65C3 9.704 3 9.991 3 10.565V17.8c0 1.12 0 1.68.218 2.108a2 2 0 00.874.874C4.52 21 5.08 21 6.2 21h11.6c1.12 0 1.68 0 2.108-.218a2 2 0 00.874-.874C21 19.48 21 18.92 21 17.8v-7.235c0-.574 0-.861-.074-1.126a2.002 2.002 0 00-.318-.65c-.163-.221-.39-.397-.843-.75l-6.783-5.275c-.351-.273-.527-.41-.72-.462a1 1 0 00-.523 0c-.194.052-.37.189-.721.462z"/>`,
   },
   map: {
-    // 地图 - 定位图标
-    path: `<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>`,
+    // 地图 - 定位图标（优化版）
+    path: `<circle cx="12" cy="10" r="3"/><path d="M12 22c4-4 8-7.582 8-12a8 8 0 10-16 0c0 4.418 4 8 8 12z"/>`,
   },
   scan: {
-    // 扫码 - 二维码扫描图标
-    path: `<path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm13-2h2v3h-3v-2h1v-1zm-3 0h2v2h-2v-2zm0 3h2v3h-2v-3zm3 1h2v2h-2v-2z"/>`,
+    // 扫码 - 二维码扫描图标（优化版）
+    path: `<path d="M3 7V5a2 2 0 012-2h2M7 21H5a2 2 0 01-2-2v-2M21 17v2a2 2 0 01-2 2h-2M17 3h2a2 2 0 012 2v2"/><line x1="12" y1="4" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="20"/><line x1="4" y1="12" x2="8" y2="12"/><line x1="16" y1="12" x2="20" y2="12"/>`,
   },
   order: {
-    // 订单 - 文件列表图标
-    path: `<path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6zm2-6h8v2H8v-2zm0-3h8v2H8v-2z"/>`,
+    // 订单 - 文件列表图标（优化版）
+    path: `<path d="M8 6h8M8 10h8M8 14h4M6 2h12a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/>`,
   },
   mine: {
-    // 我的 - 用户图标
-    path: `<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>`,
+    // 我的 - 用户图标（优化版）
+    path: `<circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>`,
   }
 }
 
-function createSvg(iconName, color) {
+function createSvg(iconName, color, isActive = false) {
   const icon = svgIcons[iconName]
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="81" height="81" viewBox="0 0 24 24" fill="${color}">${icon.path}</svg>`
+  const strokeWidth = isActive ? '2.5' : '2'
+  // 优化SVG，使用stroke而不是fill，更清晰
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="81" height="81" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${icon.path}</svg>`
 }
 
 async function generatePngIcons() {
@@ -52,8 +55,8 @@ async function generatePngIcons() {
 
     // 只生成 SVG
     for (const name of Object.keys(svgIcons)) {
-      const normalSvg = createSvg(name, normalColor)
-      const activeSvg = createSvg(name, activeColor)
+      const normalSvg = createSvg(name, normalColor, false)
+      const activeSvg = createSvg(name, activeColor, true)
 
       fs.writeFileSync(path.join(tabbarDir, `${name}.svg`), normalSvg)
       fs.writeFileSync(path.join(tabbarDir, `${name}-active.svg`), activeSvg)
@@ -68,19 +71,19 @@ async function generatePngIcons() {
 
   for (const name of Object.keys(svgIcons)) {
     try {
-      // 生成普通状态 PNG
-      const normalSvg = createSvg(name, normalColor)
+      // 生成普通状态 PNG（更大尺寸，更高清晰度）
+      const normalSvg = createSvg(name, normalColor, false)
       await sharp(Buffer.from(normalSvg))
-        .resize(81, 81)
-        .png()
+        .resize(162, 162) // 2x尺寸，保证清晰度
+        .png({ quality: 100, compressionLevel: 9 })
         .toFile(path.join(tabbarDir, `${name}.png`))
       console.log(`✓ ${name}.png`)
 
       // 生成选中状态 PNG
-      const activeSvg = createSvg(name, activeColor)
+      const activeSvg = createSvg(name, activeColor, true)
       await sharp(Buffer.from(activeSvg))
-        .resize(81, 81)
-        .png()
+        .resize(162, 162) // 2x尺寸，保证清晰度
+        .png({ quality: 100, compressionLevel: 9 })
         .toFile(path.join(tabbarDir, `${name}-active.png`))
       console.log(`✓ ${name}-active.png`)
 

@@ -1,0 +1,22 @@
+/**
+ * TabBar 样式优化
+ * 提升底部导航栏的视觉体验
+ */
+
+// #ifdef H5
+// H5平台可以通过全局样式优化TabBar
+uni-tabbar {
+  box-shadow: 0 -2rpx 16rpx rgba(0, 0, 0, 0.04) !important;
+  border-top: 1rpx solid var(--ink-05) !important;
+}
+
+.uni-tabbar {
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+}
+
+.uni-tabbar__icon {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+// #endif

@@ -180,10 +180,14 @@
     }
   },
   "tabBar": {
-    "color": "#737373",
-    "selectedColor": "#1A1A1A",
+    "color": "#A6A6A6",
+    "selectedColor": "#5A8F7B",
     "borderStyle": "white",
     "backgroundColor": "#FFFFFF",
+    "height": "100rpx",
+    "fontSize": "22rpx",
+    "iconWidth": "44rpx",
+    "spacing": "6rpx",
     "list": [
       {
         "pagePath": "pages/index/index",

@@ -378,6 +378,7 @@ function goToStationDetail(id: number) {
 }
 
 .content {
+  margin-top: 20px !important;
   height: 100vh;
 }
 
@@ -487,15 +488,18 @@ function goToStationDetail(id: number) {
 // ==================== 快捷入口 ====================
 .quick-section {
   padding: 0 var(--space-4);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .quick-grid {
   display: flex;
   background: var(--bg-card);
   border-radius: var(--radius-xl);
-  padding: var(--space-5) var(--space-2);
-  box-shadow: var(--shadow-sm);
+  padding: var(--space-5) var(--space-4);
+  box-shadow: var(--shadow-lg);
+  gap: var(--space-3);
+  // 添加微妙的边框，增加层次
+  border: 1rpx solid var(--ink-05);
 }
 
 .quick-item {
@@ -503,42 +507,118 @@ function goToStationDetail(id: number) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  transition: all var(--duration-fast) var(--ease-out);
+  
+  // 点击效果优化
+  &:active {
+    transform: scale(0.96);
+    background: var(--ink-02);
+    
+    .quick-icon {
+      transform: scale(0.95);
+      box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+      
+      &::before {
+        opacity: 0.25;
+      }
+    }
+    
+    .quick-label {
+      color: var(--text-primary);
+      font-weight: var(--weight-semibold);
+    }
+  }
 }
 
 .quick-icon {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: var(--radius-lg);
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-out);
+  // 添加微妙的内阴影，增加层次感
+  box-shadow: inset 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+
+  // 渐变背景，更高级
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.15;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent);
+    transition: opacity var(--duration-normal);
+    pointer-events: none;
+  }
 
   .icon {
-    color: var(--paper);
+    position: relative;
+    z-index: 1;
+    // 优化图标清晰度
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    // 轻微阴影，增加层次
+    filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.15));
   }
 
+  // 扫码充电 - 深墨色渐变（高级黑）- 协调配色
   &.scan {
-    background: var(--ink-90);
+    background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
+    box-shadow: 0 8rpx 24rpx rgba(26, 26, 26, 0.25), inset 0 1rpx 0 rgba(255, 255, 255, 0.12);
+    
+    .icon {
+      filter: brightness(0) invert(1) drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.25));
+    }
   }
 
+  // 附近站点 - 翡翠绿渐变（主题色）- 协调配色
   &.map {
-    background: var(--jade);
+    background: linear-gradient(135deg, #5A8F7B 0%, #4A7F6B 100%);
+    box-shadow: 0 8rpx 24rpx rgba(90, 143, 123, 0.35), inset 0 1rpx 0 rgba(255, 255, 255, 0.2);
+    
+    .icon {
+      filter: brightness(0) invert(1) drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.2));
+    }
   }
 
+  // 充电记录 - 暖金色渐变（琥珀金）- 协调配色
   &.order {
-    background: var(--gold);
+    background: linear-gradient(135deg, #D4A84B 0%, #C89A3A 100%);
+    box-shadow: 0 8rpx 24rpx rgba(212, 168, 75, 0.35), inset 0 1rpx 0 rgba(255, 255, 255, 0.2);
+    
+    .icon {
+      filter: brightness(0) invert(1) drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.2));
+    }
   }
 
+  // 账户余额 - 青瓷蓝渐变（优雅蓝）- 协调配色
   &.wallet {
-    background: var(--cyan);
+    background: linear-gradient(135deg, #5B8C94 0%, #4A7A81 100%);
+    box-shadow: 0 8rpx 24rpx rgba(91, 140, 148, 0.35), inset 0 1rpx 0 rgba(255, 255, 255, 0.2);
+    
+    .icon {
+      filter: brightness(0) invert(1) drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.2));
+    }
   }
+
 }
+
 
 .quick-label {
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   letter-spacing: var(--tracking-wide);
+  font-weight: var(--weight-medium);
+  margin-top: 4rpx;
 }
 
 // ==================== 会员卡片 ====================
