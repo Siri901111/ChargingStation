@@ -10,7 +10,9 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const docsSource = path.resolve(__dirname, '../../docs')
+// 从 scripts/copy-docs.js 到项目根目录的 docs 文件夹
+// scripts/ -> apps/admin/ -> apps/ -> 项目根目录/
+const docsSource = path.resolve(__dirname, '../../../docs')
 const docsTarget = path.resolve(__dirname, '../public/docs')
 
 function copyDir(src, dest) {
@@ -38,5 +40,9 @@ if (fs.existsSync(docsSource)) {
     copyDir(docsSource, docsTarget)
     console.log('✅ docs文件夹复制完成！')
 } else {
-    console.warn('⚠️  未找到docs文件夹，请确保项目根目录存在docs文件夹')
+    // 如果docs文件夹不存在，创建目标目录但不报错，避免阻塞启动
+    if (!fs.existsSync(docsTarget)) {
+        fs.mkdirSync(docsTarget, { recursive: true })
+    }
+    console.warn('⚠️  未找到docs文件夹，已创建public/docs目录，启动将继续')
 }
