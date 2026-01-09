@@ -1,0 +1,188 @@
+.page.data-v-0979a525 {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+}
+.status-area.data-v-0979a525 {
+  background: linear-gradient(180deg, #4CAF50 0%, #2E7D32 100%);
+  padding-bottom: 60rpx;
+}
+.status-header.data-v-0979a525 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  padding: 0 24rpx;
+}
+.status-header .back-btn.data-v-0979a525,
+.status-header .placeholder.data-v-0979a525 {
+  width: 80rpx;
+}
+.status-header .back-btn .iconfont.data-v-0979a525 {
+  font-size: 40rpx;
+  color: #FFFFFF;
+}
+.status-header .title.data-v-0979a525 {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+.charging-animation.data-v-0979a525 {
+  position: relative;
+  width: 360rpx;
+  height: 360rpx;
+  margin: 40rpx auto;
+}
+.circle-outer.data-v-0979a525 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.circle-inner.data-v-0979a525 {
+  width: 280rpx;
+  height: 280rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.percent-value.data-v-0979a525 {
+  font-size: 72rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+.percent-label.data-v-0979a525 {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 10rpx;
+}
+.wave.data-v-0979a525 {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  animation: wave-0979a525 2s ease-out infinite;
+}
+.wave2.data-v-0979a525 {
+  animation-delay: 1s;
+}
+@keyframes wave-0979a525 {
+0% {
+    transform: scale(1);
+    opacity: 1;
+}
+100% {
+    transform: scale(1.5);
+    opacity: 0;
+}
+}
+.station-info.data-v-0979a525 {
+  text-align: center;
+  color: #FFFFFF;
+}
+.station-info .station-name.data-v-0979a525 {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+.station-info .pile-name.data-v-0979a525 {
+  font-size: 26rpx;
+  opacity: 0.8;
+}
+.data-area.data-v-0979a525 {
+  margin-top: -30rpx;
+  padding: 0 24rpx;
+  padding-bottom: 180rpx;
+}
+.data-card.data-v-0979a525 {
+  background-color: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: var(--shadow);
+}
+.data-grid.data-v-0979a525 {
+  display: flex;
+  justify-content: space-around;
+}
+.data-item.data-v-0979a525 {
+  text-align: center;
+}
+.data-value.data-v-0979a525 {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+.data-value.primary.data-v-0979a525 {
+  color: var(--primary-color);
+}
+.data-label.data-v-0979a525 {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-top: 10rpx;
+}
+.realtime-data.data-v-0979a525 {
+  padding-top: 24rpx;
+}
+.realtime-title.data-v-0979a525 {
+  font-size: 28rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+}
+.realtime-grid.data-v-0979a525 {
+  display: flex;
+  justify-content: space-between;
+}
+.realtime-item.data-v-0979a525 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.realtime-label.data-v-0979a525 {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-bottom: 8rpx;
+}
+.realtime-value.data-v-0979a525 {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+.tips-card.data-v-0979a525 {
+  margin-top: 24rpx;
+}
+.tips-item.data-v-0979a525 {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 16rpx;
+}
+.tips-item.data-v-0979a525:last-child {
+  margin-bottom: 0;
+}
+.tips-item .iconfont.data-v-0979a525 {
+  color: var(--warning-color);
+  margin-right: 12rpx;
+}
+.bottom-action.data-v-0979a525 {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24rpx;
+  background-color: #FFFFFF;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+.btn-danger.data-v-0979a525 {
+  background: linear-gradient(135deg, #F44336, #C62828);
+  color: #FFFFFF;
+}

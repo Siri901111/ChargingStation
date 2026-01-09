@@ -1,0 +1,148 @@
+.page.data-v-744525eb {
+  min-height: 100vh;
+  background-color: #FFFFFF;
+}
+.login-header.data-v-744525eb {
+  position: relative;
+  background: linear-gradient(180deg, rgba(76, 175, 80, 0.1) 0%, #FFFFFF 100%);
+  padding-bottom: 60rpx;
+}
+.close-btn.data-v-744525eb {
+  position: absolute;
+  top: 20rpx;
+  left: 24rpx;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.close-btn .iconfont.data-v-744525eb {
+  font-size: 40rpx;
+  color: var(--text-secondary);
+}
+.header-content.data-v-744525eb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 100rpx;
+}
+.logo.data-v-744525eb {
+  width: 160rpx;
+  height: 160rpx;
+  margin-bottom: 24rpx;
+}
+.app-name.data-v-744525eb {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 16rpx;
+}
+.slogan.data-v-744525eb {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+.login-body.data-v-744525eb {
+  padding: 60rpx 48rpx;
+}
+.form-item.data-v-744525eb {
+  margin-bottom: 30rpx;
+}
+.input-wrap.data-v-744525eb {
+  display: flex;
+  align-items: center;
+  height: 100rpx;
+  background-color: #F5F5F5;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+}
+.prefix.data-v-744525eb {
+  font-size: 30rpx;
+  color: var(--text-primary);
+  margin-right: 16rpx;
+  padding-right: 16rpx;
+  border-right: 1rpx solid var(--border-color);
+}
+.input.data-v-744525eb {
+  flex: 1;
+  height: 100%;
+  font-size: 30rpx;
+}
+.code-btn.data-v-744525eb {
+  font-size: 28rpx;
+  color: var(--primary-color);
+  white-space: nowrap;
+}
+.code-btn.disabled.data-v-744525eb {
+  color: var(--text-placeholder);
+}
+.divider-wrap.data-v-744525eb {
+  display: flex;
+  align-items: center;
+  margin: 60rpx 0;
+}
+.divider-line.data-v-744525eb {
+  flex: 1;
+  height: 1rpx;
+  background-color: var(--border-color);
+}
+.divider-text.data-v-744525eb {
+  padding: 0 24rpx;
+  font-size: 26rpx;
+  color: var(--text-placeholder);
+}
+.third-login.data-v-744525eb {
+  display: flex;
+  justify-content: center;
+}
+.wechat-btn.data-v-744525eb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 88rpx;
+  background-color: #07C160;
+  border-radius: 44rpx;
+  color: #FFFFFF;
+  font-size: 30rpx;
+}
+.wechat-btn .iconfont.data-v-744525eb {
+  font-size: 40rpx;
+  margin-right: 16rpx;
+}
+.wechat-btn.data-v-744525eb::after {
+  border: none;
+}
+.agreement.data-v-744525eb {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 40rpx;
+}
+.checkbox.data-v-744525eb {
+  width: 36rpx;
+  height: 36rpx;
+  border: 2rpx solid var(--border-color);
+  border-radius: 50%;
+  margin-right: 12rpx;
+  margin-top: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.checkbox.checked.data-v-744525eb {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+.checkbox .iconfont.data-v-744525eb {
+  font-size: 24rpx;
+  color: #FFFFFF;
+}
+.agreement-text.data-v-744525eb {
+  flex: 1;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.link.data-v-744525eb {
+  color: var(--primary-color);
+}

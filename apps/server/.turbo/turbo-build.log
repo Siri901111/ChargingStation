@@ -1,0 +1,14 @@
+
+> @charging/server@1.0.0 build C:\Users\Lenovo\Desktop\毕业论文\chargingStation\apps\server
+> tsup src/app.ts --format esm --outDir dist --clean --no-dts
+
+[34mCLI[39m Building entry: src/app.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Target: es2020
+[34mCLI[39m Cleaning output folder
+[34mESM[39m Build start
+[32mESM[39m [1mdist\initMockData-JZZZUJE7.js [22m[32m123.00 B[39m
+[32mESM[39m [1mdist\app.js                   [22m[32m228.94 KB[39m
+[32mESM[39m [1mdist\chunk-ZVF4WKVT.js        [22m[32m40.65 KB[39m
+[32mESM[39m ⚡️ Build success in 176ms

@@ -1,0 +1,140 @@
+.page.data-v-f95de024 {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  padding-bottom: 180rpx;
+}
+.section.data-v-f95de024 {
+  margin: 24rpx;
+}
+.section-title.data-v-f95de024 {
+  font-size: 30rpx;
+  font-weight: bold;
+  margin-bottom: 24rpx;
+}
+.package-list.data-v-f95de024 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20rpx;
+}
+.package-item.data-v-f95de024 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 140rpx;
+  background-color: #F5F5F5;
+  border-radius: 16rpx;
+  border: 4rpx solid transparent;
+}
+.package-item.active.data-v-f95de024 {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-color: var(--primary-color);
+}
+.package-amount.data-v-f95de024 {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+.package-gift.data-v-f95de024 {
+  font-size: 22rpx;
+  color: var(--danger-color);
+}
+.custom-amount.data-v-f95de024 {
+  margin-top: 30rpx;
+  padding-top: 30rpx;
+  border-top: 1rpx solid var(--border-color);
+}
+.custom-label.data-v-f95de024 {
+  display: block;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  margin-bottom: 16rpx;
+}
+.custom-input-wrap.data-v-f95de024 {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  background-color: #F5F5F5;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+}
+.custom-prefix.data-v-f95de024 {
+  font-size: 36rpx;
+  font-weight: bold;
+  margin-right: 16rpx;
+}
+.custom-input.data-v-f95de024 {
+  flex: 1;
+  height: 100%;
+  font-size: 32rpx;
+}
+.pay-list .pay-item.data-v-f95de024 {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+.pay-list .pay-item.data-v-f95de024:last-child {
+  border-bottom: none;
+}
+.pay-icon.data-v-f95de024 {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+.pay-icon.wechat.data-v-f95de024 {
+  color: #07C160;
+}
+.pay-icon.alipay.data-v-f95de024 {
+  color: #1677FF;
+}
+.pay-name.data-v-f95de024 {
+  flex: 1;
+  font-size: 28rpx;
+}
+.pay-check.data-v-f95de024 {
+  width: 40rpx;
+  height: 40rpx;
+  border: 2rpx solid var(--border-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pay-check .iconfont.data-v-f95de024 {
+  font-size: 24rpx;
+  color: var(--primary-color);
+}
+.pay-item.active .pay-check.data-v-f95de024 {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+.pay-item.active .pay-check .iconfont.data-v-f95de024 {
+  color: #FFFFFF;
+}
+.bottom-action.data-v-f95de024 {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  background-color: #FFFFFF;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+.amount-info.data-v-f95de024 {
+  margin-right: 30rpx;
+}
+.amount-label.data-v-f95de024 {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+.amount-value.data-v-f95de024 {
+  display: block;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: var(--danger-color);
+}
+.btn.data-v-f95de024 {
+  flex: 1;
+}

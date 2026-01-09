@@ -1,26 +1,5 @@
 # Dependencies
 node_modules/
-.pnpm-store/
-
-# Build outputs
-dist/
-*.tsbuildinfo
-
-# IDE
-.vscode/
-.idea/
-
-# Turbo
-.turbo/
-
-# Local env files
-.env*.local
-.env
-
-# Logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
 
 # OS files
 .DS_Store
