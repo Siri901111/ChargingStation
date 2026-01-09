@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import os from 'os';
 import sequelize from './config/db.js';
 import './models/index.js'; // 导入所有模型
 import { User, ChargingUser } from './models/index.js';
@@ -10,21 +11,66 @@ import { initAllTestData } from './utils/initTestData.js';
 
 dotenv.config();
 
+/**
+ * 获取本机局域网IP地址
+ */
+function getLocalIP(): string {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    const nets = interfaces[name];
+    if (nets) {
+      for (const net of nets) {
+        // 跳过内部地址（如127.0.0.1）和非IPv4地址
+        if (net.family === 'IPv4' && !net.internal) {
+          return net.address;
+        }
+      }
+    }
+  }
+  return 'localhost';
+}
+
 const app = express();
 
-// CORS配置 - 支持credentials模式
+// CORS配置 - 支持credentials模式和局域网访问
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5175',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:5175',
-    // H5 开发服务器
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-  ],
+  origin: (origin, callback) => {
+    // 开发环境：允许所有localhost、127.0.0.1和局域网IP访问
+    if (isDevelopment) {
+      // 允许没有origin的情况（如移动端或Postman）
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // 允许localhost和127.0.0.1
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
+      
+      // 允许局域网IP（192.168.x.x, 10.x.x.x, 172.16-31.x.x）
+      const localNetworkRegex = /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?$/;
+      if (localNetworkRegex.test(origin)) {
+        return callback(null, true);
+      }
+      
+      // 允许所有开发环境的访问
+      return callback(null, true);
+    }
+    
+    // 生产环境：使用白名单
+    const allowedOrigins = [
+      'https://api.example.com',
+      // 添加生产环境的前端域名
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('不允许的跨域请求'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'token'],
@@ -337,10 +383,13 @@ sequelize.authenticate()
       console.log('⚠️  服务器将继续启动，但可能缺少初始数据');
     }
     
-    // 启动服务器
-app.listen(PORT, () => {
+    // 启动服务器 - 监听所有网络接口，支持局域网访问
+    const HOST = process.env.HOST || '0.0.0.0'; // 0.0.0.0 表示监听所有网络接口
+    app.listen(PORT, HOST, () => {
       console.log(`🚀 Server running at http://localhost:${PORT}`);
+      console.log(`🌐 局域网访问: http://${getLocalIP()}:${PORT}`);
       console.log(`📝 API 文档: http://localhost:${PORT}/api`);
+      console.log(`📱 移动端API: http://${getLocalIP()}:${PORT}/api/mobile`);
     });
   })
   .catch((err: any) => {

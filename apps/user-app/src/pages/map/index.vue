@@ -28,7 +28,22 @@
       </view>
     </view>
 
-    <!-- 地图 -->
+    <!-- H5平台使用高德地图 -->
+    <!-- #ifdef H5 -->
+    <view class="map-wrapper">
+      <view id="amap-container" class="amap-container"></view>
+      <view v-if="mapLoading" class="map-loading">
+        <text>地图加载中...</text>
+      </view>
+      <view v-if="mapError" class="map-error">
+        <text>{{ mapError }}</text>
+        <view class="retry-btn" @click="initAMap">重试</view>
+      </view>
+    </view>
+    <!-- #endif -->
+    
+    <!-- 小程序/APP使用原生map组件 -->
+    <!-- #ifndef H5 -->
     <map
       id="map"
       class="map"
@@ -40,6 +55,7 @@
       @markertap="handleMarkerTap"
       @regionchange="handleRegionChange"
     />
+    <!-- #endif -->
 
     <!-- 重新定位按钮 -->
     <view class="location-btn" @click="relocate">
@@ -127,12 +143,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useLocationStore } from '@/store/modules/location'
 import { stationApi, type Station } from '@/api/station'
 import { formatDistance, openNavigation } from '@/utils'
 import { PAGE_PATH } from '@/constants'
+import config from '@/config'
 
 // Store
 const locationStore = useLocationStore()
@@ -145,6 +162,15 @@ const mapScale = ref(14)
 const showStationList = ref(false)
 const stationList = ref<Station[]>([])
 const selectedStation = ref<Station | null>(null)
+
+// H5地图相关（高德地图）
+// #ifdef H5
+const mapLoading = ref(true)
+const mapError = ref('')
+let amapInstance: any = null
+let amapMap: any = null
+let amapMarkers: any[] = []
+// #endif
 
 // 地图中心点（默认长沙）
 const mapCenter = ref({
@@ -194,8 +220,391 @@ onMounted(() => {
   const systemInfo = uni.getSystemInfoSync()
   statusBarHeight.value = systemInfo.statusBarHeight || 0
 
+  // #ifdef H5
+  // H5平台初始化高德地图
+  nextTick(() => {
+    const container = document.getElementById('amap-container')
+    if (container) {
+      initAMap()
+    } else {
+      console.error('❌ 地图容器不存在')
+      mapError.value = '地图容器初始化失败'
+      mapLoading.value = false
+    }
+  })
+  // #endif
+  
+  // #ifndef H5
+  // 小程序/APP平台初始化定位
   initLocation()
+  // #endif
 })
+
+// #ifdef H5
+// 初始化高德地图（严格按照官方文档和admin端实现）
+function initAMap() {
+  mapLoading.value = true
+  mapError.value = ''
+  
+  // 检查是否已加载高德地图SDK
+  if ((window as any).AMap) {
+    createMap()
+    return
+  }
+  
+  // 动态加载高德地图SDK（使用1.4.15版本，与admin端一致）
+  const script = document.createElement('script')
+  script.type = 'text/javascript'
+  const amapKey = config.amapKey
+  script.src = `https://webapi.amap.com/maps?v=1.4.15&key=${amapKey}&callback=initAMapCallback`
+  script.async = true
+  script.defer = true
+  
+  // 全局回调函数
+  ;(window as any).initAMapCallback = () => {
+    setTimeout(() => {
+      createMap()
+      delete (window as any).initAMapCallback
+    }, 100)
+  }
+  
+  script.onerror = () => {
+    mapLoading.value = false
+    mapError.value = '地图SDK加载失败，请检查网络连接'
+    delete (window as any).initAMapCallback
+  }
+  
+  document.head.appendChild(script)
+}
+
+// 创建地图实例（参考admin端实现）
+function createMap() {
+  try {
+    amapInstance = (window as any).AMap
+    
+    if (!amapInstance) {
+      throw new Error('高德地图SDK加载失败')
+    }
+    
+    // 获取当前位置或使用默认位置
+    const location = locationStore.currentLocation || {
+      latitude: 28.1963,
+      longitude: 112.9822,
+    }
+    
+    // 在创建地图前，先阻止容器的滚轮事件冒泡（关键：解决页面滚动导致滚轮缩放失效）
+    const container = document.getElementById('amap-container')
+    if (container) {
+      // 阻止滚轮事件冒泡到页面，但不阻止默认行为（让地图可以缩放）
+      // 使用 capture 阶段在事件冒泡前捕获并阻止冒泡
+      container.addEventListener('wheel', (e) => {
+        // 阻止冒泡到document/window，防止页面滚动
+        e.stopPropagation()
+        // 不调用 e.preventDefault()，让高德地图自己处理滚轮缩放
+      }, { passive: false, capture: true })
+      
+      // 也阻止 map-wrapper 的滚轮事件冒泡
+      const mapWrapper = container.parentElement
+      if (mapWrapper && mapWrapper.classList.contains('map-wrapper')) {
+        mapWrapper.addEventListener('wheel', (e) => {
+          // 如果事件来自地图容器或其子元素，阻止冒泡
+          if (e.target === container || container.contains(e.target as Node)) {
+            e.stopPropagation()
+          }
+        }, { passive: false, capture: true })
+      }
+    }
+    
+    // 创建地图（严格按照官方文档，启用缩放、拖拽等功能）
+    amapMap = new amapInstance.Map('amap-container', {
+      viewMode: '3D', // 是否为3D地图模式
+      zoom: 14, // 初始化地图级别
+      center: [location.longitude, location.latitude], // 初始化地图中心点位置 [经度, 纬度]
+      // 启用缩放和交互功能
+      zoomEnable: true, // 是否可以通过鼠标滚轮缩放
+      dragEnable: true, // 是否可通过鼠标拖拽平移地图
+      scrollWheel: true, // 是否可以通过鼠标滚轮缩放
+      doubleClickZoom: true, // 是否可以通过双击鼠标放大地图
+      keyboardEnable: true, // 是否可以通过键盘控制地图
+      resizeEnable: true, // 是否监控地图容器尺寸变化
+      rotateEnable: true, // 是否允许旋转
+      pitchEnable: true, // 是否允许倾斜
+    })
+    
+    // 监听地图加载完成事件（必须等待complete事件后再添加标记）
+    amapMap.on('complete', () => {
+      console.log('✅ 地图加载完成，开始加载站点')
+      mapLoading.value = false
+      
+      // 确保缩放功能已启用（如果之前被禁用）
+      if (typeof amapMap.setStatus === 'function') {
+        amapMap.setStatus({
+          zoomEnable: true,
+          dragEnable: true,
+          scrollWheel: true,
+        })
+      }
+      
+      // 在地图加载完成后，再次确保滚轮事件不冒泡到页面
+      // 因为高德地图内部可能会重新绑定事件
+      try {
+        const mapContainer = amapMap.getContainer()
+        if (mapContainer) {
+          // 使用 capture 阶段捕获滚轮事件，阻止冒泡到页面
+          mapContainer.addEventListener('wheel', (e) => {
+            e.stopPropagation()
+            // 不阻止默认行为，让高德地图处理滚轮缩放
+          }, { passive: false, capture: true })
+        }
+      } catch (e) {
+        console.warn('设置地图容器事件监听失败:', e)
+      }
+      
+      // 延迟确保地图完全渲染
+      setTimeout(() => {
+        loadMapStations()
+      }, 300)
+    })
+    
+    // 监听地图错误
+    amapMap.on('error', (error: any) => {
+      console.error('地图初始化错误:', error)
+      mapLoading.value = false
+      if (error && error.message) {
+        if (error.message.includes('USERKEY_PLAT_NOMATCH') || error.message.includes('10009')) {
+          mapError.value = '地图Key平台类型不匹配\n请在控制台确认Key类型为"Web端（JS API）"'
+        } else {
+          mapError.value = `地图加载失败: ${error.message}`
+        }
+      } else {
+        mapError.value = '地图加载失败，请检查Key配置'
+      }
+    })
+    
+  } catch (error: any) {
+    console.error('创建地图失败:', error)
+    mapLoading.value = false
+    mapError.value = error.message || '地图初始化失败'
+  }
+}
+
+// 加载地图上的站点标记（严格按照高德地图官方文档实现）
+async function loadMapStations() {
+  // 检查地图实例是否已初始化
+  if (!amapMap || !amapInstance) {
+    console.warn('⚠️ 地图实例未初始化，无法加载站点')
+    mapLoading.value = false
+    return
+  }
+  
+  console.log('📍 开始加载站点数据...')
+  
+  try {
+    // 清除已有标记（参考admin端实现）
+    amapMarkers.forEach(marker => {
+      try {
+        amapMap.remove(marker)
+      } catch (e) {
+        console.warn('移除标记失败:', e)
+      }
+    })
+    amapMarkers = []
+    
+    // 获取站点列表
+    const location = locationStore.currentLocation || {
+      latitude: 28.1963,
+      longitude: 112.9822,
+    }
+    
+    console.log('📡 请求站点数据，位置:', location)
+    
+    const res = await stationApi.getNearbyStations({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      radius: 10000,
+      type: currentFilter.value === 'all' ? undefined : currentFilter.value as 'fast' | 'slow',
+      pageSize: 50,
+    })
+    
+    console.log('✅ 获取到站点数据:', res.list?.length || 0, '个站点')
+    
+    stationList.value = res.list || []
+    
+    if (stationList.value.length === 0) {
+      console.warn('⚠️ 没有找到附近的站点')
+      mapLoading.value = false
+      return
+    }
+    
+    // 创建信息窗体（参考admin端实现）
+    const infoWindow = new amapInstance.InfoWindow({
+      offset: new amapInstance.Pixel(0, -30),
+    })
+    
+    // 创建标记点（严格按照官方文档：AMap.Marker）
+    stationList.value.forEach((station: Station) => {
+      if (!station.latitude || !station.longitude) {
+        console.warn('⚠️ 站点缺少坐标信息:', station.name)
+        return
+      }
+      
+      try {
+        const hasFree = station.fastFree > 0 || station.slowFree > 0
+        
+        // 根据官方文档创建Marker图标
+        // 使用AMap.Icon对象设置图标（更可靠，可以设置大小和偏移）
+        let iconUrl = ''
+        if (hasFree) {
+          // 有可用桩：使用红色标记
+          iconUrl = 'https://webapi.amap.com/theme/v1.3/markers/n/mark_r.png'
+        } else {
+          // 无可用桩：使用蓝色标记
+          iconUrl = 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png'
+        }
+        
+        // 创建Icon对象（根据官方文档，更可靠）
+        const markerIcon = new amapInstance.Icon({
+          size: new amapInstance.Size(25, 34), // 图标实际尺寸
+          image: iconUrl, // 图标URL
+          imageSize: new amapInstance.Size(25, 34), // 图标显示尺寸
+          imageOffset: new amapInstance.Pixel(0, 0), // 图标偏移
+        })
+        
+        // 按照官方文档创建Marker
+        const marker = new amapInstance.Marker({
+          position: [station.longitude, station.latitude], // [经度, 纬度]
+          icon: markerIcon, // 使用Icon对象
+          title: station.name, // 鼠标悬停显示标题
+          offset: new amapInstance.Pixel(-12, -34), // 标记偏移，使图标底部对齐坐标点
+        })
+        
+        // 添加点击事件（参考admin端实现）
+        marker.on('click', () => {
+          // 设置信息窗体内容
+          const content = createInfoWindowContent(station)
+          infoWindow.setContent(content)
+          // 打开信息窗体
+          infoWindow.open(amapMap, marker.getPosition())
+          // 更新选中状态（用于小程序/APP显示）
+          selectedStation.value = station
+        })
+        
+        // 将标记添加到地图（严格按照官方文档：map.add(marker)）
+        amapMap.add(marker)
+        amapMarkers.push(marker)
+        
+      } catch (markerError: any) {
+        console.error('创建标记失败:', station.name, markerError)
+      }
+    })
+    
+    console.log('✅ 成功创建', amapMarkers.length, '个标记点')
+    
+    // 如果有站点，调整地图视野（参考admin端实现）
+    if (amapMarkers.length > 0) {
+      try {
+        amapMap.setFitView(amapMarkers)
+        console.log('✅ 地图视野已调整')
+      } catch (viewError) {
+        console.warn('调整地图视野失败:', viewError)
+      }
+    }
+    
+    // 更新地图中心
+    if (res.list.length > 0 && !locationStore.currentLocation) {
+      mapCenter.value = {
+        latitude: res.list[0].latitude,
+        longitude: res.list[0].longitude,
+      }
+    }
+    
+    // 确保loading状态关闭
+    mapLoading.value = false
+    
+  } catch (error: any) {
+    console.error('❌ 加载地图站点失败:', error)
+    mapLoading.value = false
+    uni.showToast({
+      title: '加载站点失败: ' + (error.message || '未知错误'),
+      icon: 'none',
+      duration: 2000
+    })
+  }
+}
+
+// 创建信息窗体内容（参考admin端实现，简化版）
+function createInfoWindowContent(station: Station): string {
+  const distanceText = station.distance ? `${formatDistance(station.distance)} | ` : ''
+  const hasFree = station.fastFree > 0 || station.slowFree > 0
+  const statusColor = hasFree ? '#5A8F7B' : '#999999'
+  const statusText = hasFree ? '有可用桩' : '暂无可用桩'
+  
+  return `
+    <div style="padding: 16px; min-width: 280px; max-width: 350px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+      <div style="margin-bottom: 12px;">
+        <div style="font-size: 18px; font-weight: 600; color: #1A1A1A; margin-bottom: 6px;">
+          ${station.name}
+        </div>
+        <div style="font-size: 13px; color: ${statusColor}; font-weight: 500; margin-bottom: 4px;">
+          ${statusText}
+        </div>
+        <div style="font-size: 13px; color: #666;">
+          ${distanceText}${station.address || station.city || ''}
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+        <div style="padding: 6px 12px; background: rgba(90, 143, 123, 0.1); border-radius: 12px; font-size: 12px; color: #5A8F7B; font-weight: 500;">
+          ⚡ 快充 ${station.fastFree}/${station.fast}
+        </div>
+        <div style="padding: 6px 12px; background: rgba(184, 153, 111, 0.1); border-radius: 12px; font-size: 12px; color: #B8996F; font-weight: 500;">
+          🔋 慢充 ${station.slowFree}/${station.slow}
+        </div>
+      </div>
+      ${station.price ? `
+        <div style="font-size: 16px; font-weight: 600; color: #1A1A1A; margin-bottom: 12px;">
+          ¥${station.price.toFixed(2)}/度起
+        </div>
+      ` : ''}
+      <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <button onclick="window.navigateToDetail && window.navigateToDetail(${station.id})" style="flex: 1; padding: 8px; background: linear-gradient(135deg, #5A8F7B 0%, #3D6B5A 100%); border: none; border-radius: 16px; font-size: 13px; color: #FFFFFF; font-weight: 500; cursor: pointer;">
+          查看详情
+        </button>
+      </div>
+    </div>
+  `
+}
+
+// 注册全局导航函数供信息窗体调用
+// #ifdef H5
+if (typeof window !== 'undefined') {
+  ;(window as any).navigateToDetail = (stationId: number) => {
+    uni.navigateTo({ url: `${PAGE_PATH.STATION_DETAIL}?id=${stationId}` })
+  }
+}
+// #endif
+
+// 清理地图资源
+onUnmounted(() => {
+  // #ifdef H5
+  if (amapMap) {
+    // 清除所有标记（参考admin端实现）
+    amapMarkers.forEach(marker => {
+      try {
+        amapMap.remove(marker)
+      } catch (e) {
+        console.warn('移除标记失败:', e)
+      }
+    })
+    amapMarkers = []
+    
+    // 销毁地图实例
+    amapMap.destroy()
+    amapMap = null
+    amapInstance = null
+  }
+  // #endif
+})
+// #endif
 
 onShow(() => {
   // 检查是否有从首页传来的搜索请求
@@ -248,6 +657,13 @@ async function fetchNearbyStations() {
       pageSize: 50,
     })
     stationList.value = res.list || []
+    
+    // #ifdef H5
+    // H5平台刷新地图标记
+    if (amapMap && typeof amapMap.add === 'function') {
+      loadMapStations()
+    }
+    // #endif
     
     // 如果有站点且地图中心是默认位置，更新地图中心到第一个站点
     if (res.list.length > 0 && !locationStore.currentLocation) {
@@ -307,6 +723,13 @@ function clearSearch() {
 function handleFilterChange(value: string) {
   currentFilter.value = value
   fetchNearbyStations()
+  
+  // #ifdef H5
+  // H5平台刷新地图标记
+  if (amapMap && typeof amapMap.add === 'function') {
+    loadMapStations()
+  }
+  // #endif
 }
 
 // 重新定位
@@ -369,7 +792,24 @@ function goToStationDetail(station: Station) {
   position: relative;
   height: 100vh;
   overflow: hidden;
+  /* 确保页面本身不能滚动，但允许地图区域交互 */
 }
+
+/* H5平台：确保body和html也不滚动 */
+// #ifdef H5
+:deep(body),
+:deep(html) {
+  overflow: hidden !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* 阻止页面在H5平台上的默认滚动行为 */
+:deep(body) {
+  /* 不设置 position: fixed，因为这可能导致其他问题 */
+  /* 通过 overflow: hidden 和事件阻止来处理滚动问题 */
+}
+// #endif
 
 .nav-bar {
   position: fixed;
@@ -432,10 +872,96 @@ function goToStationDetail(station: Station) {
   }
 }
 
+/* H5平台高德地图容器 */
+// #ifdef H5
+.map-wrapper {
+  width: 100%;
+  /* 高度 = 100vh - 导航栏高度（导航栏大约占100px） */
+  height: calc(100vh - 100px);
+  position: fixed;
+  top: 100px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* 阻止滚轮事件冒泡 */
+  overflow: hidden;
+  /* 允许地图容器内的触摸操作 */
+  touch-action: auto;
+  z-index: 1;
+}
+
+.amap-container {
+  width: 100%;
+  height: 100%;
+  /* 确保地图容器可以接收鼠标和触摸事件 */
+  touch-action: pan-x pan-y pinch-zoom;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* 确保容器可见且可交互 */
+  position: relative;
+  overflow: hidden;
+  /* 确保地图可以响应交互 */
+  cursor: default;
+  /* 阻止事件冒泡到父元素 */
+  pointer-events: auto;
+}
+
+.map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 24rpx 48rpx;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20rpx);
+  border-radius: 24rpx;
+  font-size: 28rpx;
+  color: #666666;
+  z-index: 1000;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.map-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 32rpx 48rpx;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20rpx);
+  border-radius: 24rpx;
+  font-size: 26rpx;
+  color: #C4554A;
+  z-index: 1000;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+  text-align: center;
+  max-width: 80%;
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+.retry-btn {
+  padding: 16rpx 32rpx;
+  background: linear-gradient(135deg, #5A8F7B 0%, #3D6B5A 100%);
+  color: #FFFFFF;
+  border-radius: 32rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  cursor: pointer;
+}
+// #endif
+
+// #ifndef H5
 .map {
   width: 100%;
   height: 100%;
 }
+// #endif
 
 .location-btn {
   position: fixed;
