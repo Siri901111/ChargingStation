@@ -69,4 +69,5 @@ export const PAGE_PATH = {
   RECHARGE: '/pages/wallet/recharge',
   LOGIN: '/pages-sub/auth/login',
   SETTINGS: '/pages-sub/settings/index',
+  PROFILE: '/pages-sub/settings/profile',
 } as const

@@ -31,6 +31,7 @@ export const useLocationStore = defineStore('location', () => {
   const currentLocation = ref<Location | null>(null)
   const isLocating = ref(false)
   const locationError = ref<string>('')
+  const pendingSearchKeyword = ref<string>('')  // 待处理的搜索关键词（用于跨页面传递）
 
   // Getters
   const hasLocation = computed(() => !!currentLocation.value)
@@ -194,11 +195,28 @@ export const useLocationStore = defineStore('location', () => {
     })
   }
 
+  /**
+   * 设置待处理的搜索关键词
+   */
+  function setPendingSearch(keyword: string) {
+    pendingSearchKeyword.value = keyword
+  }
+
+  /**
+   * 消费待处理的搜索关键词（获取后清空）
+   */
+  function consumePendingSearch(): string {
+    const keyword = pendingSearchKeyword.value
+    pendingSearchKeyword.value = ''
+    return keyword
+  }
+
   return {
     // State
     currentLocation,
     isLocating,
     locationError,
+    pendingSearchKeyword,
     // Getters
     hasLocation,
     locationText,
@@ -207,5 +225,7 @@ export const useLocationStore = defineStore('location', () => {
     reverseGeocode,
     reverseGeocodeByAmap,
     openLocationSetting,
+    setPendingSearch,
+    consumePendingSearch,
   }
 })

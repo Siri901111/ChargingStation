@@ -22,6 +22,8 @@ export interface MobileUserInfo {
   phone: string;
   name?: string;
   avatar?: string;
+  gender?: number;  // 0未知 1男 2女
+  birthday?: string;
   memberCardNo?: string;
   cardType?: string;
   balance: number;
@@ -199,6 +201,8 @@ export async function getUserInfo(userId: number): Promise<MobileUserInfo> {
     phone: (user as any).phone,
     name: (user as any).name,
     avatar: (user as any).avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${(user as any).phone}`,
+    gender: (user as any).gender || 0,
+    birthday: (user as any).birthday || null,
     memberCardNo: (user as any).member_card_no,
     cardType: (user as any).card_type,
     balance: parseFloat((user as any).balance) || 0,
@@ -218,6 +222,9 @@ export async function updateUserInfo(userId: number, data: Partial<MobileUserInf
   const updateData: any = {};
   if (data.name !== undefined) updateData.name = data.name;
   if (data.avatar !== undefined) updateData.avatar = data.avatar;
+  if (data.gender !== undefined) updateData.gender = data.gender;
+  if (data.birthday !== undefined) updateData.birthday = data.birthday;
+  updateData.updated_at = new Date();
 
   await ChargingUser.update(updateData, { where: { id: userId } });
 

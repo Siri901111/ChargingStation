@@ -1,10 +1,26 @@
 <template>
   <view class="page">
+    <!-- 自定义导航栏 -->
+    <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
+      <view class="nav-content">
+        <view class="nav-back" @click="handleBack">
+          <text class="back-icon">‹</text>
+        </view>
+        <text class="nav-title">站点详情</text>
+        <view class="nav-placeholder"></view>
+      </view>
+    </view>
+
     <view v-if="loading" class="loading-wrap">
       <text>加载中...</text>
     </view>
 
-    <view v-else-if="station" class="station-detail">
+    <scroll-view
+      v-else-if="station"
+      class="station-detail"
+      scroll-y
+      :style="{ paddingTop: navBarHeight + 'px' }"
+    >
       <!-- 站点头部 -->
       <view class="station-header">
         <swiper class="station-swiper" indicator-dots autoplay circular v-if="station.images?.length">
@@ -13,24 +29,25 @@
           </swiper-item>
         </swiper>
         <view class="station-image-placeholder" v-else>
-          <text class="iconfont icon-charging-station"></text>
+          <text class="placeholder-icon">⚡</text>
+          <text class="placeholder-text">{{ station.name }}</text>
         </view>
 
         <view class="station-info">
           <view class="info-main">
             <text class="station-name">{{ station.name }}</text>
             <view class="station-tags">
-              <text class="tag tag-primary" v-if="station.fastFree > 0">快充空闲</text>
+              <text class="tag tag-success" v-if="station.fastFree > 0">快充空闲</text>
               <text class="tag tag-warning" v-if="station.slowFree > 0">慢充空闲</text>
             </view>
           </view>
           <view class="info-address" @click="handleNavigation">
-            <text class="iconfont icon-location"></text>
+            <text class="info-icon">📍</text>
             <text class="address-text">{{ station.address || station.city }}</text>
             <text class="distance" v-if="station.distance">{{ formatDistance(station.distance) }}</text>
           </view>
           <view class="info-contact" v-if="station.tel">
-            <text class="iconfont icon-phone"></text>
+            <text class="info-icon">📞</text>
             <text class="contact-text" @click="handleCall">{{ station.tel }}</text>
           </view>
         </view>
@@ -75,7 +92,7 @@
             @click="handleSelectPile(pile)"
           >
             <view class="pile-icon">
-              <text class="iconfont icon-charging-pile"></text>
+              <text class="pile-emoji">🔌</text>
             </view>
             <view class="pile-info">
               <view class="pile-name">{{ pile.name }}</view>
@@ -92,23 +109,30 @@
             </view>
           </view>
         </view>
+
+        <view v-if="filteredPiles.length === 0" class="empty-piles">
+          <text>暂无充电桩</text>
+        </view>
       </view>
 
-      <!-- 底部操作 -->
-      <view class="bottom-action safe-area-bottom">
-        <view class="action-left">
-          <view class="action-item" @click="handleFavorite">
-            <text :class="['iconfont', isFavorite ? 'icon-star-filled' : 'icon-star']"></text>
-            <text>收藏</text>
-          </view>
-          <view class="action-item" @click="handleNavigation">
-            <text class="iconfont icon-navigation"></text>
-            <text>导航</text>
-          </view>
+      <!-- 底部留白 -->
+      <view class="bottom-space"></view>
+    </scroll-view>
+
+    <!-- 底部操作 -->
+    <view v-if="station" class="bottom-action">
+      <view class="action-left">
+        <view class="action-item" @click="handleFavorite">
+          <text class="action-emoji">{{ isFavorite ? '⭐' : '☆' }}</text>
+          <text>收藏</text>
         </view>
-        <view class="btn btn-primary" @click="handleScan">
-          扫码充电
+        <view class="action-item" @click="handleNavigation">
+          <text class="action-emoji">🧭</text>
+          <text>导航</text>
         </view>
+      </view>
+      <view class="btn-primary" @click="handleScan">
+        扫码充电
       </view>
     </view>
   </view>
@@ -126,6 +150,8 @@ import { formatDistance, openNavigation, makePhoneCall } from '@/utils'
 const userStore = useUserStore()
 
 // 状态
+const statusBarHeight = ref(0)
+const navBarHeight = ref(0)
 const stationId = ref(0)
 const station = ref<Station | null>(null)
 const piles = ref<Pile[]>([])
@@ -149,11 +175,21 @@ onLoad((options) => {
 })
 
 onMounted(() => {
+  // 获取状态栏高度
+  const systemInfo = uni.getSystemInfoSync()
+  statusBarHeight.value = systemInfo.statusBarHeight || 0
+  navBarHeight.value = statusBarHeight.value + 44
+
   if (stationId.value) {
     fetchStationDetail()
     fetchStationPiles()
   }
 })
+
+// 返回上一页
+function handleBack() {
+  uni.navigateBack({ delta: 1 })
+}
 
 // 获取站点详情
 async function fetchStationDetail() {
@@ -276,8 +312,53 @@ function handleScan() {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh;
-  background-color: var(--bg-color);
-  padding-bottom: 150rpx;
+  background: #FAF9F7;
+}
+
+/* 导航栏 */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: #FFFFFF;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  padding: 0 24rpx;
+}
+
+.nav-back {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F5F5F5;
+  border-radius: 50%;
+}
+
+.back-icon {
+  font-size: 48rpx;
+  color: #333333;
+  font-weight: 300;
+  margin-top: -4rpx;
+}
+
+.nav-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+.nav-placeholder {
+  width: 72rpx;
 }
 
 .loading-wrap {
@@ -285,11 +366,17 @@ function handleScan() {
   justify-content: center;
   align-items: center;
   height: 300rpx;
-  color: var(--text-placeholder);
+  color: #999999;
+}
+
+.station-detail {
+  height: 100vh;
+  padding-bottom: 180rpx;
 }
 
 .station-header {
-  background-color: #FFFFFF;
+  background: #FFFFFF;
+  margin-bottom: 24rpx;
 }
 
 .station-swiper {
@@ -304,38 +391,66 @@ function handleScan() {
 
 .station-image-placeholder {
   width: 100%;
-  height: 400rpx;
-  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  height: 320rpx;
+  background: linear-gradient(135deg, #2D2D2D 0%, #1A1A1A 100%);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 16rpx;
+}
 
-  .iconfont {
-    font-size: 150rpx;
-    color: rgba(255, 255, 255, 0.3);
-  }
+.placeholder-icon {
+  font-size: 80rpx;
+}
+
+.placeholder-text {
+  font-size: 32rpx;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
 }
 
 .station-info {
-  padding: 24rpx;
+  padding: 32rpx;
 }
 
 .info-main {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
 }
 
 .station-name {
-  font-size: 36rpx;
-  font-weight: bold;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1A1A1A;
   flex: 1;
+  line-height: 1.3;
 }
 
 .station-tags {
   display: flex;
   gap: 12rpx;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.tag {
+  padding: 8rpx 16rpx;
+  font-size: 22rpx;
+  border-radius: 8rpx;
+  font-weight: 500;
+}
+
+.tag-success {
+  color: #5A8F7B;
+  background: rgba(90, 143, 123, 0.1);
+}
+
+.tag-warning {
+  color: #B8996F;
+  background: rgba(184, 153, 111, 0.1);
 }
 
 .info-address,
@@ -343,105 +458,114 @@ function handleScan() {
   display: flex;
   align-items: center;
   margin-bottom: 16rpx;
+}
 
-  .iconfont {
-    font-size: 32rpx;
-    color: var(--text-secondary);
-    margin-right: 12rpx;
-  }
+.info-icon {
+  font-size: 28rpx;
+  margin-right: 12rpx;
 }
 
 .address-text,
 .contact-text {
   flex: 1;
   font-size: 28rpx;
-  color: var(--text-secondary);
+  color: #666666;
 }
 
 .distance {
   font-size: 26rpx;
-  color: var(--primary-color);
+  color: #5A8F7B;
+  font-weight: 500;
 }
 
+/* 充电桩区域 */
 .pile-section {
-  margin-top: 20rpx;
-  background-color: #FFFFFF;
-  padding: 24rpx;
+  background: #FFFFFF;
+  padding: 32rpx;
+  border-radius: 24rpx 24rpx 0 0;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
 }
 
 .section-title {
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1A1A1A;
 }
 
 .pile-summary {
   display: flex;
-  gap: 20rpx;
+  gap: 24rpx;
 }
 
 .summary-item {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: #999999;
 }
 
 .pile-filter {
   display: flex;
-  gap: 20rpx;
+  gap: 16rpx;
   margin-bottom: 24rpx;
 }
 
 .filter-item {
-  padding: 12rpx 32rpx;
+  padding: 16rpx 32rpx;
   font-size: 26rpx;
-  color: var(--text-secondary);
-  background-color: #F5F5F5;
-  border-radius: 24rpx;
+  color: #666666;
+  background: #F5F5F5;
+  border-radius: 32rpx;
+  transition: all 0.2s;
+}
 
-  &.active {
-    color: #FFFFFF;
-    background-color: var(--primary-color);
-  }
+.filter-item.active {
+  color: #FFFFFF;
+  background: #1A1A1A;
 }
 
 .pile-list {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .pile-card {
   display: flex;
   align-items: center;
-  padding: 24rpx;
-  background-color: #FAFAFA;
-  border-radius: 16rpx;
+  padding: 28rpx;
+  background: #FAFAFA;
+  border-radius: 20rpx;
+  transition: all 0.2s;
+}
 
-  &.disabled {
-    opacity: 0.6;
-  }
+.pile-card:active {
+  background: #F0F0F0;
+  transform: scale(0.98);
+}
+
+.pile-card.disabled {
+  opacity: 0.5;
 }
 
 .pile-icon {
-  width: 80rpx;
-  height: 80rpx;
-  background-color: rgba(76, 175, 80, 0.1);
-  border-radius: 16rpx;
+  width: 88rpx;
+  height: 88rpx;
+  background: #FFFFFF;
+  border-radius: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 20rpx;
+  margin-right: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
 
-  .iconfont {
-    font-size: 40rpx;
-    color: var(--primary-color);
-  }
+.pile-emoji {
+  font-size: 40rpx;
 }
 
 .pile-info {
@@ -449,8 +573,9 @@ function handleScan() {
 }
 
 .pile-name {
-  font-size: 28rpx;
-  font-weight: bold;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1A1A1A;
   margin-bottom: 8rpx;
 }
 
@@ -462,7 +587,7 @@ function handleScan() {
 .meta-type,
 .meta-power {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: #999999;
 }
 
 .pile-right {
@@ -472,26 +597,39 @@ function handleScan() {
 .pile-status {
   font-size: 24rpx;
   margin-bottom: 8rpx;
+  font-weight: 500;
+}
 
-  &.success {
-    color: var(--primary-color);
-  }
+.pile-status.success {
+  color: #5A8F7B;
+}
 
-  &.warning {
-    color: var(--warning-color);
-  }
+.pile-status.warning {
+  color: #B8996F;
+}
 
-  &.danger {
-    color: var(--danger-color);
-  }
+.pile-status.danger {
+  color: #C4554A;
 }
 
 .pile-price {
   font-size: 28rpx;
-  font-weight: bold;
-  color: var(--primary-color);
+  font-weight: 600;
+  color: #1A1A1A;
 }
 
+.empty-piles {
+  padding: 60rpx;
+  text-align: center;
+  color: #999999;
+  font-size: 28rpx;
+}
+
+.bottom-space {
+  height: 40rpx;
+}
+
+/* 底部操作栏 */
 .bottom-action {
   position: fixed;
   left: 0;
@@ -499,15 +637,16 @@ function handleScan() {
   bottom: 0;
   display: flex;
   align-items: center;
-  padding: 24rpx;
-  background-color: #FFFFFF;
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background: #FFFFFF;
   box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
 }
 
 .action-left {
   display: flex;
   gap: 40rpx;
-  margin-right: 30rpx;
+  margin-right: 32rpx;
 }
 
 .action-item {
@@ -515,19 +654,30 @@ function handleScan() {
   flex-direction: column;
   align-items: center;
   font-size: 22rpx;
-  color: var(--text-secondary);
-
-  .iconfont {
-    font-size: 40rpx;
-    margin-bottom: 4rpx;
-  }
-
-  .icon-star-filled {
-    color: var(--warning-color);
-  }
+  color: #666666;
 }
 
-.btn {
+.action-emoji {
+  font-size: 40rpx;
+  margin-bottom: 4rpx;
+}
+
+.btn-primary {
   flex: 1;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1A1A1A;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 600;
+  border-radius: 48rpx;
+  transition: all 0.2s;
+}
+
+.btn-primary:active {
+  background: #333333;
+  transform: scale(0.98);
 }
 </style>

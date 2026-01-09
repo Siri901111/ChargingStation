@@ -113,6 +113,14 @@
           }
         },
         {
+          "path": "profile",
+          "style": {
+            "navigationBarTitleText": "个人资料",
+            "navigationBarBackgroundColor": "#FFFFFF",
+            "navigationBarTextStyle": "black"
+          }
+        },
+        {
           "path": "about",
           "style": {
             "navigationBarTitleText": "关于我们",

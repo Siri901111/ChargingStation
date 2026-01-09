@@ -23,7 +23,9 @@
       "Bash(npm view:*)",
       "Bash(npm run dev:h5:*)",
       "Bash(node scripts/generate-png-icons.js:*)",
-      "Bash(dir /s \"C:\\\\Users\\\\Lenovo\\\\Desktop\\\\毕业论文\\\\chargingStation\\\\apps\\\\user-app\\\\src\")"
+      "Bash(dir /s \"C:\\\\Users\\\\Lenovo\\\\Desktop\\\\毕业论文\\\\chargingStation\\\\apps\\\\user-app\\\\src\")",
+      "Bash(dir /b:*)",
+      "Bash(mysql:*)"
     ]
   }
 }

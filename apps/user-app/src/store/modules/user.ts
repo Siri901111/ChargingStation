@@ -12,6 +12,8 @@ export interface UserInfo {
   phone: string
   name?: string
   avatar?: string
+  gender?: number  // 0未知 1男 2女
+  birthday?: string
   memberCardNo?: string
   cardType?: string
   balance?: number

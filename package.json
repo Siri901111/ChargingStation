@@ -9,6 +9,7 @@
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rimraf node_modules",
     "dev:admin": "pnpm --filter @charging/admin dev",
+    "h5":"pnpm --filter @charging/user-app run dev:h5 --host",
     "dev:server": "pnpm --filter @charging/server dev",
     "build:admin": "pnpm --filter @charging/admin build",
     "build:server": "pnpm --filter @charging/server build"

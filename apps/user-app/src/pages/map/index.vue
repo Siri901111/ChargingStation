@@ -4,7 +4,7 @@
     <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="search-wrap">
         <view class="search-box">
-          <text class="iconfont icon-search"></text>
+          <text class="search-icon">🔍</text>
           <input
             v-model="keyword"
             class="search-input"
@@ -12,7 +12,7 @@
             confirm-type="search"
             @confirm="handleSearch"
           />
-          <text v-if="keyword" class="iconfont icon-close" @click="clearSearch"></text>
+          <text v-if="keyword" class="clear-icon" @click="clearSearch">✕</text>
         </view>
       </view>
       <!-- 筛选标签 -->
@@ -43,7 +43,7 @@
 
     <!-- 重新定位按钮 -->
     <view class="location-btn" @click="relocate">
-      <text class="iconfont icon-location"></text>
+      <text class="btn-icon">📍</text>
     </view>
 
     <!-- 站点列表弹窗 -->
@@ -78,8 +78,7 @@
               {{ formatDistance(station.distance) }}
             </view>
             <view class="nav-btn" @click.stop="handleNavigation(station)">
-              <text class="iconfont icon-navigation"></text>
-              导航
+              🧭 导航
             </view>
           </view>
         </view>
@@ -90,7 +89,7 @@
     <view v-if="selectedStation" class="station-card" @click="goToStationDetail(selectedStation)">
       <view class="card-header">
         <view class="station-name">{{ selectedStation.name }}</view>
-        <text class="iconfont icon-close" @click.stop="closeStationCard"></text>
+        <text class="close-icon" @click.stop="closeStationCard">✕</text>
       </view>
       <view class="card-body">
         <view class="station-address">{{ selectedStation.address || selectedStation.city }}</view>
@@ -111,13 +110,12 @@
       </view>
       <view class="card-footer">
         <view class="price-info" v-if="selectedStation.price">
-          <text class="price-value">¥{{ selectedStation.price }}</text>
+          <text class="price-value">¥{{ selectedStation.price.toFixed(2) }}</text>
           <text class="price-unit">/度起</text>
         </view>
         <view class="action-btns">
           <view class="action-btn outline" @click.stop="handleNavigation(selectedStation)">
-            <text class="iconfont icon-navigation"></text>
-            导航
+            🧭 导航
           </view>
           <view class="action-btn primary" @click.stop="goToStationDetail(selectedStation)">
             去充电
@@ -148,10 +146,10 @@ const showStationList = ref(false)
 const stationList = ref<Station[]>([])
 const selectedStation = ref<Station | null>(null)
 
-// 地图中心点
+// 地图中心点（默认长沙）
 const mapCenter = ref({
-  latitude: 39.908823,
-  longitude: 116.397470,
+  latitude: 28.1963,
+  longitude: 112.9822,
 })
 
 // 筛选选项
@@ -200,6 +198,14 @@ onMounted(() => {
 })
 
 onShow(() => {
+  // 检查是否有从首页传来的搜索请求
+  const pendingSearch = locationStore.consumePendingSearch()
+  if (pendingSearch === '__FOCUS__') {
+    // 聚焦搜索框
+    showStationList.value = false
+    selectedStation.value = null
+  }
+
   // 刷新站点列表
   if (locationStore.currentLocation) {
     fetchNearbyStations()
@@ -238,9 +244,37 @@ async function fetchNearbyStations() {
 }
 
 // 搜索
-function handleSearch() {
-  if (!keyword.value.trim()) return
-  // TODO: 实现搜索功能
+async function handleSearch() {
+  if (!keyword.value.trim()) {
+    // 清空搜索时重新获取附近站点
+    fetchNearbyStations()
+    return
+  }
+
+  try {
+    const { latitude, longitude } = locationStore.currentLocation || {}
+    const res = await stationApi.searchStations({
+      keyword: keyword.value.trim(),
+      latitude,
+      longitude,
+      pageSize: 50,
+    })
+    stationList.value = res.list
+
+    // 如果有搜索结果，地图移动到第一个结果
+    if (res.list.length > 0) {
+      mapCenter.value = {
+        latitude: res.list[0].latitude,
+        longitude: res.list[0].longitude,
+      }
+      uni.showToast({ title: `找到${res.list.length}个站点`, icon: 'none' })
+    } else {
+      uni.showToast({ title: '未找到相关站点', icon: 'none' })
+    }
+  } catch (error) {
+    console.error('搜索站点失败', error)
+    uni.showToast({ title: '搜索失败', icon: 'none' })
+  }
 }
 
 // 清除搜索
@@ -323,8 +357,8 @@ function goToStationDetail(station: Station) {
   left: 0;
   right: 0;
   z-index: 100;
-  background-color: #FFFFFF;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  background: #FFFFFF;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.08);
 }
 
 .search-wrap {
@@ -334,39 +368,47 @@ function goToStationDetail(station: Station) {
 .search-box {
   display: flex;
   align-items: center;
-  height: 72rpx;
-  background-color: #F5F5F5;
-  border-radius: 36rpx;
-  padding: 0 24rpx;
+  height: 76rpx;
+  background: #F5F5F5;
+  border-radius: 38rpx;
+  padding: 0 28rpx;
 
   .search-input {
     flex: 1;
     height: 100%;
     margin: 0 16rpx;
     font-size: 28rpx;
+    color: #1A1A1A;
   }
 
-  .iconfont {
+  .search-icon {
+    font-size: 32rpx;
+  }
+
+  .clear-icon {
+    font-size: 28rpx;
     color: #999999;
+    padding: 8rpx;
   }
 }
 
 .filter-tabs {
   display: flex;
   padding: 0 24rpx 16rpx;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .filter-tab {
-  padding: 10rpx 24rpx;
+  padding: 12rpx 28rpx;
   font-size: 26rpx;
-  color: var(--text-secondary);
-  background-color: #F5F5F5;
-  border-radius: 24rpx;
+  color: #666666;
+  background: #F5F5F5;
+  border-radius: 28rpx;
+  transition: all 0.2s;
 
   &.active {
     color: #FFFFFF;
-    background-color: var(--primary-color);
+    background: #1A1A1A;
   }
 }
 
@@ -378,34 +420,35 @@ function goToStationDetail(station: Station) {
 .location-btn {
   position: fixed;
   right: 24rpx;
-  bottom: 300rpx;
-  width: 88rpx;
-  height: 88rpx;
-  background-color: #FFFFFF;
+  bottom: 320rpx;
+  width: 96rpx;
+  height: 96rpx;
+  background: #FFFFFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.12);
+  z-index: 50;
 
-  .iconfont {
+  .btn-icon {
     font-size: 40rpx;
-    color: var(--primary-color);
   }
 }
 
-// 站点列表弹窗
+/* 站点列表弹窗 */
 .station-popup {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   height: 60vh;
-  background-color: #FFFFFF;
+  background: #FFFFFF;
   border-radius: 32rpx 32rpx 0 0;
-  transform: translateY(calc(100% - 120rpx));
+  transform: translateY(calc(100% - 140rpx));
   transition: transform 0.3s ease;
   z-index: 200;
+  box-shadow: 0 -8rpx 30rpx rgba(0, 0, 0, 0.1);
 
   &.show {
     transform: translateY(0);
@@ -416,48 +459,60 @@ function goToStationDetail(station: Station) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20rpx;
+  padding: 24rpx 24rpx 16rpx;
 }
 
 .popup-handle {
-  width: 60rpx;
+  width: 80rpx;
   height: 8rpx;
-  background-color: #E0E0E0;
+  background: #E0E0E0;
   border-radius: 4rpx;
   margin-bottom: 16rpx;
 }
 
 .popup-title {
-  font-size: 28rpx;
-  color: var(--text-secondary);
+  font-size: 30rpx;
+  color: #666666;
+  font-weight: 500;
 }
 
 .popup-content {
-  height: calc(60vh - 100rpx);
+  height: calc(60vh - 120rpx);
   padding: 0 24rpx;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .station-item {
   display: flex;
   justify-content: space-between;
-  padding: 24rpx 0;
-  border-bottom: 1rpx solid var(--border-color);
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #F0F0F0;
 }
 
 .station-info {
   flex: 1;
+  min-width: 0;
 }
 
 .station-name {
-  font-size: 30rpx;
-  font-weight: bold;
-  margin-bottom: 8rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 12rpx;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .station-address {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  margin-bottom: 12rpx;
+  font-size: 26rpx;
+  color: #999999;
+  margin-bottom: 16rpx;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .station-meta {
@@ -469,7 +524,7 @@ function goToStationDetail(station: Station) {
   display: flex;
   align-items: center;
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: #666666;
 }
 
 .meta-icon {
@@ -479,11 +534,11 @@ function goToStationDetail(station: Station) {
   margin-right: 8rpx;
 
   &.fast {
-    background-color: var(--primary-color);
+    background: #5A8F7B;
   }
 
   &.slow {
-    background-color: var(--warning-color);
+    background: #B8996F;
   }
 }
 
@@ -492,68 +547,73 @@ function goToStationDetail(station: Station) {
   flex-direction: column;
   align-items: flex-end;
   justify-content: space-between;
+  margin-left: 16rpx;
 }
 
 .station-distance {
-  font-size: 24rpx;
-  color: var(--text-secondary);
+  font-size: 26rpx;
+  color: #5A8F7B;
+  font-weight: 500;
 }
 
 .nav-btn {
   display: flex;
   align-items: center;
-  padding: 12rpx 20rpx;
+  padding: 14rpx 24rpx;
   font-size: 24rpx;
-  color: var(--primary-color);
-  background-color: rgba(76, 175, 80, 0.1);
-  border-radius: 24rpx;
-
-  .iconfont {
-    margin-right: 8rpx;
-  }
+  color: #1A1A1A;
+  background: #F5F5F5;
+  border-radius: 28rpx;
+  gap: 6rpx;
+  font-weight: 500;
 }
 
-// 站点详情卡片
+/* 站点详情卡片 */
 .station-card {
   position: fixed;
   left: 24rpx;
   right: 24rpx;
-  bottom: 140rpx;
-  background-color: #FFFFFF;
-  border-radius: 24rpx;
-  padding: 24rpx;
-  box-shadow: 0 4rpx 30rpx rgba(0, 0, 0, 0.15);
+  bottom: 180rpx;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 28rpx;
+  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.15);
   z-index: 150;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 16rpx;
 
   .station-name {
-    font-size: 32rpx;
-    font-weight: bold;
+    font-size: 36rpx;
+    font-weight: 600;
+    color: #1A1A1A;
+    flex: 1;
+    margin-bottom: 0;
   }
 
-  .iconfont {
-    font-size: 32rpx;
-    color: var(--text-placeholder);
+  .close-icon {
+    font-size: 36rpx;
+    color: #CCCCCC;
+    padding: 8rpx;
+    margin: -8rpx;
   }
 }
 
 .card-body {
   .station-address {
     font-size: 26rpx;
-    color: var(--text-secondary);
-    margin-bottom: 20rpx;
+    color: #999999;
+    margin-bottom: 24rpx;
   }
 }
 
 .station-status {
   display: flex;
-  gap: 40rpx;
+  gap: 48rpx;
 }
 
 .status-item {
@@ -563,77 +623,77 @@ function goToStationDetail(station: Station) {
 
 .status-label {
   font-size: 26rpx;
-  color: var(--text-secondary);
+  color: #999999;
   margin-right: 12rpx;
 }
 
 .status-value {
-  font-size: 36rpx;
-  font-weight: bold;
+  font-size: 40rpx;
+  font-weight: 600;
 
   &.success {
-    color: var(--primary-color);
+    color: #5A8F7B;
   }
 }
 
 .status-divider {
-  color: var(--text-placeholder);
+  color: #CCCCCC;
   margin: 0 4rpx;
+  font-size: 28rpx;
 }
 
 .status-total {
   font-size: 28rpx;
-  color: var(--text-secondary);
+  color: #999999;
 }
 
 .card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 24rpx;
-  padding-top: 24rpx;
-  border-top: 1rpx solid var(--border-color);
+  margin-top: 28rpx;
+  padding-top: 28rpx;
+  border-top: 1rpx solid #F0F0F0;
 }
 
 .price-info {
   .price-value {
-    font-size: 36rpx;
-    font-weight: bold;
-    color: var(--primary-color);
+    font-size: 40rpx;
+    font-weight: 600;
+    color: #1A1A1A;
   }
 
   .price-unit {
     font-size: 24rpx;
-    color: var(--text-secondary);
+    color: #999999;
   }
 }
 
 .action-btns {
   display: flex;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 72rpx;
-  padding: 0 32rpx;
+  height: 80rpx;
+  padding: 0 36rpx;
   font-size: 28rpx;
-  border-radius: 36rpx;
+  border-radius: 40rpx;
+  gap: 8rpx;
+  font-weight: 500;
 
   &.outline {
-    color: var(--primary-color);
-    border: 2rpx solid var(--primary-color);
+    color: #1A1A1A;
+    border: 2rpx solid #E0E0E0;
+    background: #FFFFFF;
   }
 
   &.primary {
     color: #FFFFFF;
-    background-color: var(--primary-color);
-  }
-
-  .iconfont {
-    margin-right: 8rpx;
+    background: #1A1A1A;
   }
 }
 </style>

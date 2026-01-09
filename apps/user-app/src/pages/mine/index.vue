@@ -228,7 +228,7 @@ function handleUserClick() {
   if (!userStore.isLoggedIn) {
     uni.navigateTo({ url: PAGE_PATH.LOGIN })
   } else {
-    uni.showToast({ title: '个人资料编辑中', icon: 'none' })
+    uni.navigateTo({ url: PAGE_PATH.PROFILE })
   }
 }
 

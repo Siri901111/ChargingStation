@@ -8,23 +8,34 @@
 
 | 接口 | 方法 | 说明 | 认证 |
 |------|------|------|------|
-| `/user/sendCode` | POST | 发送验证码 | ❌ |
-| `/user/loginByPhone` | POST | 手机号登录 | ❌ |
-| `/user/loginByWechat` | POST | 微信登录 | ❌ |
+| `/user/sendCode` | POST | 发送验证码 | - |
+| `/user/loginByPhone` | POST | 手机号登录 | - |
+| `/user/loginByWechat` | POST | 微信登录 | - |
 | `/user/info` | GET | 获取用户信息 | ✅ |
 | `/user/info` | PUT | 更新用户信息 | ✅ |
 | `/user/balance` | GET | 获取余额 | ✅ |
 | `/user/recharge` | POST | 充值 | ✅ |
 
+### 钱包模块
+
+| 接口 | 方法 | 说明 | 认证 |
+|------|------|------|------|
+| `/wallet/balance` | GET | 获取余额 | ✅ |
+| `/wallet/packages` | GET | 获取充值套餐 | - |
+| `/wallet/consume` | GET | 获取消费记录 | ✅ |
+| `/wallet/records` | GET | 获取充值记录 | ✅ |
+| `/wallet/recharge` | POST | 充值 | ✅ |
+
 ### 充电站模块
 
 | 接口 | 方法 | 说明 | 认证 |
 |------|------|------|------|
-| `/station/nearby` | GET | 获取附近站点 | ❌ |
-| `/station/search` | GET | 搜索站点 | ❌ |
-| `/station/:id` | GET | 站点详情 | ❌ |
-| `/station/:id/piles` | GET | 站点充电桩列表 | ❌ |
-| `/pile/:id` | GET | 充电桩详情 | ❌ |
+| `/station/nearby` | GET | 获取附近站点 | - |
+| `/station/search` | GET | 搜索站点 | - |
+| `/station/hot` | GET | 获取热门站点 | - |
+| `/station/:id` | GET | 站点详情 | - |
+| `/station/:id/piles` | GET | 站点充电桩列表 | - |
+| `/pile/:id` | GET | 充电桩详情 | - |
 
 ### 充电模块
 
@@ -125,6 +136,80 @@ POST /api/mobile/user/loginByPhone
       "name": "测试用户",
       "balance": 500.00
     }
+  }
+}
+```
+
+---
+
+### 获取用户信息
+
+```
+GET /api/mobile/user/info
+```
+
+**请求头**：需要 Token
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "id": 1,
+    "phone": "19282249442",
+    "name": "测试用户",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=19282249442",
+    "gender": 1,
+    "birthday": "1995-06-15",
+    "memberCardNo": "M202401010001",
+    "cardType": "普通卡",
+    "balance": 500.00
+  }
+}
+```
+
+**字段说明**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| gender | number | 性别：0未知 1男 2女 |
+| birthday | string | 生日，格式 YYYY-MM-DD |
+
+---
+
+### 更新用户信息
+
+```
+PUT /api/mobile/user/info
+```
+
+**请求头**：需要 Token
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| name | string | 否 | 昵称 |
+| avatar | string | 否 | 头像URL |
+| gender | number | 否 | 性别：0未知 1男 2女 |
+| birthday | string | 否 | 生日，格式 YYYY-MM-DD |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "id": 1,
+    "phone": "19282249442",
+    "name": "新昵称",
+    "avatar": "https://example.com/avatar.jpg",
+    "gender": 1,
+    "birthday": "1995-06-15",
+    "memberCardNo": "M202401010001",
+    "cardType": "普通卡",
+    "balance": 500.00
   }
 }
 ```

@@ -192,6 +192,126 @@ router.post('/user/recharge', authMiddleware, async (req, res) => {
   }
 });
 
+// ==================== 钱包相关 ====================
+
+/**
+ * 获取余额
+ */
+router.get('/wallet/balance', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const result = await getUserBalance(userId);
+    res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 获取充值套餐
+ */
+router.get('/wallet/packages', async (req, res) => {
+  try {
+    // 返回充值套餐列表
+    const packages = [
+      { id: 1, amount: 50, giftAmount: 0, description: '基础充值' },
+      { id: 2, amount: 100, giftAmount: 5, description: '充100送5' },
+      { id: 3, amount: 200, giftAmount: 15, description: '充200送15' },
+      { id: 4, amount: 500, giftAmount: 50, description: '充500送50' },
+      { id: 5, amount: 1000, giftAmount: 150, description: '充1000送150' },
+    ];
+    res.json(success(packages));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 获取消费记录（从订单中获取）
+ */
+router.get('/wallet/consume', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : 10;
+
+    // 从订单表获取消费记录
+    const result = await getOrderList({
+      userId,
+      status: 3, // 已完成的订单
+      page,
+      pageSize,
+    });
+
+    // 转换为消费记录格式
+    const list = result.list.map((order: any) => ({
+      id: order.id,
+      orderNo: order.orderNo,
+      amount: order.money || 0,
+      type: '充电消费',
+      createTime: order.endTime || order.startTime || order.date,
+    }));
+
+    res.json(success({ list, total: result.total }));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 获取充值记录
+ */
+router.get('/wallet/records', authMiddleware, async (req, res) => {
+  try {
+    // 暂时返回空列表，后续可以添加充值记录表
+    res.json(success({ list: [], total: 0 }));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 充值（正式）
+ */
+router.post('/wallet/recharge', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const { amount, packageId, payType } = req.body;
+
+    // 开发环境直接充值成功
+    if (process.env.NODE_ENV === 'development') {
+      // 查找套餐获取赠送金额
+      const packages = [
+        { id: 1, amount: 50, giftAmount: 0 },
+        { id: 2, amount: 100, giftAmount: 5 },
+        { id: 3, amount: 200, giftAmount: 15 },
+        { id: 4, amount: 500, giftAmount: 50 },
+        { id: 5, amount: 1000, giftAmount: 150 },
+      ];
+      const pkg = packages.find(p => p.id === packageId);
+      const giftAmount = pkg?.giftAmount || 0;
+
+      const result = await testRecharge(userId, amount, giftAmount);
+      res.json(success({
+        orderId: `R${Date.now()}`,
+        payInfo: null,
+        ...result,
+      }));
+      return;
+    }
+
+    // 生产环境返回支付信息（需要对接实际支付接口）
+    res.json(success({
+      orderId: `R${Date.now()}`,
+      payInfo: {
+        // 微信/支付宝支付参数
+      },
+    }));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
 // ==================== 站点相关 ====================
 // 注意：特定路由必须在参数化路由之前定义
 

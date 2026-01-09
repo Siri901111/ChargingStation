@@ -259,7 +259,9 @@ function handleLocationClick() {
 
 // 点击搜索
 function handleSearchClick() {
-  uni.navigateTo({ url: '/pages/map/index?search=1' })
+  // 设置搜索标记，地图页面会自动聚焦搜索框
+  locationStore.setPendingSearch('__FOCUS__')
+  uni.switchTab({ url: PAGE_PATH.MAP })
 }
 
 // 扫码充电
