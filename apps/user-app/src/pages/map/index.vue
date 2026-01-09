@@ -214,32 +214,52 @@ onShow(() => {
 
 // 初始化定位
 async function initLocation() {
-  const location = await locationStore.getCurrentLocation()
-  if (location) {
-    mapCenter.value = {
-      latitude: location.latitude,
-      longitude: location.longitude,
+  try {
+    const location = await locationStore.getCurrentLocation()
+    if (location) {
+      mapCenter.value = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+      }
     }
+    // 无论定位成功与否都尝试获取站点
+    fetchNearbyStations()
+  } catch (error) {
+    console.error('定位失败', error)
+    // 定位失败时使用默认位置并获取站点
     fetchNearbyStations()
   }
 }
 
 // 获取附近站点
 async function fetchNearbyStations() {
-  if (!locationStore.currentLocation) return
-
   try {
-    const { latitude, longitude } = locationStore.currentLocation
+    // 使用当前位置或默认位置（长沙）
+    const location = locationStore.currentLocation || {
+      latitude: 28.1963,
+      longitude: 112.9822,
+    }
+    
     const res = await stationApi.getNearbyStations({
-      latitude,
-      longitude,
+      latitude: location.latitude,
+      longitude: location.longitude,
       radius: 10000,
       type: currentFilter.value === 'all' ? undefined : currentFilter.value as 'fast' | 'slow',
       pageSize: 50,
     })
-    stationList.value = res.list
+    stationList.value = res.list || []
+    
+    // 如果有站点且地图中心是默认位置，更新地图中心到第一个站点
+    if (res.list.length > 0 && !locationStore.currentLocation) {
+      mapCenter.value = {
+        latitude: res.list[0].latitude,
+        longitude: res.list[0].longitude,
+      }
+    }
   } catch (error) {
     console.error('获取站点失败', error)
+    stationList.value = []
+    uni.showToast({ title: '获取站点失败', icon: 'none' })
   }
 }
 

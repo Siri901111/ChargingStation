@@ -196,6 +196,10 @@ async function fetchStationDetail() {
   loading.value = true
   try {
     station.value = await stationApi.getStationDetail(stationId.value)
+    // 设置收藏状态
+    if (station.value) {
+      isFavorite.value = station.value.isFavorite || false
+    }
   } catch (error) {
     uni.showToast({ title: '获取站点失败', icon: 'none' })
   } finally {

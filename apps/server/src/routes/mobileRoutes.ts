@@ -20,6 +20,10 @@ import {
   getStationPiles,
   getPileDetail,
   getHotStations,
+  favoriteStation,
+  unfavoriteStation,
+  getFavoriteStations,
+  checkIsFavorite,
 } from '../services/mobileStationService.js';
 import {
   scanPile,
@@ -385,12 +389,14 @@ router.get('/station/:id/piles', async (req, res) => {
 /**
  * 获取站点详情（参数化路由放在最后）
  */
-router.get('/station/:id', async (req, res) => {
+router.get('/station/:id', optionalAuth, async (req, res) => {
   try {
     const stationId = parseInt(req.params.id);
     const latitude = req.query.latitude ? parseFloat(req.query.latitude as string) : undefined;
     const longitude = req.query.longitude ? parseFloat(req.query.longitude as string) : undefined;
-    const result = await getStationDetail(stationId, latitude, longitude);
+    const userId = (req as any).userId;
+    
+    const result = await getStationDetail(stationId, latitude, longitude, userId);
     res.json(success(result));
   } catch (err: any) {
     res.json(error(err.message));
@@ -404,6 +410,47 @@ router.get('/pile/:id', async (req, res) => {
   try {
     const pileId = parseInt(req.params.id);
     const result = await getPileDetail(pileId);
+    res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 收藏站点
+ */
+router.post('/station/favorite', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const { stationId } = req.body;
+    const result = await favoriteStation(userId, stationId);
+    res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 取消收藏
+ */
+router.delete('/station/favorite/:id', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const stationId = parseInt(req.params.id);
+    const result = await unfavoriteStation(userId, stationId);
+    res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 获取收藏列表
+ */
+router.get('/station/favorites', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const result = await getFavoriteStations(userId);
     res.json(success(result));
   } catch (err: any) {
     res.json(error(err.message));

@@ -36,6 +36,9 @@
 | `/station/:id` | GET | 站点详情 | - |
 | `/station/:id/piles` | GET | 站点充电桩列表 | - |
 | `/pile/:id` | GET | 充电桩详情 | - |
+| `/station/favorite` | POST | 收藏站点 | ✅ |
+| `/station/favorite/:id` | DELETE | 取消收藏 | ✅ |
+| `/station/favorites` | GET | 获取收藏列表 | ✅ |
 
 ### 充电模块
 
@@ -251,6 +254,95 @@ GET /api/mobile/station/search
 | city | string | 否 | 城市 |
 | latitude | number | 否 | 纬度 |
 | longitude | number | 否 | 经度 |
+
+---
+
+## 收藏接口
+
+### 收藏站点
+
+```
+POST /api/mobile/station/favorite
+```
+
+**请求头**：需要 Token
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| stationId | number | 是 | 站点ID |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "success": true
+  }
+}
+```
+
+---
+
+### 取消收藏
+
+```
+DELETE /api/mobile/station/favorite/:id
+```
+
+**请求头**：需要 Token
+
+**路径参数**
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| id | number | 站点ID |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "success": true
+  }
+}
+```
+
+---
+
+### 获取收藏列表
+
+```
+GET /api/mobile/station/favorites
+```
+
+**请求头**：需要 Token
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": [
+    {
+      "id": 1,
+      "name": "长沙岳麓区充电站",
+      "city": "长沙市",
+      "address": "岳麓区xxx路",
+      "latitude": 28.1963,
+      "longitude": 112.9822,
+      "fast": 8,
+      "slow": 6,
+      "fastFree": 5,
+      "slowFree": 4,
+      "price": 1.2
+    }
+  ]
+}
+```
 
 ---
 

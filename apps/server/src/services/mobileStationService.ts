@@ -5,6 +5,7 @@
 import { Op, Sequelize } from 'sequelize';
 import Station from '../models/Station.js';
 import Pile from '../models/Pile.js';
+import UserFavorite from '../models/UserFavorite.js';
 
 export interface StationListParams {
   latitude?: number;
@@ -236,14 +237,22 @@ export async function searchStations(params: StationListParams) {
 /**
  * 获取站点详情
  */
-export async function getStationDetail(stationId: number, userLat?: number, userLon?: number) {
+export async function getStationDetail(stationId: number, userLat?: number, userLon?: number, userId?: number) {
   const station = await Station.findByPk(stationId);
 
   if (!station) {
     throw new Error('站点不存在');
   }
 
-  return formatStation(station, userLat, userLon);
+  const stationInfo = await formatStation(station, userLat, userLon);
+  
+  // 如果提供了userId，检查是否收藏
+  if (userId) {
+    const isFavorite = await checkIsFavorite(userId, stationId);
+    (stationInfo as any).isFavorite = isFavorite;
+  }
+  
+  return stationInfo;
 }
 
 /**
@@ -316,4 +325,95 @@ export async function getHotStations(city?: string, limit: number = 5) {
   }
 
   return formattedStations;
+}
+
+/**
+ * 收藏站点
+ */
+export async function favoriteStation(userId: number, stationId: number) {
+  // 检查是否已收藏
+  const existing = await UserFavorite.findOne({
+    where: {
+      user_id: userId,
+      station_id: stationId,
+    },
+  });
+
+  if (existing) {
+    throw new Error('该站点已收藏');
+  }
+
+  // 检查站点是否存在
+  const station = await Station.findByPk(stationId);
+  if (!station) {
+    throw new Error('站点不存在');
+  }
+
+  await UserFavorite.create({
+    user_id: userId,
+    station_id: stationId,
+  });
+
+  return { success: true };
+}
+
+/**
+ * 取消收藏
+ */
+export async function unfavoriteStation(userId: number, stationId: number) {
+  const result = await UserFavorite.destroy({
+    where: {
+      user_id: userId,
+      station_id: stationId,
+    },
+  });
+
+  if (result === 0) {
+    throw new Error('该站点未收藏');
+  }
+
+  return { success: true };
+}
+
+/**
+ * 获取收藏列表
+ */
+export async function getFavoriteStations(userId: number) {
+  const favorites = await UserFavorite.findAll({
+    where: { user_id: userId },
+    include: [
+      {
+        model: Station,
+        as: 'station',
+        where: { status: { [Op.ne]: 0 } },
+        required: true,
+      },
+    ],
+    order: [['created_at', 'DESC']],
+  });
+
+  const formattedStations: StationInfo[] = [];
+  for (const favorite of favorites) {
+    const station = (favorite as any).station;
+    if (station) {
+      const stationInfo = await formatStation(station);
+      formattedStations.push(stationInfo);
+    }
+  }
+
+  return formattedStations;
+}
+
+/**
+ * 检查站点是否已收藏
+ */
+export async function checkIsFavorite(userId: number, stationId: number): Promise<boolean> {
+  const favorite = await UserFavorite.findOne({
+    where: {
+      user_id: userId,
+      station_id: stationId,
+    },
+  });
+
+  return !!favorite;
 }

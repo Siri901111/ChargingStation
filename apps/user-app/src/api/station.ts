@@ -22,6 +22,7 @@ export interface Station {
   price?: number     // 起始电价
   tags?: string[]    // 标签
   images?: string[]  // 站点图片
+  isFavorite?: boolean // 是否已收藏
 }
 
 export interface Pile {

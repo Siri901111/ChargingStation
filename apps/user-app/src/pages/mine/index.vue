@@ -92,12 +92,6 @@
           </view>
           <text class="quick-label">收藏</text>
         </view>
-        <view class="quick-item" @click="handleCoupon">
-          <view class="quick-icon coupon-icon">
-            <text>🎫</text>
-          </view>
-          <text class="quick-label">优惠券</text>
-        </view>
       </view>
     </view>
 
@@ -114,24 +108,6 @@
           </view>
           <view class="item-right">
             <text class="item-hint">查看充电数据</text>
-            <text class="item-arrow">›</text>
-          </view>
-        </view>
-        <view class="list-item" @click="handleInvoice">
-          <view class="item-left">
-            <text class="item-emoji">🧾</text>
-            <text class="item-text">发票管理</text>
-          </view>
-          <view class="item-right">
-            <text class="item-arrow">›</text>
-          </view>
-        </view>
-        <view class="list-item" @click="handleVehicle">
-          <view class="item-left">
-            <text class="item-emoji">🚗</text>
-            <text class="item-text">我的车辆</text>
-          </view>
-          <view class="item-right">
             <text class="item-arrow">›</text>
           </view>
         </view>
@@ -244,28 +220,14 @@ function goToOrders() {
 
 function goToStatistics() {
   if (!userStore.checkLoginAndNavigate()) return
-  uni.showToast({ title: '功能开发中', icon: 'none' })
+  uni.navigateTo({ url: '/pages/statistics/index' })
 }
 
 function handleFavorites() {
   if (!userStore.checkLoginAndNavigate()) return
-  uni.showToast({ title: '功能开发中', icon: 'none' })
+  uni.navigateTo({ url: PAGE_PATH.FAVORITE })
 }
 
-function handleCoupon() {
-  if (!userStore.checkLoginAndNavigate()) return
-  uni.showToast({ title: '功能开发中', icon: 'none' })
-}
-
-function handleInvoice() {
-  if (!userStore.checkLoginAndNavigate()) return
-  uni.showToast({ title: '功能开发中', icon: 'none' })
-}
-
-function handleVehicle() {
-  if (!userStore.checkLoginAndNavigate()) return
-  uni.showToast({ title: '功能开发中', icon: 'none' })
-}
 
 function goToFeedback() {
   uni.navigateTo({ url: '/pages-sub/settings/feedback' })

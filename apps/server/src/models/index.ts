@@ -12,6 +12,7 @@ import BillingTemplate from './BillingTemplate.js';
 import Document from './Document.js';
 import PileMaintenance from './PileMaintenance.js';
 import MonitorData from './MonitorData.js';
+import UserFavorite from './UserFavorite.js';
 import { AIAgent, KnowledgeBase, KnowledgeDocument, ChatSession, ChatMessage } from './AIAgent.js';
 
 // ==================== 模型关联关系设置 ====================
@@ -99,6 +100,26 @@ Order.belongsTo(ChargingUser, {
   as: 'chargingUser'
 });
 
+// 一个充电用户有多个收藏
+ChargingUser.hasMany(UserFavorite, {
+  foreignKey: 'user_id',
+  as: 'favorites'
+});
+UserFavorite.belongsTo(ChargingUser, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+// 一个站点可以被多个用户收藏
+Station.hasMany(UserFavorite, {
+  foreignKey: 'station_id',
+  as: 'favorites'
+});
+UserFavorite.belongsTo(Station, {
+  foreignKey: 'station_id',
+  as: 'station'
+});
+
 // Order (订单) 与 Pile (充电桩) 关联关系
 Pile.hasMany(Order, {
   foreignKey: 'pile_id',
@@ -171,6 +192,7 @@ export {
   Document,
   PileMaintenance,
   MonitorData,
+  UserFavorite,
   AIAgent,
   KnowledgeBase,
   KnowledgeDocument,
