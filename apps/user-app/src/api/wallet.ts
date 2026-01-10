@@ -5,10 +5,14 @@ import http from '@/utils/http'
 
 export interface RechargeRecord {
   id: number
-  amount: number
+  orderNo: string
+  amount: number // 实际到账金额
+  payAmount?: number // 支付金额
   giftAmount?: number
-  payType: string
-  status: number
+  memberDiscount?: number
+  packageId?: number
+  payType?: string
+  status?: number
   createTime: string
 }
 

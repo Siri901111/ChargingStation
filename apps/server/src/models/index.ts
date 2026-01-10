@@ -13,6 +13,7 @@ import Document from './Document.js';
 import PileMaintenance from './PileMaintenance.js';
 import MonitorData from './MonitorData.js';
 import UserFavorite from './UserFavorite.js';
+import RechargeRecord from './RechargeRecord.js';
 import { AIAgent, KnowledgeBase, KnowledgeDocument, ChatSession, ChatMessage } from './AIAgent.js';
 
 // ==================== 模型关联关系设置 ====================
@@ -120,6 +121,17 @@ UserFavorite.belongsTo(Station, {
   as: 'station'
 });
 
+// ChargingUser (充电用户) 与 RechargeRecord (充值记录) 关联关系
+// 一个充电用户有多个充值记录
+ChargingUser.hasMany(RechargeRecord, {
+  foreignKey: 'user_id',
+  as: 'rechargeRecords'
+});
+RechargeRecord.belongsTo(ChargingUser, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
 // Order (订单) 与 Pile (充电桩) 关联关系
 Pile.hasMany(Order, {
   foreignKey: 'pile_id',
@@ -193,6 +205,7 @@ export {
   PileMaintenance,
   MonitorData,
   UserFavorite,
+  RechargeRecord,
   AIAgent,
   KnowledgeBase,
   KnowledgeDocument,

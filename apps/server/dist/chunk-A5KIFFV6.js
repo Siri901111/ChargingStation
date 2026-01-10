@@ -66,6 +66,12 @@ ChargingUser.init(
     id: { type: DataTypes2.BIGINT, autoIncrement: true, primaryKey: true },
     phone: { type: DataTypes2.STRING(16), allowNull: false, unique: true },
     name: { type: DataTypes2.STRING(32) },
+    avatar: { type: DataTypes2.STRING(255) },
+    // 头像URL
+    gender: { type: DataTypes2.TINYINT, defaultValue: 0 },
+    // 性别：0未知 1男 2女
+    birthday: { type: DataTypes2.DATEONLY },
+    // 生日
     id_no: { type: DataTypes2.STRING(24) },
     member_card_no: { type: DataTypes2.STRING(32) },
     // 会员卡号（业务层保证唯一性）
@@ -79,7 +85,8 @@ ChargingUser.init(
     // 有效期至
     status: { type: DataTypes2.TINYINT, defaultValue: 1 },
     // 1正常 0禁用
-    created_at: { type: DataTypes2.DATE, defaultValue: DataTypes2.NOW }
+    created_at: { type: DataTypes2.DATE, defaultValue: DataTypes2.NOW },
+    updated_at: { type: DataTypes2.DATE, defaultValue: DataTypes2.NOW }
   },
   {
     sequelize: db_default,
@@ -99,15 +106,26 @@ Station.init(
     id: { type: DataTypes3.BIGINT, autoIncrement: true, primaryKey: true },
     name: { type: DataTypes3.STRING(100), allowNull: false },
     city: { type: DataTypes3.STRING(30) },
+    address: { type: DataTypes3.STRING(200) },
+    // 详细地址
     fast: { type: DataTypes3.INTEGER },
+    // 快充桩数量
     slow: { type: DataTypes3.INTEGER },
+    // 慢充桩数量
     status: { type: DataTypes3.TINYINT, defaultValue: 1 },
+    // 1正常 0关闭
     now: { type: DataTypes3.INTEGER },
+    // 当前使用中的桩数
     fault: { type: DataTypes3.INTEGER },
+    // 故障桩数
     person: { type: DataTypes3.STRING(50) },
+    // 负责人
     tel: { type: DataTypes3.STRING(16) },
+    // 联系电话
     longitude: { type: DataTypes3.FLOAT },
+    // 经度
     latitude: { type: DataTypes3.FLOAT }
+    // 纬度
   },
   {
     sequelize: db_default,
@@ -126,12 +144,19 @@ Pile.init(
   {
     id: { type: DataTypes4.BIGINT, autoIncrement: true, primaryKey: true },
     station_id: { type: DataTypes4.BIGINT, allowNull: false },
+    name: { type: DataTypes4.STRING(50) },
+    // 充电桩名称
     type: { type: DataTypes4.STRING(16) },
+    // 快充/慢充
     status: { type: DataTypes4.TINYINT },
+    // 1空闲 2充电中 3故障 0离线
     percent: { type: DataTypes4.INTEGER },
     voltage: { type: DataTypes4.FLOAT },
     current: { type: DataTypes4.FLOAT },
     power: { type: DataTypes4.FLOAT },
+    // 功率 kW
+    price: { type: DataTypes4.DECIMAL(10, 2) },
+    // 价格 元/度
     temperature: { type: DataTypes4.FLOAT },
     install_date: { type: DataTypes4.DATE }
   },
@@ -154,11 +179,15 @@ Order.init(
     user_id: { type: DataTypes5.BIGINT, allowNull: false },
     equipment_no: { type: DataTypes5.STRING(64) },
     station_id: { type: DataTypes5.BIGINT },
+    pile_id: { type: DataTypes5.BIGINT },
+    // 充电桩ID
     date: { type: DataTypes5.DATE },
     start_time: { type: DataTypes5.DATE },
     end_time: { type: DataTypes5.DATE },
     money: { type: DataTypes5.DECIMAL(10, 2) },
     pay: { type: DataTypes5.STRING(20) },
+    pay_time: { type: DataTypes5.DATE },
+    // 支付时间
     status: { type: DataTypes5.TINYINT }
   },
   {

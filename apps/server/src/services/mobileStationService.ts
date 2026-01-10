@@ -393,25 +393,38 @@ export async function unfavoriteStation(userId: number, stationId: number) {
  * 获取收藏列表
  */
 export async function getFavoriteStations(userId: number) {
+  // 验证 userId 是否为有效数字
+  const validUserId = Number(userId);
+  if (isNaN(validUserId) || validUserId <= 0) {
+    throw new Error('无效的用户ID');
+  }
+
+  // 先查询收藏记录
   const favorites = await UserFavorite.findAll({
-    where: { user_id: userId },
-    include: [
-      {
-        model: Station,
-        as: 'station',
-        where: { status: { [Op.ne]: 0 } },
-        required: true,
-      },
-    ],
+    where: { user_id: validUserId },
     order: [['created_at', 'DESC']],
   });
 
+  // 然后查询对应的站点信息
   const formattedStations: StationInfo[] = [];
   for (const favorite of favorites) {
-    const station = (favorite as any).station;
+    const favoriteData = favorite as any;
+    const stationId = favoriteData.station_id;
+    
+    if (!stationId || isNaN(Number(stationId))) {
+      continue;
+    }
+
+    const station = await Station.findByPk(stationId);
     if (station) {
-      const stationInfo = await formatStation(station);
-      formattedStations.push(stationInfo);
+      const stationData = station as any;
+      // 只返回状态正常的站点
+      if (stationData.status !== 0 && stationData.status !== null) {
+        const stationInfo = await formatStation(station);
+        // 标记为已收藏
+        stationInfo.isFavorite = true;
+        formattedStations.push(stationInfo);
+      }
     }
   }
 

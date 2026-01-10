@@ -48,6 +48,7 @@ import {
   initAllTestData,
 } from '../utils/initTestData.js';
 import { getMyMemberCardService, purchaseRechargeMemberService } from '../services/mobileMemberCardService.js';
+import RechargeRecord from '../models/RechargeRecord.js';
 
 const router = express.Router();
 
@@ -260,11 +261,11 @@ router.get('/wallet/consume', authMiddleware, async (req, res) => {
 
     // 转换为消费记录格式
     const list = result.list.map((order: any) => ({
-      id: order.id,
+      id: order.orderNo ? parseInt(order.orderNo.replace(/\D/g, '')) || 0 : 0, // 从订单号中提取数字作为ID
       orderNo: order.orderNo,
-      amount: order.money || 0,
+      amount: order.totalAmount || 0,
       type: '充电消费',
-      createTime: order.endTime || order.startTime || order.date,
+      createTime: order.endTime || order.startTime || order.createTime || new Date().toISOString(),
     }));
 
     res.json(success({ list, total: result.total }));
@@ -278,10 +279,40 @@ router.get('/wallet/consume', authMiddleware, async (req, res) => {
  */
 router.get('/wallet/records', authMiddleware, async (req, res) => {
   try {
-    // 暂时返回空列表，后续可以添加充值记录表
-    res.json(success({ list: [], total: 0 }));
+    const userId = (req as any).userId;
+    if (typeof userId !== 'number' || isNaN(userId) || userId <= 0) {
+      return res.json(error('无效的用户ID'));
+    }
+    
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : 10;
+
+    // 查询充值记录
+    const { rows, count } = await RechargeRecord.findAndCountAll({
+      where: { user_id: userId },
+      order: [['created_at', 'DESC']],
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    });
+
+    // 格式化返回数据
+    const list = rows.map((record: any) => ({
+      id: record.id,
+      orderNo: record.order_no,
+      amount: parseFloat(record.actual_amount || 0), // 实际到账金额
+      payAmount: parseFloat(record.amount || 0), // 支付金额
+      giftAmount: parseFloat(record.gift_amount || 0),
+      memberDiscount: parseFloat(record.member_discount || 0),
+      packageId: record.package_id,
+      payType: record.pay_type,
+      status: record.status,
+      createTime: record.created_at ? new Date(record.created_at).toISOString() : new Date().toISOString(),
+    }));
+
+    res.json(success({ list, total: count }));
   } catch (err: any) {
-    res.json(error(err.message));
+    console.error('获取充值记录失败:', err);
+    res.json(error(err.message || '获取充值记录失败'));
   }
 });
 
@@ -310,8 +341,29 @@ router.post('/wallet/recharge', authMiddleware, async (req, res) => {
       const giftAmount = pkg?.giftAmount || 0;
 
       const result = await testRecharge(userId, amount, giftAmount);
+      const orderNo = `R${Date.now()}`;
+      
+      // 保存充值记录
+      try {
+        await RechargeRecord.create({
+          user_id: userId,
+          order_no: orderNo,
+          amount: amount,
+          actual_amount: result.amount,
+          gift_amount: giftAmount,
+          member_discount: result.memberDiscount || 0,
+          package_id: packageId || null,
+          pay_type: payType || 'test',
+          status: 1,
+          created_at: new Date(),
+        });
+      } catch (recordErr: any) {
+        console.error('保存充值记录失败:', recordErr);
+        // 记录保存失败不影响充值结果
+      }
+      
       res.json(success({
-        orderId: `R${Date.now()}`,
+        orderId: orderNo,
         payInfo: null,
         ...result,
       }));
@@ -464,13 +516,15 @@ router.delete('/station/favorite/:id', authMiddleware, async (req, res) => {
 router.get('/station/favorites', authMiddleware, async (req, res) => {
   try {
     const userId = (req as any).userId;
-    if (!userId || isNaN(Number(userId)) || Number(userId) <= 0) {
+    // authMiddleware 已经验证了 userId，这里再次确保是有效数字
+    if (typeof userId !== 'number' || isNaN(userId) || userId <= 0) {
       return res.json(error('无效的用户ID'));
     }
-    const result = await getFavoriteStations(Number(userId));
+    const result = await getFavoriteStations(userId);
     res.json(success(result));
   } catch (err: any) {
-    res.json(error(err.message));
+    console.error('获取收藏列表失败:', err);
+    res.json(error(err.message || '获取收藏列表失败'));
   }
 });
 
@@ -664,6 +718,27 @@ router.post('/test/recharge', authMiddleware, async (req, res) => {
     }
 
     const result = await testRecharge(userId, amount, giftAmount);
+    const orderNo = `R${Date.now()}`;
+    
+    // 保存充值记录
+    try {
+      await RechargeRecord.create({
+        user_id: userId,
+        order_no: orderNo,
+        amount: amount,
+        actual_amount: result.amount,
+        gift_amount: giftAmount,
+        member_discount: result.memberDiscount || 0,
+        package_id: null,
+        pay_type: 'test',
+        status: 1,
+        created_at: new Date(),
+      });
+    } catch (recordErr: any) {
+      console.error('保存充值记录失败:', recordErr);
+      // 记录保存失败不影响充值结果
+    }
+    
     res.json(success(result));
   } catch (err: any) {
     res.json(error(err.message));

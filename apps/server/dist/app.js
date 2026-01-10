@@ -12,12 +12,13 @@ import {
   User_default,
   db_default,
   initMockData
-} from "./chunk-ZVF4WKVT.js";
+} from "./chunk-A5KIFFV6.js";
 
 // src/app.ts
-import express from "express";
+import express2 from "express";
 import cors from "cors";
 import dotenv2 from "dotenv";
+import os from "os";
 
 // src/models/Role.ts
 import { DataTypes, Model } from "sequelize";
@@ -170,55 +171,131 @@ MonitorData.init(
 );
 var MonitorData_default = MonitorData;
 
-// src/models/AIAgent.ts
+// src/models/UserFavorite.ts
 import { DataTypes as DataTypes4, Model as Model4 } from "sequelize";
-var AIAgent = class extends Model4 {
+var UserFavorite = class extends Model4 {
+};
+UserFavorite.init(
+  {
+    id: { type: DataTypes4.BIGINT, autoIncrement: true, primaryKey: true },
+    user_id: { type: DataTypes4.BIGINT, allowNull: false, comment: "\u7528\u6237ID\uFF08\u5145\u7535\u7528\u6237\uFF09" },
+    station_id: { type: DataTypes4.BIGINT, allowNull: false, comment: "\u7AD9\u70B9ID" },
+    created_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW, comment: "\u6536\u85CF\u65F6\u95F4" }
+  },
+  {
+    sequelize: db_default,
+    modelName: "UserFavorite",
+    tableName: "user_favorite",
+    timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["user_id", "station_id"],
+        name: "uk_user_station"
+      },
+      {
+        fields: ["user_id"],
+        name: "idx_user_id"
+      },
+      {
+        fields: ["station_id"],
+        name: "idx_station_id"
+      }
+    ]
+  }
+);
+var UserFavorite_default = UserFavorite;
+
+// src/models/RechargeRecord.ts
+import { DataTypes as DataTypes5, Model as Model5 } from "sequelize";
+var RechargeRecord = class extends Model5 {
+};
+RechargeRecord.init(
+  {
+    id: { type: DataTypes5.BIGINT, autoIncrement: true, primaryKey: true },
+    user_id: { type: DataTypes5.BIGINT, allowNull: false, comment: "\u7528\u6237ID\uFF08\u5145\u7535\u7528\u6237\uFF09" },
+    order_no: { type: DataTypes5.STRING(64), allowNull: false, unique: true, comment: "\u5145\u503C\u8BA2\u5355\u53F7" },
+    amount: { type: DataTypes5.DECIMAL(10, 2), allowNull: false, comment: "\u5145\u503C\u91D1\u989D\uFF08\u652F\u4ED8\u91D1\u989D\uFF09" },
+    actual_amount: { type: DataTypes5.DECIMAL(10, 2), allowNull: false, comment: "\u5B9E\u9645\u5230\u8D26\u91D1\u989D" },
+    gift_amount: { type: DataTypes5.DECIMAL(10, 2), defaultValue: 0, comment: "\u8D60\u9001\u91D1\u989D" },
+    member_discount: { type: DataTypes5.DECIMAL(10, 2), defaultValue: 0, comment: "\u4F1A\u5458\u6298\u6263\u91D1\u989D" },
+    package_id: { type: DataTypes5.INTEGER, comment: "\u5145\u503C\u5957\u9910ID" },
+    pay_type: { type: DataTypes5.STRING(20), comment: "\u652F\u4ED8\u65B9\u5F0F\uFF1Awechat/alipay/test" },
+    status: { type: DataTypes5.TINYINT, defaultValue: 1, comment: "\u72B6\u6001\uFF1A1\u6210\u529F 0\u5931\u8D25" },
+    created_at: { type: DataTypes5.DATE, defaultValue: DataTypes5.NOW, comment: "\u521B\u5EFA\u65F6\u95F4" }
+  },
+  {
+    sequelize: db_default,
+    modelName: "RechargeRecord",
+    tableName: "recharge_record",
+    timestamps: false,
+    indexes: [
+      {
+        fields: ["user_id"],
+        name: "idx_user_id"
+      },
+      {
+        fields: ["order_no"],
+        name: "idx_order_no"
+      },
+      {
+        fields: ["created_at"],
+        name: "idx_created_at"
+      }
+    ]
+  }
+);
+var RechargeRecord_default = RechargeRecord;
+
+// src/models/AIAgent.ts
+import { DataTypes as DataTypes6, Model as Model6 } from "sequelize";
+var AIAgent = class extends Model6 {
 };
 AIAgent.init(
   {
-    id: { type: DataTypes4.BIGINT, autoIncrement: true, primaryKey: true },
-    name: { type: DataTypes4.STRING(100), allowNull: false, comment: "\u667A\u80FD\u4F53\u540D\u79F0" },
-    description: { type: DataTypes4.TEXT, comment: "\u667A\u80FD\u4F53\u63CF\u8FF0" },
+    id: { type: DataTypes6.BIGINT, autoIncrement: true, primaryKey: true },
+    name: { type: DataTypes6.STRING(100), allowNull: false, comment: "\u667A\u80FD\u4F53\u540D\u79F0" },
+    description: { type: DataTypes6.TEXT, comment: "\u667A\u80FD\u4F53\u63CF\u8FF0" },
     type: {
-      type: DataTypes4.ENUM("chat", "workflow", "multi-agent"),
+      type: DataTypes6.ENUM("chat", "workflow", "multi-agent"),
       defaultValue: "chat",
       comment: "\u667A\u80FD\u4F53\u7C7B\u578B\uFF1A\u5BF9\u8BDD\u578B\u3001\u5DE5\u4F5C\u6D41\u578B\u3001\u591AAgent"
     },
-    avatar: { type: DataTypes4.STRING(500), comment: "\u5934\u50CFURL" },
-    system_prompt: { type: DataTypes4.TEXT, comment: "\u7CFB\u7EDF\u63D0\u793A\u8BCD" },
-    welcome_message: { type: DataTypes4.STRING(500), comment: "\u6B22\u8FCE\u8BED" },
-    suggested_questions: { type: DataTypes4.JSON, comment: "\u63A8\u8350\u95EE\u9898\u5217\u8868" },
+    avatar: { type: DataTypes6.STRING(500), comment: "\u5934\u50CFURL" },
+    system_prompt: { type: DataTypes6.TEXT, comment: "\u7CFB\u7EDF\u63D0\u793A\u8BCD" },
+    welcome_message: { type: DataTypes6.STRING(500), comment: "\u6B22\u8FCE\u8BED" },
+    suggested_questions: { type: DataTypes6.JSON, comment: "\u63A8\u8350\u95EE\u9898\u5217\u8868" },
     // 模型配置
     model_config: {
-      type: DataTypes4.JSON,
+      type: DataTypes6.JSON,
       comment: "\u6A21\u578B\u914D\u7F6E\uFF1Amodel, temperature, topP, maxTokens, contextLength"
     },
     // MCP配置
-    mcp_enabled: { type: DataTypes4.BOOLEAN, defaultValue: false, comment: "MCP\u662F\u5426\u542F\u7528" },
-    mcp_servers: { type: DataTypes4.JSON, comment: "MCP\u670D\u52A1\u914D\u7F6E\u5217\u8868" },
+    mcp_enabled: { type: DataTypes6.BOOLEAN, defaultValue: false, comment: "MCP\u662F\u5426\u542F\u7528" },
+    mcp_servers: { type: DataTypes6.JSON, comment: "MCP\u670D\u52A1\u914D\u7F6E\u5217\u8868" },
     // RAG配置
-    rag_enabled: { type: DataTypes4.BOOLEAN, defaultValue: false, comment: "RAG\u662F\u5426\u542F\u7528" },
+    rag_enabled: { type: DataTypes6.BOOLEAN, defaultValue: false, comment: "RAG\u662F\u5426\u542F\u7528" },
     rag_config: {
-      type: DataTypes4.JSON,
+      type: DataTypes6.JSON,
       comment: "RAG\u914D\u7F6E\uFF1AknowledgeBaseIds, retrievalMode, topK, scoreThreshold, rerankEnabled"
     },
     // 工作流配置
-    workflow_enabled: { type: DataTypes4.BOOLEAN, defaultValue: false, comment: "\u5DE5\u4F5C\u6D41\u662F\u5426\u542F\u7528" },
-    workflow_config: { type: DataTypes4.JSON, comment: "\u5DE5\u4F5C\u6D41\u914D\u7F6E\uFF1Anodes, edges" },
+    workflow_enabled: { type: DataTypes6.BOOLEAN, defaultValue: false, comment: "\u5DE5\u4F5C\u6D41\u662F\u5426\u542F\u7528" },
+    workflow_config: { type: DataTypes6.JSON, comment: "\u5DE5\u4F5C\u6D41\u914D\u7F6E\uFF1Anodes, edges" },
     // 插件配置
-    plugins: { type: DataTypes4.JSON, comment: "\u542F\u7528\u7684\u63D2\u4EF6ID\u5217\u8868" },
+    plugins: { type: DataTypes6.JSON, comment: "\u542F\u7528\u7684\u63D2\u4EF6ID\u5217\u8868" },
     // 统计数据
-    chat_count: { type: DataTypes4.INTEGER, defaultValue: 0, comment: "\u5BF9\u8BDD\u6B21\u6570" },
+    chat_count: { type: DataTypes6.INTEGER, defaultValue: 0, comment: "\u5BF9\u8BDD\u6B21\u6570" },
     // 状态
     status: {
-      type: DataTypes4.TINYINT,
+      type: DataTypes6.TINYINT,
       defaultValue: 0,
       comment: "\u72B6\u6001\uFF1A-1\u5DF2\u505C\u7528\uFF0C0\u8349\u7A3F\uFF0C1\u5DF2\u53D1\u5E03"
     },
     // 创建者
-    creator_id: { type: DataTypes4.BIGINT, comment: "\u521B\u5EFA\u8005ID" },
-    created_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW },
-    updated_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW }
+    creator_id: { type: DataTypes6.BIGINT, comment: "\u521B\u5EFA\u8005ID" },
+    created_at: { type: DataTypes6.DATE, defaultValue: DataTypes6.NOW },
+    updated_at: { type: DataTypes6.DATE, defaultValue: DataTypes6.NOW }
   },
   {
     sequelize: db_default,
@@ -227,24 +304,24 @@ AIAgent.init(
     timestamps: false
   }
 );
-var KnowledgeBase = class extends Model4 {
+var KnowledgeBase = class extends Model6 {
 };
 KnowledgeBase.init(
   {
-    id: { type: DataTypes4.BIGINT, autoIncrement: true, primaryKey: true },
-    name: { type: DataTypes4.STRING(100), allowNull: false, comment: "\u77E5\u8BC6\u5E93\u540D\u79F0" },
-    description: { type: DataTypes4.TEXT, comment: "\u77E5\u8BC6\u5E93\u63CF\u8FF0" },
+    id: { type: DataTypes6.BIGINT, autoIncrement: true, primaryKey: true },
+    name: { type: DataTypes6.STRING(100), allowNull: false, comment: "\u77E5\u8BC6\u5E93\u540D\u79F0" },
+    description: { type: DataTypes6.TEXT, comment: "\u77E5\u8BC6\u5E93\u63CF\u8FF0" },
     embedding_model: {
-      type: DataTypes4.STRING(50),
+      type: DataTypes6.STRING(50),
       defaultValue: "text-embedding-3-small",
       comment: "Embedding\u6A21\u578B"
     },
-    doc_count: { type: DataTypes4.INTEGER, defaultValue: 0, comment: "\u6587\u6863\u6570\u91CF" },
-    chunk_count: { type: DataTypes4.INTEGER, defaultValue: 0, comment: "\u5206\u5757\u6570\u91CF" },
-    status: { type: DataTypes4.TINYINT, defaultValue: 1, comment: "\u72B6\u6001\uFF1A0\u7981\u7528\uFF0C1\u542F\u7528" },
-    creator_id: { type: DataTypes4.BIGINT, comment: "\u521B\u5EFA\u8005ID" },
-    created_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW },
-    updated_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW }
+    doc_count: { type: DataTypes6.INTEGER, defaultValue: 0, comment: "\u6587\u6863\u6570\u91CF" },
+    chunk_count: { type: DataTypes6.INTEGER, defaultValue: 0, comment: "\u5206\u5757\u6570\u91CF" },
+    status: { type: DataTypes6.TINYINT, defaultValue: 1, comment: "\u72B6\u6001\uFF1A0\u7981\u7528\uFF0C1\u542F\u7528" },
+    creator_id: { type: DataTypes6.BIGINT, comment: "\u521B\u5EFA\u8005ID" },
+    created_at: { type: DataTypes6.DATE, defaultValue: DataTypes6.NOW },
+    updated_at: { type: DataTypes6.DATE, defaultValue: DataTypes6.NOW }
   },
   {
     sequelize: db_default,
@@ -253,29 +330,29 @@ KnowledgeBase.init(
     timestamps: false
   }
 );
-var KnowledgeDocument = class extends Model4 {
+var KnowledgeDocument = class extends Model6 {
 };
 KnowledgeDocument.init(
   {
-    id: { type: DataTypes4.BIGINT, autoIncrement: true, primaryKey: true },
+    id: { type: DataTypes6.BIGINT, autoIncrement: true, primaryKey: true },
     knowledge_base_id: {
-      type: DataTypes4.BIGINT,
+      type: DataTypes6.BIGINT,
       allowNull: false,
       comment: "\u6240\u5C5E\u77E5\u8BC6\u5E93ID"
     },
-    name: { type: DataTypes4.STRING(200), allowNull: false, comment: "\u6587\u6863\u540D\u79F0" },
-    type: { type: DataTypes4.STRING(50), comment: "\u6587\u6863\u7C7B\u578B\uFF1Apdf, docx, txt, md\u7B49" },
-    size: { type: DataTypes4.BIGINT, comment: "\u6587\u4EF6\u5927\u5C0F(\u5B57\u8282)" },
-    file_path: { type: DataTypes4.STRING(500), comment: "\u6587\u4EF6\u5B58\u50A8\u8DEF\u5F84" },
-    chunk_count: { type: DataTypes4.INTEGER, defaultValue: 0, comment: "\u5206\u5757\u6570\u91CF" },
+    name: { type: DataTypes6.STRING(200), allowNull: false, comment: "\u6587\u6863\u540D\u79F0" },
+    type: { type: DataTypes6.STRING(50), comment: "\u6587\u6863\u7C7B\u578B\uFF1Apdf, docx, txt, md\u7B49" },
+    size: { type: DataTypes6.BIGINT, comment: "\u6587\u4EF6\u5927\u5C0F(\u5B57\u8282)" },
+    file_path: { type: DataTypes6.STRING(500), comment: "\u6587\u4EF6\u5B58\u50A8\u8DEF\u5F84" },
+    chunk_count: { type: DataTypes6.INTEGER, defaultValue: 0, comment: "\u5206\u5757\u6570\u91CF" },
     status: {
-      type: DataTypes4.TINYINT,
+      type: DataTypes6.TINYINT,
       defaultValue: 0,
       comment: "\u72B6\u6001\uFF1A0\u5904\u7406\u4E2D\uFF0C1\u5904\u7406\u5B8C\u6210\uFF0C2\u5904\u7406\u5931\u8D25"
     },
-    error_message: { type: DataTypes4.TEXT, comment: "\u9519\u8BEF\u4FE1\u606F" },
-    created_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW },
-    updated_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW }
+    error_message: { type: DataTypes6.TEXT, comment: "\u9519\u8BEF\u4FE1\u606F" },
+    created_at: { type: DataTypes6.DATE, defaultValue: DataTypes6.NOW },
+    updated_at: { type: DataTypes6.DATE, defaultValue: DataTypes6.NOW }
   },
   {
     sequelize: db_default,
@@ -284,18 +361,18 @@ KnowledgeDocument.init(
     timestamps: false
   }
 );
-var ChatSession = class extends Model4 {
+var ChatSession = class extends Model6 {
 };
 ChatSession.init(
   {
-    id: { type: DataTypes4.BIGINT, autoIncrement: true, primaryKey: true },
-    agent_id: { type: DataTypes4.BIGINT, allowNull: false, comment: "\u667A\u80FD\u4F53ID" },
-    user_id: { type: DataTypes4.BIGINT, comment: "\u7528\u6237ID" },
-    title: { type: DataTypes4.STRING(200), comment: "\u4F1A\u8BDD\u6807\u9898" },
-    message_count: { type: DataTypes4.INTEGER, defaultValue: 0, comment: "\u6D88\u606F\u6570\u91CF" },
-    total_tokens: { type: DataTypes4.INTEGER, defaultValue: 0, comment: "\u603BToken\u6570" },
-    created_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW },
-    updated_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW }
+    id: { type: DataTypes6.BIGINT, autoIncrement: true, primaryKey: true },
+    agent_id: { type: DataTypes6.BIGINT, allowNull: false, comment: "\u667A\u80FD\u4F53ID" },
+    user_id: { type: DataTypes6.BIGINT, comment: "\u7528\u6237ID" },
+    title: { type: DataTypes6.STRING(200), comment: "\u4F1A\u8BDD\u6807\u9898" },
+    message_count: { type: DataTypes6.INTEGER, defaultValue: 0, comment: "\u6D88\u606F\u6570\u91CF" },
+    total_tokens: { type: DataTypes6.INTEGER, defaultValue: 0, comment: "\u603BToken\u6570" },
+    created_at: { type: DataTypes6.DATE, defaultValue: DataTypes6.NOW },
+    updated_at: { type: DataTypes6.DATE, defaultValue: DataTypes6.NOW }
   },
   {
     sequelize: db_default,
@@ -304,21 +381,21 @@ ChatSession.init(
     timestamps: false
   }
 );
-var ChatMessage = class extends Model4 {
+var ChatMessage = class extends Model6 {
 };
 ChatMessage.init(
   {
-    id: { type: DataTypes4.BIGINT, autoIncrement: true, primaryKey: true },
-    session_id: { type: DataTypes4.BIGINT, allowNull: false, comment: "\u4F1A\u8BDDID" },
+    id: { type: DataTypes6.BIGINT, autoIncrement: true, primaryKey: true },
+    session_id: { type: DataTypes6.BIGINT, allowNull: false, comment: "\u4F1A\u8BDDID" },
     role: {
-      type: DataTypes4.ENUM("user", "assistant", "system"),
+      type: DataTypes6.ENUM("user", "assistant", "system"),
       allowNull: false,
       comment: "\u89D2\u8272"
     },
-    content: { type: DataTypes4.TEXT, allowNull: false, comment: "\u6D88\u606F\u5185\u5BB9" },
-    tokens: { type: DataTypes4.INTEGER, defaultValue: 0, comment: "Token\u6570\u91CF" },
-    metadata: { type: DataTypes4.JSON, comment: "\u5143\u6570\u636E\uFF1A\u5F15\u7528\u7684\u77E5\u8BC6\u3001\u5DE5\u5177\u8C03\u7528\u7B49" },
-    created_at: { type: DataTypes4.DATE, defaultValue: DataTypes4.NOW }
+    content: { type: DataTypes6.TEXT, allowNull: false, comment: "\u6D88\u606F\u5185\u5BB9" },
+    tokens: { type: DataTypes6.INTEGER, defaultValue: 0, comment: "Token\u6570\u91CF" },
+    metadata: { type: DataTypes6.JSON, comment: "\u5143\u6570\u636E\uFF1A\u5F15\u7528\u7684\u77E5\u8BC6\u3001\u5DE5\u5177\u8C03\u7528\u7B49" },
+    created_at: { type: DataTypes6.DATE, defaultValue: DataTypes6.NOW }
   },
   {
     sequelize: db_default,
@@ -398,6 +475,38 @@ ChargingUser_default.hasMany(Order_default, {
 Order_default.belongsTo(ChargingUser_default, {
   foreignKey: "user_id",
   as: "chargingUser"
+});
+ChargingUser_default.hasMany(UserFavorite_default, {
+  foreignKey: "user_id",
+  as: "favorites"
+});
+UserFavorite_default.belongsTo(ChargingUser_default, {
+  foreignKey: "user_id",
+  as: "user"
+});
+Station_default.hasMany(UserFavorite_default, {
+  foreignKey: "station_id",
+  as: "favorites"
+});
+UserFavorite_default.belongsTo(Station_default, {
+  foreignKey: "station_id",
+  as: "station"
+});
+ChargingUser_default.hasMany(RechargeRecord_default, {
+  foreignKey: "user_id",
+  as: "rechargeRecords"
+});
+RechargeRecord_default.belongsTo(ChargingUser_default, {
+  foreignKey: "user_id",
+  as: "user"
+});
+Pile_default.hasMany(Order_default, {
+  foreignKey: "pile_id",
+  as: "orders"
+});
+Order_default.belongsTo(Pile_default, {
+  foreignKey: "pile_id",
+  as: "pile"
 });
 User_default.belongsTo(Role_default, {
   foreignKey: "role_id",
@@ -481,10 +590,361 @@ async function initDefaultUser() {
     } else {
       console.log("\u2139\uFE0F  \u7BA1\u7406\u5458\u8D26\u53F7\u5DF2\u5B58\u5728\uFF0C\u8DF3\u8FC7\u521B\u5EFA");
     }
-  } catch (error) {
-    console.error("\u274C \u521D\u59CB\u5316\u9ED8\u8BA4\u7528\u6237\u5931\u8D25:", error);
-    throw error;
+  } catch (error2) {
+    console.error("\u274C \u521D\u59CB\u5316\u9ED8\u8BA4\u7528\u6237\u5931\u8D25:", error2);
+    throw error2;
   }
+}
+
+// src/utils/initTestData.ts
+import { Op } from "sequelize";
+var changshStations = [
+  {
+    name: "\u5CB3\u9E93\u533A\u667A\u80FD\u5145\u7535\u7AD9",
+    city: "\u957F\u6C99\u5E02\u5CB3\u9E93\u533A",
+    address: "\u957F\u6C99\u5E02\u5CB3\u9E93\u533A\u9E93\u5C71\u5357\u8DEF301\u53F7",
+    latitude: 28.1758,
+    longitude: 112.9452,
+    person: "\u674E\u7AD9\u957F",
+    tel: "0731-88888001"
+  },
+  {
+    name: "\u5929\u5FC3\u533A\u65B0\u80FD\u6E90\u5145\u7535\u7AD9",
+    city: "\u957F\u6C99\u5E02\u5929\u5FC3\u533A",
+    address: "\u957F\u6C99\u5E02\u5929\u5FC3\u533A\u8299\u84C9\u5357\u8DEF388\u53F7",
+    latitude: 28.1127,
+    longitude: 112.9896,
+    person: "\u738B\u7ECF\u7406",
+    tel: "0731-88888002"
+  },
+  {
+    name: "\u5F00\u798F\u533A\u4E07\u8FBE\u5145\u7535\u7AD9",
+    city: "\u957F\u6C99\u5E02\u5F00\u798F\u533A",
+    address: "\u957F\u6C99\u5E02\u5F00\u798F\u533A\u8299\u84C9\u5317\u8DEF88\u53F7\u4E07\u8FBE\u5E7F\u573A",
+    latitude: 28.2282,
+    longitude: 112.9849,
+    person: "\u5F20\u7AD9\u957F",
+    tel: "0731-88888003"
+  },
+  {
+    name: "\u96E8\u82B1\u533A\u7EA2\u661F\u5145\u7535\u7AD9",
+    city: "\u957F\u6C99\u5E02\u96E8\u82B1\u533A",
+    address: "\u957F\u6C99\u5E02\u96E8\u82B1\u533A\u4E07\u5BB6\u4E3D\u8DEF568\u53F7",
+    latitude: 28.1352,
+    longitude: 113.0367,
+    person: "\u5218\u7ECF\u7406",
+    tel: "0731-88888004"
+  },
+  {
+    name: "\u8299\u84C9\u533A\u4E94\u4E00\u5E7F\u573A\u5145\u7535\u7AD9",
+    city: "\u957F\u6C99\u5E02\u8299\u84C9\u533A",
+    address: "\u957F\u6C99\u5E02\u8299\u84C9\u533A\u4E94\u4E00\u5927\u9053389\u53F7",
+    latitude: 28.1963,
+    longitude: 112.9822,
+    person: "\u9648\u7AD9\u957F",
+    tel: "0731-88888005"
+  },
+  {
+    name: "\u671B\u57CE\u533A\u9AD8\u94C1\u897F\u7AD9\u5145\u7535\u7AD9",
+    city: "\u957F\u6C99\u5E02\u671B\u57CE\u533A",
+    address: "\u957F\u6C99\u5E02\u671B\u57CE\u533A\u91D1\u661F\u5317\u8DEF\u9AD8\u94C1\u897F\u7AD9P1\u505C\u8F66\u573A",
+    latitude: 28.2516,
+    longitude: 112.8356,
+    person: "\u8D75\u7ECF\u7406",
+    tel: "0731-88888006"
+  },
+  {
+    name: "\u957F\u6C99\u53BF\u661F\u6C99\u5145\u7535\u7AD9",
+    city: "\u957F\u6C99\u5E02\u957F\u6C99\u53BF",
+    address: "\u957F\u6C99\u53BF\u661F\u6C99\u5927\u9053199\u53F7",
+    latitude: 28.2453,
+    longitude: 113.0815,
+    person: "\u5B59\u7AD9\u957F",
+    tel: "0731-88888007"
+  },
+  {
+    name: "\u5CB3\u9E93\u533A\u6A58\u5B50\u6D32\u5145\u7535\u7AD9",
+    city: "\u957F\u6C99\u5E02\u5CB3\u9E93\u533A",
+    address: "\u957F\u6C99\u5E02\u5CB3\u9E93\u533A\u6F47\u6E58\u4E2D\u8DEF\u6A58\u5B50\u6D32\u666F\u533A\u5165\u53E3",
+    latitude: 28.1892,
+    longitude: 112.9612,
+    person: "\u5468\u7ECF\u7406",
+    tel: "0731-88888008"
+  }
+];
+var tianjinStations = [
+  {
+    name: "\u548C\u5E73\u533A\u6EE8\u6C5F\u9053\u5145\u7535\u7AD9",
+    city: "\u5929\u6D25\u5E02\u548C\u5E73\u533A",
+    address: "\u5929\u6D25\u5E02\u548C\u5E73\u533A\u6EE8\u6C5F\u9053128\u53F7",
+    latitude: 39.1256,
+    longitude: 117.1945,
+    person: "\u9A6C\u7AD9\u957F",
+    tel: "022-88888001"
+  },
+  {
+    name: "\u5357\u5F00\u533A\u5929\u5854\u5145\u7535\u7AD9",
+    city: "\u5929\u6D25\u5E02\u5357\u5F00\u533A",
+    address: "\u5929\u6D25\u5E02\u5357\u5F00\u533A\u536B\u6D25\u5357\u8DEF\u5929\u5854\u666F\u533A",
+    latitude: 39.0832,
+    longitude: 117.1541,
+    person: "\u51AF\u7ECF\u7406",
+    tel: "022-88888002"
+  },
+  {
+    name: "\u6CB3\u897F\u533A\u53CB\u8C0A\u8DEF\u5145\u7535\u7AD9",
+    city: "\u5929\u6D25\u5E02\u6CB3\u897F\u533A",
+    address: "\u5929\u6D25\u5E02\u6CB3\u897F\u533A\u53CB\u8C0A\u8DEF50\u53F7",
+    latitude: 39.0865,
+    longitude: 117.2235,
+    person: "\u90D1\u7AD9\u957F",
+    tel: "022-88888003"
+  },
+  {
+    name: "\u6CB3\u4E1C\u533A\u4E07\u8FBE\u5E7F\u573A\u5145\u7535\u7AD9",
+    city: "\u5929\u6D25\u5E02\u6CB3\u4E1C\u533A",
+    address: "\u5929\u6D25\u5E02\u6CB3\u4E1C\u533A\u6D25\u6EE8\u5927\u905355\u53F7\u4E07\u8FBE\u5E7F\u573A",
+    latitude: 39.1323,
+    longitude: 117.2516,
+    person: "\u5434\u7ECF\u7406",
+    tel: "022-88888004"
+  },
+  {
+    name: "\u6CB3\u5317\u533A\u610F\u5F0F\u98CE\u60C5\u8857\u5145\u7535\u7AD9",
+    city: "\u5929\u6D25\u5E02\u6CB3\u5317\u533A",
+    address: "\u5929\u6D25\u5E02\u6CB3\u5317\u533A\u80DC\u5229\u8DEF\u610F\u5F0F\u98CE\u60C5\u8857",
+    latitude: 39.1452,
+    longitude: 117.2012,
+    person: "\u94B1\u7AD9\u957F",
+    tel: "022-88888005"
+  },
+  {
+    name: "\u7EA2\u6865\u533A\u897F\u7AD9\u5145\u7535\u7AD9",
+    city: "\u5929\u6D25\u5E02\u7EA2\u6865\u533A",
+    address: "\u5929\u6D25\u5E02\u7EA2\u6865\u533A\u897F\u9752\u9053\u5929\u6D25\u897F\u7AD9",
+    latitude: 39.1612,
+    longitude: 117.1325,
+    person: "\u5F90\u7ECF\u7406",
+    tel: "022-88888006"
+  },
+  {
+    name: "\u6EE8\u6D77\u65B0\u533A\u4E8E\u5BB6\u5821\u5145\u7535\u7AD9",
+    city: "\u5929\u6D25\u5E02\u6EE8\u6D77\u65B0\u533A",
+    address: "\u5929\u6D25\u5E02\u6EE8\u6D77\u65B0\u533A\u4E8E\u5BB6\u5821\u91D1\u878D\u533A",
+    latitude: 39.0125,
+    longitude: 117.7125,
+    person: "\u4F55\u7AD9\u957F",
+    tel: "022-88888007"
+  },
+  {
+    name: "\u6B66\u6E05\u533A\u4F5B\u7F57\u4F26\u8428\u5145\u7535\u7AD9",
+    city: "\u5929\u6D25\u5E02\u6B66\u6E05\u533A",
+    address: "\u5929\u6D25\u5E02\u6B66\u6E05\u533A\u524D\u8FDB\u9053\u4F5B\u7F57\u4F26\u8428\u5C0F\u9547",
+    latitude: 39.3856,
+    longitude: 117.0456,
+    person: "\u6731\u7ECF\u7406",
+    tel: "022-88888008"
+  }
+];
+function generateOrderNo(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const random = Math.floor(Math.random() * 1e4).toString().padStart(4, "0");
+  return `${year}${month}${day}${hours}${minutes}${seconds}${random}`;
+}
+async function initCityStations() {
+  console.log("\u{1F4CD} \u5F00\u59CB\u521D\u59CB\u5316\u957F\u6C99\u548C\u5929\u6D25\u5145\u7535\u7AD9\u6570\u636E...");
+  const allStations = [...changshStations, ...tianjinStations];
+  const createdStations = [];
+  for (const stationData of allStations) {
+    const existing = await Station_default.findOne({
+      where: { name: stationData.name }
+    });
+    if (existing) {
+      console.log(`   - \u7AD9\u70B9 ${stationData.name} \u5DF2\u5B58\u5728\uFF0C\u8DF3\u8FC7`);
+      createdStations.push(existing);
+      continue;
+    }
+    const fastCount = Math.floor(Math.random() * 6) + 4;
+    const slowCount = Math.floor(Math.random() * 8) + 4;
+    const station = await Station_default.create({
+      ...stationData,
+      fast: fastCount,
+      slow: slowCount,
+      status: 1,
+      now: Math.floor(Math.random() * (fastCount + slowCount)),
+      fault: Math.floor(Math.random() * 2)
+    });
+    createdStations.push(station);
+    await createPilesForStation(station.id, fastCount, slowCount);
+    console.log(`   \u2705 \u521B\u5EFA\u7AD9\u70B9: ${stationData.name} (\u5FEB\u5145${fastCount} \u6162\u5145${slowCount})`);
+  }
+  console.log(`\u{1F4CD} \u5145\u7535\u7AD9\u6570\u636E\u521D\u59CB\u5316\u5B8C\u6210\uFF0C\u5171 ${createdStations.length} \u4E2A\u7AD9\u70B9`);
+  return createdStations;
+}
+async function createPilesForStation(stationId, fastCount, slowCount) {
+  let pileIndex = 1;
+  for (let i = 0; i < fastCount; i++) {
+    await Pile_default.create({
+      station_id: stationId,
+      name: `${pileIndex}\u53F7\u5FEB\u5145\u6869`,
+      type: "\u5FEB\u5145",
+      status: Math.random() > 0.15 ? 1 : Math.random() > 0.5 ? 2 : 3,
+      // 85%空闲，7.5%充电中，7.5%故障
+      power: 120 + Math.floor(Math.random() * 40),
+      // 120-160kW
+      price: 1.2 + Math.random() * 0.4,
+      // 1.2-1.6元/度
+      voltage: 380 + Math.random() * 20,
+      current: 300 + Math.random() * 100,
+      temperature: 25 + Math.random() * 15,
+      install_date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1e3)
+    });
+    pileIndex++;
+  }
+  for (let i = 0; i < slowCount; i++) {
+    await Pile_default.create({
+      station_id: stationId,
+      name: `${pileIndex}\u53F7\u6162\u5145\u6869`,
+      type: "\u6162\u5145",
+      status: Math.random() > 0.1 ? 1 : Math.random() > 0.5 ? 2 : 3,
+      // 90%空闲
+      power: 7 + Math.floor(Math.random() * 8),
+      // 7-14kW
+      price: 0.8 + Math.random() * 0.3,
+      // 0.8-1.1元/度
+      voltage: 220 + Math.random() * 10,
+      current: 32 + Math.random() * 16,
+      temperature: 20 + Math.random() * 10,
+      install_date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1e3)
+    });
+    pileIndex++;
+  }
+}
+async function initTestUserOrders(phone = "19282249442") {
+  console.log(`\u{1F4CB} \u4E3A\u7528\u6237 ${phone} \u521B\u5EFA\u6D4B\u8BD5\u8BA2\u5355...`);
+  let user = await ChargingUser_default.findOne({ where: { phone } });
+  if (!user) {
+    const timestamp = Date.now().toString().slice(-8);
+    const random = Math.floor(Math.random() * 1e4).toString().padStart(4, "0");
+    user = await ChargingUser_default.create({
+      phone,
+      name: "\u6D4B\u8BD5\u7528\u6237",
+      member_card_no: `M${timestamp}${random}`,
+      card_type: "VIP\u5361",
+      balance: 500,
+      issue_date: /* @__PURE__ */ new Date(),
+      valid_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1e3),
+      status: 1
+    });
+    console.log(`   \u2705 \u521B\u5EFA\u6D4B\u8BD5\u7528\u6237: ${phone}, \u4F59\u989D: 500\u5143`);
+  } else {
+    console.log(`   - \u6D4B\u8BD5\u7528\u6237 ${phone} \u5DF2\u5B58\u5728, \u4F59\u989D: ${user.balance}\u5143`);
+  }
+  const userId = user.id;
+  const changshaStas = await Station_default.findAll({
+    where: { city: { [Op.like]: "%\u957F\u6C99%" } }
+  });
+  if (changshaStas.length === 0) {
+    await initCityStations();
+  }
+  const stations = await Station_default.findAll();
+  const changshStationsData = stations.filter((s) => s.city?.includes("\u957F\u6C99"));
+  if (changshStationsData.length === 0) {
+    console.log("   \u26A0\uFE0F \u6CA1\u6709\u627E\u5230\u957F\u6C99\u5145\u7535\u7AD9\uFF0C\u8BF7\u5148\u521D\u59CB\u5316\u5145\u7535\u7AD9\u6570\u636E");
+    return;
+  }
+  const existingOrders = await Order_default.findAll({ where: { user_id: userId } });
+  if (existingOrders.length > 0) {
+    console.log(`   - \u7528\u6237\u5DF2\u6709 ${existingOrders.length} \u6761\u8BA2\u5355\uFF0C\u8DF3\u8FC7\u521B\u5EFA`);
+    return;
+  }
+  const orderCount = 15;
+  for (let i = 0; i < orderCount; i++) {
+    const station = changshStationsData[Math.floor(Math.random() * changshStationsData.length)];
+    const piles = await Pile_default.findAll({ where: { station_id: station.id } });
+    if (piles.length === 0) continue;
+    const pile = piles[Math.floor(Math.random() * piles.length)];
+    const daysAgo = Math.floor(Math.random() * 30);
+    const orderDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1e3);
+    const startHour = 6 + Math.floor(Math.random() * 16);
+    orderDate.setHours(startHour, Math.floor(Math.random() * 60), 0, 0);
+    const startTime = new Date(orderDate);
+    const chargingMinutes = 30 + Math.floor(Math.random() * 150);
+    const endTime = new Date(startTime.getTime() + chargingMinutes * 60 * 1e3);
+    const hours = chargingMinutes / 60;
+    const avgPower = pile.type === "\u5FEB\u5145" ? 60 : 7;
+    const electricity = hours * avgPower;
+    const pricePerKwh = parseFloat(pile.price) || 1.2;
+    const totalMoney = electricity * pricePerKwh * 1.1;
+    const orderNo = generateOrderNo(startTime);
+    await Order_default.create({
+      order_no: orderNo,
+      user_id: userId,
+      station_id: station.id,
+      pile_id: pile.id,
+      equipment_no: `PILE${pile.id}`,
+      date: orderDate,
+      start_time: startTime,
+      end_time: endTime,
+      money: parseFloat(totalMoney.toFixed(2)),
+      pay: "balance",
+      pay_time: endTime,
+      status: 3
+      // 已完成
+    });
+  }
+  console.log(`   \u2705 \u4E3A\u7528\u6237 ${phone} \u521B\u5EFA\u4E86 ${orderCount} \u6761\u5386\u53F2\u8BA2\u5355`);
+}
+async function testRecharge(userId, amount, giftAmount = 0) {
+  const user = await ChargingUser_default.findByPk(userId);
+  if (!user) {
+    throw new Error("\u7528\u6237\u4E0D\u5B58\u5728");
+  }
+  const userData = user;
+  const currentBalance = parseFloat(userData.balance) || 0;
+  let actualAmount = amount;
+  let memberDiscount = 0;
+  let isRechargeMember = false;
+  if (userData.card_type === "\u5145\u503C\u4F1A\u5458" && userData.valid_until) {
+    const validUntil = new Date(userData.valid_until);
+    const now = /* @__PURE__ */ new Date();
+    if (validUntil > now) {
+      actualAmount = Math.round(amount / 0.95 * 100) / 100;
+      memberDiscount = actualAmount - amount;
+      isRechargeMember = true;
+    }
+  }
+  const totalAdd = actualAmount + giftAmount;
+  const newBalance = currentBalance + totalAdd;
+  await ChargingUser_default.update(
+    { balance: newBalance },
+    { where: { id: userId } }
+  );
+  console.log(`\u{1F4B0} \u5145\u503C\u6210\u529F: \u7528\u6237${userId} \u652F\u4ED8${amount}\u5143 ${isRechargeMember ? `(\u5145\u503C\u4F1A\u545895\u6298\uFF0C\u5B9E\u9645\u5230\u8D26${actualAmount}\u5143)` : ""} \u8D60\u9001${giftAmount}\u5143 \u65B0\u4F59\u989D${newBalance}\u5143`);
+  return {
+    success: true,
+    message: "\u5145\u503C\u6210\u529F",
+    amount: actualAmount,
+    // 实际到账金额
+    payAmount: amount,
+    // 支付金额
+    giftAmount,
+    memberDiscount: isRechargeMember ? memberDiscount : 0,
+    isRechargeMember,
+    totalAdd,
+    newBalance
+  };
+}
+async function initAllTestData() {
+  console.log("\u{1F680} \u5F00\u59CB\u521D\u59CB\u5316\u6240\u6709\u6D4B\u8BD5\u6570\u636E...\n");
+  await initCityStations();
+  await initTestUserOrders("19282249442");
+  console.log("\n\u2705 \u6240\u6709\u6D4B\u8BD5\u6570\u636E\u521D\u59CB\u5316\u5B8C\u6210\uFF01");
 }
 
 // src/routes/userRoutes.ts
@@ -504,7 +964,7 @@ function generateToken(payload) {
 function verifyToken(token) {
   try {
     return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+  } catch (error2) {
     throw new Error("Invalid token");
   }
 }
@@ -530,7 +990,7 @@ function validateIdNo(idNo) {
 }
 
 // src/services/userService.ts
-import { Op } from "sequelize";
+import { Op as Op2 } from "sequelize";
 var getMenuAndBtnAuthByRole = (pageAuthority) => {
   if (pageAuthority === "admin") {
     return {
@@ -641,11 +1101,11 @@ var getMenuAndBtnAuthByRole = (pageAuthority) => {
             }
           ]
         },
-        {
-          name: "AI\u667A\u80FD\u4F53",
-          url: "/ai-agent",
-          icon: "MagicStick"
-        },
+        // {
+        //   name: 'AI智能体',
+        //   url: '/ai-agent',
+        //   icon: 'MagicStick'
+        // },
         {
           name: "\u4E2A\u4EBA\u4E2D\u5FC3",
           url: "/personal",
@@ -883,7 +1343,7 @@ async function getUserListService(params) {
   const where = {};
   if (name) {
     where.name = {
-      [Op.like]: `%${name}%`
+      [Op2.like]: `%${name}%`
     };
   }
   if (department) {
@@ -924,9 +1384,9 @@ async function getUserAuthService(pageAuthority) {
       list: menulist,
       btn: btnAuth
     };
-  } catch (error) {
-    console.error("getUserAuthService \u9519\u8BEF:", error);
-    throw error;
+  } catch (error2) {
+    console.error("getUserAuthService \u9519\u8BEF:", error2);
+    throw error2;
   }
 }
 async function setUserAuthService(account, btnList, pageList) {
@@ -998,10 +1458,10 @@ async function loginController(req, res) {
       message: "\u767B\u5F55\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(401).json({
       code: 401,
-      message: error.message || "\u767B\u5F55\u5931\u8D25",
+      message: error2.message || "\u767B\u5F55\u5931\u8D25",
       data: null
     });
   }
@@ -1030,11 +1490,11 @@ async function registerController(req, res) {
       message: "\u6CE8\u518C\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u5DF2\u88AB\u6CE8\u518C") || error.message.includes("\u683C\u5F0F\u4E0D\u6B63\u786E") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u5DF2\u88AB\u6CE8\u518C") || error2.message.includes("\u683C\u5F0F\u4E0D\u6B63\u786E") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u6CE8\u518C\u5931\u8D25",
+      message: error2.message || "\u6CE8\u518C\u5931\u8D25",
       data: null
     });
   }
@@ -1055,10 +1515,10 @@ async function getUserListController(req, res) {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u7528\u6237\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u7528\u6237\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -1104,11 +1564,11 @@ async function getUserAuthController(req, res) {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u7528\u6237\u6743\u9650\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u7528\u6237\u6743\u9650\u5931\u8D25:", error2);
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u7528\u6237\u6743\u9650\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u7528\u6237\u6743\u9650\u5931\u8D25",
       data: null
     });
   }
@@ -1151,11 +1611,11 @@ async function setUserAuthController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u8BBE\u7F6E\u7528\u6237\u6743\u9650\u5931\u8D25",
+      message: error2.message || "\u8BBE\u7F6E\u7528\u6237\u6743\u9650\u5931\u8D25",
       data: null
     });
   }
@@ -1191,11 +1651,11 @@ async function deleteUserController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : error.message.includes("\u4E0D\u80FD\u5220\u9664") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : error2.message.includes("\u4E0D\u80FD\u5220\u9664") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u5220\u9664\u7528\u6237\u5931\u8D25",
+      message: error2.message || "\u5220\u9664\u7528\u6237\u5931\u8D25",
       data: null
     });
   }
@@ -1233,11 +1693,11 @@ async function toggleUserStatusController(req, res) {
         status: result.status
       }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : error.message.includes("\u4E0D\u80FD\u7981\u7528") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : error2.message.includes("\u4E0D\u80FD\u7981\u7528") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u64CD\u4F5C\u5931\u8D25",
+      message: error2.message || "\u64CD\u4F5C\u5931\u8D25",
       data: null
     });
   }
@@ -1261,7 +1721,7 @@ function authMiddleware(req, res, next) {
       roles: decoded.roles
     };
     next();
-  } catch (error) {
+  } catch (error2) {
     return res.status(401).json({
       code: 401,
       message: "\u65E0\u6548\u7684\u8BA4\u8BC1\u4EE4\u724C",
@@ -1285,7 +1745,7 @@ var userRoutes_default = router;
 import { Router as Router2 } from "express";
 
 // src/services/stationService.ts
-import { Op as Op2 } from "sequelize";
+import { Op as Op3 } from "sequelize";
 async function calculateStationStats(stationId) {
   const nowCount = await Pile_default.count({
     where: {
@@ -1325,7 +1785,7 @@ async function getStationListService(params) {
   const where = {};
   if (name) {
     where.name = {
-      [Op2.like]: `%${name}%`
+      [Op3.like]: `%${name}%`
     };
   }
   if (id) {
@@ -1399,7 +1859,7 @@ async function updateStationService(stationId, params) {
     const existing = await Station_default.findOne({
       where: {
         name: params.name,
-        id: { [Op2.ne]: stationId }
+        id: { [Op3.ne]: stationId }
       }
     });
     if (existing) {
@@ -1465,10 +1925,10 @@ async function getStationListController(req, res) {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u5145\u7535\u7AD9\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u5145\u7535\u7AD9\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -1498,11 +1958,11 @@ async function getStationByIdController(req, res) {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u5145\u7535\u7AD9\u8BE6\u60C5\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u5145\u7535\u7AD9\u8BE6\u60C5\u5931\u8D25",
       data: null
     });
   }
@@ -1526,11 +1986,11 @@ async function createStationController(req, res) {
       message: result.message,
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u5DF2\u5B58\u5728") || error.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u5DF2\u5B58\u5728") || error2.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u521B\u5EFA\u5145\u7535\u7AD9\u5931\u8D25",
+      message: error2.message || "\u521B\u5EFA\u5145\u7535\u7AD9\u5931\u8D25",
       data: null
     });
   }
@@ -1571,11 +2031,11 @@ async function updateStationController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : error.message.includes("\u5DF2\u5B58\u5728") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : error2.message.includes("\u5DF2\u5B58\u5728") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u66F4\u65B0\u5145\u7535\u7AD9\u5931\u8D25",
+      message: error2.message || "\u66F4\u65B0\u5145\u7535\u7AD9\u5931\u8D25",
       data: null
     });
   }
@@ -1605,11 +2065,11 @@ async function deleteStationController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : error.message.includes("\u65E0\u6CD5\u5220\u9664") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : error2.message.includes("\u65E0\u6CD5\u5220\u9664") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u5220\u9664\u5145\u7535\u7AD9\u5931\u8D25",
+      message: error2.message || "\u5220\u9664\u5145\u7535\u7AD9\u5931\u8D25",
       data: null
     });
   }
@@ -1628,7 +2088,7 @@ var stationRoutes_default = router2;
 import { Router as Router3 } from "express";
 
 // src/services/revenueService.ts
-import { Op as Op3 } from "sequelize";
+import { Op as Op4 } from "sequelize";
 async function getRevenueChartService() {
   const now = /* @__PURE__ */ new Date();
   const months = [];
@@ -1645,14 +2105,14 @@ async function getRevenueChartService() {
     const monthRevenue = await Revenue_default.sum("month", {
       where: {
         day_date: {
-          [Op3.between]: [startDate, endDate]
+          [Op4.between]: [startDate, endDate]
         }
       }
     }) || 0;
     const visitCount = await Revenue_default.count({
       where: {
         day_date: {
-          [Op3.between]: [startDate, endDate]
+          [Op4.between]: [startDate, endDate]
         }
       }
     });
@@ -1677,17 +2137,17 @@ async function getRevenueListService(params) {
   const where = {};
   if (name) {
     where.name = {
-      [Op3.like]: `%${name}%`
+      [Op4.like]: `%${name}%`
     };
   }
   const stations = await Station_default.findAll({
-    where: name ? { name: { [Op3.like]: `%${name}%` } } : {},
+    where: name ? { name: { [Op4.like]: `%${name}%` } } : {},
     limit: pageSize,
     offset: (page - 1) * pageSize,
     order: [["id", "DESC"]]
   });
   const total = await Station_default.count({
-    where: name ? { name: { [Op3.like]: `%${name}%` } } : {}
+    where: name ? { name: { [Op4.like]: `%${name}%` } } : {}
   });
   const list = await Promise.all(
     stations.map(async (station) => {
@@ -1697,7 +2157,7 @@ async function getRevenueListService(params) {
         where: {
           station_id: station.id,
           day_date: {
-            [Op3.gte]: today
+            [Op4.gte]: today
           }
         },
         order: [["day_date", "DESC"]]
@@ -1748,10 +2208,10 @@ async function getRevenueChartController(req, res) {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u8425\u6536\u56FE\u8868\u6570\u636E\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u8425\u6536\u56FE\u8868\u6570\u636E\u5931\u8D25",
       data: null
     });
   }
@@ -1769,10 +2229,10 @@ async function getRevenueListController(req, res) {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u8425\u6536\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u8425\u6536\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -1837,10 +2297,10 @@ async function getCurrentListController(req, res) {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u5145\u7535\u6869\u76D1\u63A7\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u5145\u7535\u6869\u76D1\u63A7\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -1857,7 +2317,7 @@ var revenueRoutes_default = router3;
 import { Router as Router4 } from "express";
 
 // src/services/dashboardService.ts
-import { Op as Op4 } from "sequelize";
+import { Op as Op5 } from "sequelize";
 async function getElectricityStatsService() {
   const now = /* @__PURE__ */ new Date();
   const hours = [];
@@ -1893,7 +2353,7 @@ async function getRevenueRatioService() {
   const revenueStats = await Revenue_default.findAll({
     where: {
       day_date: {
-        [Op4.gte]: oneMonthAgo
+        [Op5.gte]: oneMonthAgo
       }
     },
     attributes: [
@@ -1960,7 +2420,7 @@ async function getDeviceOverviewService() {
       level: 1,
       // 严重级别
       fault_time: {
-        [Op4.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1e3)
+        [Op5.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1e3)
         // 最近30天
       }
     }
@@ -1975,7 +2435,7 @@ async function getDeviceStatusService() {
   const usingPiles = await Pile_default.count({
     where: {
       status: {
-        [Op4.in]: [2, 3]
+        [Op5.in]: [2, 3]
         // 充电中或连接中
       }
     }
@@ -1991,7 +2451,7 @@ async function getDeviceStatusService() {
   const todayRevenue = await Revenue_default.sum("day", {
     where: {
       day_date: {
-        [Op4.gte]: today
+        [Op5.gte]: today
       }
     }
   }) || 0;
@@ -2012,10 +2472,10 @@ async function getElectricityStatsController(req, res) {
       message: "\u83B7\u53D6\u7535\u91CF\u7EDF\u8BA1\u6570\u636E\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u7535\u91CF\u7EDF\u8BA1\u6570\u636E\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u7535\u91CF\u7EDF\u8BA1\u6570\u636E\u5931\u8D25",
       data: null
     });
   }
@@ -2028,10 +2488,10 @@ async function getRevenueRatioController(req, res) {
       message: "\u83B7\u53D6\u8425\u6536\u5360\u6BD4\u6570\u636E\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u8425\u6536\u5360\u6BD4\u6570\u636E\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u8425\u6536\u5360\u6BD4\u6570\u636E\u5931\u8D25",
       data: null
     });
   }
@@ -2044,10 +2504,10 @@ async function getDeviceOverviewController(req, res) {
       message: "\u83B7\u53D6\u8BBE\u5907\u603B\u89C8\u6570\u636E\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u8BBE\u5907\u603B\u89C8\u6570\u636E\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u8BBE\u5907\u603B\u89C8\u6570\u636E\u5931\u8D25",
       data: null
     });
   }
@@ -2060,10 +2520,10 @@ async function getDeviceStatusController(req, res) {
       message: "\u83B7\u53D6\u8BBE\u5907\u72B6\u6001\u7EDF\u8BA1\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u8BBE\u5907\u72B6\u6001\u7EDF\u8BA1\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u8BBE\u5907\u72B6\u6001\u7EDF\u8BA1\u5931\u8D25",
       data: null
     });
   }
@@ -2081,7 +2541,7 @@ var dashboardRoutes_default = router4;
 import { Router as Router5 } from "express";
 
 // src/services/alarmService.ts
-import { Op as Op5 } from "sequelize";
+import { Op as Op6 } from "sequelize";
 async function getAlarmListService(params) {
   const { level, page = 1, pageSize = 10, status } = params;
   const where = {};
@@ -2141,8 +2601,8 @@ async function getAlarmListService(params) {
       list,
       total
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u62A5\u8B66\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u62A5\u8B66\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u62A5\u8B66\u5217\u8868\u5931\u8D25");
   }
 }
@@ -2246,8 +2706,8 @@ async function updateAlarmStatusService(params) {
     return {
       message: "\u62A5\u8B66\u72B6\u6001\u66F4\u65B0\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u66F4\u65B0\u62A5\u8B66\u72B6\u6001\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u66F4\u65B0\u62A5\u8B66\u72B6\u6001\u5931\u8D25:", error2);
     throw new Error("\u66F4\u65B0\u62A5\u8B66\u72B6\u6001\u5931\u8D25");
   }
 }
@@ -2259,7 +2719,7 @@ async function getAlarmStatsService() {
     ],
     where: {
       fault_time: {
-        [Op5.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1e3)
+        [Op6.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1e3)
         // 最近30天
       }
     },
@@ -2341,8 +2801,8 @@ async function assignAlarmTaskService(params) {
         responsible: responsibleInfo.person
       }
     };
-  } catch (error) {
-    console.error("\u6307\u6D3E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u6307\u6D3E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25:", error2);
     throw new Error("\u6307\u6D3E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25");
   }
 }
@@ -2376,8 +2836,8 @@ ${urgeNote || "\u8BF7\u52A0\u5FEB\u5904\u7406\u8FDB\u5EA6"}`;
       urgeTime: urgeTime.toLocaleString("zh-CN", { hour12: false }),
       urgeCount: newUrgeCount
     };
-  } catch (error) {
-    console.error("\u50AC\u529E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u50AC\u529E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25:", error2);
     throw new Error("\u50AC\u529E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25");
   }
 }
@@ -2407,8 +2867,8 @@ ${exceptionNote || "\u5904\u7406\u8FC7\u7A0B\u4E2D\u9047\u5230\u5F02\u5E38\uFF0C
       message: "\u62A5\u8B66\u4EFB\u52A1\u5DF2\u6807\u8BB0\u4E3A\u5904\u7406\u5F02\u5E38",
       exceptionTime: (/* @__PURE__ */ new Date()).toLocaleString("zh-CN", { hour12: false })
     };
-  } catch (error) {
-    console.error("\u6807\u8BB0\u62A5\u8B66\u5F02\u5E38\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u6807\u8BB0\u62A5\u8B66\u5F02\u5E38\u5931\u8D25:", error2);
     throw new Error("\u6807\u8BB0\u62A5\u8B66\u5F02\u5E38\u5931\u8D25");
   }
 }
@@ -2438,8 +2898,8 @@ ${completionNote || "\u4EFB\u52A1\u5DF2\u5B8C\u6210\u5904\u7406"}`;
       message: "\u62A5\u8B66\u4EFB\u52A1\u5904\u7406\u5B8C\u6210",
       completionTime: (/* @__PURE__ */ new Date()).toLocaleString("zh-CN", { hour12: false })
     };
-  } catch (error) {
-    console.error("\u5B8C\u6210\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5B8C\u6210\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25:", error2);
     throw new Error("\u5B8C\u6210\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25");
   }
 }
@@ -2484,11 +2944,11 @@ async function getAlarmListController(req, res) {
       message: "\u83B7\u53D6\u62A5\u8B66\u5217\u8868\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u62A5\u8B66\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u62A5\u8B66\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error2);
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u62A5\u8B66\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u62A5\u8B66\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -2509,11 +2969,11 @@ async function getAlarmDetailController(req, res) {
       message: "\u83B7\u53D6\u62A5\u8B66\u8BE6\u60C5\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u62A5\u8B66\u8BE6\u60C5\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u62A5\u8B66\u8BE6\u60C5\u5931\u8D25",
       data: null
     });
   }
@@ -2547,11 +3007,11 @@ async function createAlarmController(req, res) {
       message: result.message,
       data: { id: result.id }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u521B\u5EFA\u62A5\u8B66\u8BB0\u5F55\u5931\u8D25",
+      message: error2.message || "\u521B\u5EFA\u62A5\u8B66\u8BB0\u5F55\u5931\u8D25",
       data: null
     });
   }
@@ -2586,11 +3046,11 @@ async function updateAlarmStatusController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u66F4\u65B0\u62A5\u8B66\u72B6\u6001\u5931\u8D25",
+      message: error2.message || "\u66F4\u65B0\u62A5\u8B66\u72B6\u6001\u5931\u8D25",
       data: null
     });
   }
@@ -2603,10 +3063,10 @@ async function getAlarmStatsController(req, res) {
       message: "\u83B7\u53D6\u62A5\u8B66\u7EDF\u8BA1\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u62A5\u8B66\u7EDF\u8BA1\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u62A5\u8B66\u7EDF\u8BA1\u5931\u8D25",
       data: null
     });
   }
@@ -2640,11 +3100,11 @@ async function assignAlarmTaskController(req, res) {
       message: result.message,
       data: result.assignInfo
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : error.message.includes("\u4E0D\u5141\u8BB8") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : error2.message.includes("\u4E0D\u5141\u8BB8") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u6307\u6D3E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25",
+      message: error2.message || "\u6307\u6D3E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25",
       data: null
     });
   }
@@ -2672,11 +3132,11 @@ async function urgeAlarmTaskController(req, res) {
         urgeCount: result.urgeCount
       }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : error.message.includes("\u4E0D\u5141\u8BB8") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : error2.message.includes("\u4E0D\u5141\u8BB8") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u50AC\u529E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25",
+      message: error2.message || "\u50AC\u529E\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25",
       data: null
     });
   }
@@ -2698,11 +3158,11 @@ async function markAlarmExceptionController(req, res) {
       message: result.message,
       data: { exceptionTime: result.exceptionTime }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : error.message.includes("\u4E0D\u5141\u8BB8") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : error2.message.includes("\u4E0D\u5141\u8BB8") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u6807\u8BB0\u62A5\u8B66\u5F02\u5E38\u5931\u8D25",
+      message: error2.message || "\u6807\u8BB0\u62A5\u8B66\u5F02\u5E38\u5931\u8D25",
       data: null
     });
   }
@@ -2724,11 +3184,11 @@ async function completeAlarmTaskController(req, res) {
       message: result.message,
       data: { completionTime: result.completionTime }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : error.message.includes("\u4E0D\u5141\u8BB8") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : error2.message.includes("\u4E0D\u5141\u8BB8") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u5B8C\u6210\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25",
+      message: error2.message || "\u5B8C\u6210\u62A5\u8B66\u4EFB\u52A1\u5931\u8D25",
       data: null
     });
   }
@@ -2749,11 +3209,11 @@ async function getAlarmUrgeCountController(req, res) {
       message: "\u83B7\u53D6\u50AC\u529E\u4FE1\u606F\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u50AC\u529E\u4FE1\u606F\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u50AC\u529E\u4FE1\u606F\u5931\u8D25",
       data: null
     });
   }
@@ -2778,18 +3238,18 @@ var alarmRoutes_default = router5;
 import { Router as Router6 } from "express";
 
 // src/services/memberCardService.ts
-import { Op as Op6 } from "sequelize";
+import { Op as Op7 } from "sequelize";
 async function getMemberCardListService(params) {
   const { page = 1, pageSize = 10, no, tel, name } = params;
   const where = {};
   if (no && typeof no === "string" && no.trim()) {
-    where.member_card_no = { [Op6.like]: `%${no.trim()}%` };
+    where.member_card_no = { [Op7.like]: `%${no.trim()}%` };
   }
   if (tel && typeof tel === "string" && tel.trim()) {
-    where.phone = { [Op6.like]: `%${tel.trim()}%` };
+    where.phone = { [Op7.like]: `%${tel.trim()}%` };
   }
   if (name && typeof name === "string" && name.trim()) {
-    where.name = { [Op6.like]: `%${name.trim()}%` };
+    where.name = { [Op7.like]: `%${name.trim()}%` };
   }
   try {
     const { rows: users, count: total } = await ChargingUser_default.findAndCountAll({
@@ -2841,8 +3301,8 @@ async function getMemberCardListService(params) {
       list,
       total
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u4F1A\u5458\u5361\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u4F1A\u5458\u5361\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u4F1A\u5458\u5361\u5217\u8868\u5931\u8D25");
   }
 }
@@ -2915,11 +3375,11 @@ async function getMemberCardListController(req, res) {
       message: "\u83B7\u53D6\u4F1A\u5458\u5361\u5217\u8868\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u4F1A\u5458\u5361\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u4F1A\u5458\u5361\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error2);
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u4F1A\u5458\u5361\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u4F1A\u5458\u5361\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -2940,11 +3400,11 @@ async function getMemberCardDetailController(req, res) {
       message: "\u83B7\u53D6\u4F1A\u5458\u5361\u8BE6\u60C5\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u4F1A\u5458\u5361\u8BE6\u60C5\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u4F1A\u5458\u5361\u8BE6\u60C5\u5931\u8D25",
       data: null
     });
   }
@@ -2960,7 +3420,7 @@ var memberCardRoutes_default = router6;
 import { Router as Router7 } from "express";
 
 // src/services/orderService.ts
-import { Op as Op7 } from "sequelize";
+import { Op as Op8 } from "sequelize";
 async function getOrderListService(params) {
   const {
     page = 1,
@@ -2974,13 +3434,13 @@ async function getOrderListService(params) {
   } = params;
   const where = {};
   if (orderNo && typeof orderNo === "string" && orderNo.trim()) {
-    where.order_no = { [Op7.like]: `%${orderNo.trim()}%` };
+    where.order_no = { [Op8.like]: `%${orderNo.trim()}%` };
   }
   if (status && status !== 1) {
     where.status = status;
   }
   if (equipmentNo && typeof equipmentNo === "string" && equipmentNo.trim()) {
-    where.equipment_no = { [Op7.like]: `%${equipmentNo.trim()}%` };
+    where.equipment_no = { [Op8.like]: `%${equipmentNo.trim()}%` };
   }
   if (startDate && endDate) {
     const start = new Date(startDate);
@@ -2988,7 +3448,7 @@ async function getOrderListService(params) {
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
     where.date = {
-      [Op7.between]: [start, end]
+      [Op8.between]: [start, end]
     };
   }
   const include = [];
@@ -2998,7 +3458,7 @@ async function getOrderListService(params) {
       as: "station",
       attributes: ["id", "name", "city"],
       where: {
-        name: { [Op7.like]: `%${stationName.trim()}%` }
+        name: { [Op8.like]: `%${stationName.trim()}%` }
       },
       required: true
       // 内连接，必须有关联的充电站
@@ -3041,8 +3501,8 @@ async function getOrderListService(params) {
       list,
       total
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u8BA2\u5355\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u8BA2\u5355\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u8BA2\u5355\u5217\u8868\u5931\u8D25");
   }
 }
@@ -3054,7 +3514,7 @@ async function batchDeleteOrdersService(orderNos) {
     const result = await Order_default.destroy({
       where: {
         order_no: {
-          [Op7.in]: orderNos
+          [Op8.in]: orderNos
         }
       }
     });
@@ -3065,8 +3525,8 @@ async function batchDeleteOrdersService(orderNos) {
       message: `\u6210\u529F\u5220\u9664 ${result} \u6761\u8BA2\u5355`,
       deletedCount: result
     };
-  } catch (error) {
-    console.error("\u6279\u91CF\u5220\u9664\u8BA2\u5355\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u6279\u91CF\u5220\u9664\u8BA2\u5355\u5931\u8D25:", error2);
     throw new Error("\u6279\u91CF\u5220\u9664\u8BA2\u5355\u5931\u8D25");
   }
 }
@@ -3115,8 +3575,8 @@ async function getOrderDetailService(orderNo) {
           chargeDevice = `\u5145\u7535\u6869(${pile.type || "\u5FEB\u5145"})`;
         }
       }
-    } catch (error) {
-      console.error("\u83B7\u53D6\u5145\u7535\u6869\u4FE1\u606F\u5931\u8D25:", error);
+    } catch (error2) {
+      console.error("\u83B7\u53D6\u5145\u7535\u6869\u4FE1\u606F\u5931\u8D25:", error2);
     }
   }
   const maintenancePerson = {
@@ -3204,11 +3664,11 @@ async function getOrderListController(req, res) {
       message: "\u83B7\u53D6\u8BA2\u5355\u5217\u8868\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u8BA2\u5355\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u8BA2\u5355\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error2);
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u8BA2\u5355\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u8BA2\u5355\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -3229,11 +3689,11 @@ async function batchDeleteOrdersController(req, res) {
       message: result.message,
       data: result.message
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u6CA1\u6709\u627E\u5230") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u6CA1\u6709\u627E\u5230") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u6279\u91CF\u5220\u9664\u8BA2\u5355\u5931\u8D25",
+      message: error2.message || "\u6279\u91CF\u5220\u9664\u8BA2\u5355\u5931\u8D25",
       data: null
     });
   }
@@ -3254,11 +3714,11 @@ async function getOrderDetailController(req, res) {
       message: "\u83B7\u53D6\u8BA2\u5355\u8BE6\u60C5\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u8BA2\u5355\u8BE6\u60C5\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u8BA2\u5355\u8BE6\u60C5\u5931\u8D25",
       data: null
     });
   }
@@ -3275,15 +3735,15 @@ var orderRoutes_default = router7;
 import { Router as Router8 } from "express";
 
 // src/services/billingTemplateService.ts
-import { Op as Op8 } from "sequelize";
+import { Op as Op9 } from "sequelize";
 async function getCityListService() {
   try {
     const stations = await Station_default.findAll({
       attributes: ["id", "name", "city"],
       where: {
         city: {
-          [Op8.not]: null,
-          [Op8.ne]: ""
+          [Op9.not]: null,
+          [Op9.ne]: ""
         }
       },
       order: [["city", "ASC"], ["name", "ASC"]]
@@ -3309,8 +3769,8 @@ async function getCityListService() {
       }
     ];
     return treeData;
-  } catch (error) {
-    console.error("\u83B7\u53D6\u57CE\u5E02\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u57CE\u5E02\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u57CE\u5E02\u5217\u8868\u5931\u8D25");
   }
 }
@@ -3360,8 +3820,8 @@ async function getBillingTemplateByStationService(stationId) {
       ],
       stationName: template.station?.name || ""
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5931\u8D25");
   }
 }
@@ -3421,8 +3881,8 @@ async function saveBillingTemplateService(params) {
         message: "\u8BA1\u8D39\u6A21\u677F\u521B\u5EFA\u6210\u529F"
       };
     }
-  } catch (error) {
-    console.error("\u4FDD\u5B58\u8BA1\u8D39\u6A21\u677F\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u4FDD\u5B58\u8BA1\u8D39\u6A21\u677F\u5931\u8D25:", error2);
     throw new Error("\u4FDD\u5B58\u8BA1\u8D39\u6A21\u677F\u5931\u8D25");
   }
 }
@@ -3438,8 +3898,8 @@ async function deleteBillingTemplateService(stationId) {
     return {
       message: "\u8BA1\u8D39\u6A21\u677F\u5220\u9664\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u5220\u9664\u8BA1\u8D39\u6A21\u677F\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5220\u9664\u8BA1\u8D39\u6A21\u677F\u5931\u8D25:", error2);
     throw new Error("\u5220\u9664\u8BA1\u8D39\u6A21\u677F\u5931\u8D25");
   }
 }
@@ -3469,8 +3929,8 @@ async function getBillingTemplateListService() {
       }) : ""
     }));
     return { list };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5217\u8868\u5931\u8D25");
   }
 }
@@ -3484,11 +3944,11 @@ async function getCityListController(req, res) {
       message: "\u83B7\u53D6\u57CE\u5E02\u5217\u8868\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u57CE\u5E02\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u57CE\u5E02\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error2);
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u57CE\u5E02\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u57CE\u5E02\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -3511,10 +3971,10 @@ async function getBillingTemplateController(req, res) {
       message: "\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5931\u8D25",
       data: null
     });
   }
@@ -3570,11 +4030,11 @@ async function saveBillingTemplateController(req, res) {
       message: result.message,
       data: { id: result.id }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") || error.message.includes("\u4E0D\u5B8C\u6574") || error.message.includes("\u683C\u5F0F") || error.message.includes("\u5FC5\u987B") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") || error2.message.includes("\u4E0D\u5B8C\u6574") || error2.message.includes("\u683C\u5F0F") || error2.message.includes("\u5FC5\u987B") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u4FDD\u5B58\u8BA1\u8D39\u6A21\u677F\u5931\u8D25",
+      message: error2.message || "\u4FDD\u5B58\u8BA1\u8D39\u6A21\u677F\u5931\u8D25",
       data: null
     });
   }
@@ -3595,11 +4055,11 @@ async function deleteBillingTemplateController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u5220\u9664\u8BA1\u8D39\u6A21\u677F\u5931\u8D25",
+      message: error2.message || "\u5220\u9664\u8BA1\u8D39\u6A21\u677F\u5931\u8D25",
       data: null
     });
   }
@@ -3612,10 +4072,10 @@ async function getBillingTemplateListController(req, res) {
       message: "\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5217\u8868\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u8BA1\u8D39\u6A21\u677F\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -3634,7 +4094,7 @@ var billingTemplateRoutes_default = router8;
 import { Router as Router9 } from "express";
 
 // src/services/documentService.ts
-import { Op as Op9 } from "sequelize";
+import { Op as Op10 } from "sequelize";
 async function getDocumentTypeListService() {
   try {
     return {
@@ -3642,8 +4102,8 @@ async function getDocumentTypeListService() {
       important: ["\u4E00\u7EA7", "\u4E8C\u7EA7", "\u4E09\u7EA7", "\u56DB\u7EA7"],
       publish: ["\u7AD9\u5185\u4FE1", "\u516C\u4F17\u53F7", "\u5C0F\u7A0B\u5E8F", "H5", "\u5B98\u7F51"]
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u6587\u7AE0\u7C7B\u578B\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u6587\u7AE0\u7C7B\u578B\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u6587\u7AE0\u7C7B\u578B\u5217\u8868\u5931\u8D25");
   }
 }
@@ -3685,8 +4145,8 @@ async function createDocumentService(params) {
       id: document.id,
       message: "\u6587\u7AE0\u521B\u5EFA\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u521B\u5EFA\u6587\u7AE0\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u521B\u5EFA\u6587\u7AE0\u5931\u8D25:", error2);
     throw new Error("\u521B\u5EFA\u6587\u7AE0\u5931\u8D25");
   }
 }
@@ -3713,12 +4173,12 @@ async function getDocumentListService(params) {
   if (status !== void 0) {
     where.status = status;
   } else {
-    where.status = { [Op9.ne]: 3 };
+    where.status = { [Op10.ne]: 3 };
   }
   if (keyword) {
-    where[Op9.or] = [
-      { title: { [Op9.like]: `%${keyword}%` } },
-      { content: { [Op9.like]: `%${keyword}%` } }
+    where[Op10.or] = [
+      { title: { [Op10.like]: `%${keyword}%` } },
+      { content: { [Op10.like]: `%${keyword}%` } }
     ];
   }
   try {
@@ -3752,8 +4212,8 @@ async function getDocumentListService(params) {
       list,
       total
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u6587\u7AE0\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u6587\u7AE0\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u6587\u7AE0\u5217\u8868\u5931\u8D25");
   }
 }
@@ -3818,8 +4278,8 @@ async function updateDocumentService(documentId, params) {
     return {
       message: "\u6587\u7AE0\u66F4\u65B0\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u66F4\u65B0\u6587\u7AE0\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u66F4\u65B0\u6587\u7AE0\u5931\u8D25:", error2);
     throw new Error("\u66F4\u65B0\u6587\u7AE0\u5931\u8D25");
   }
 }
@@ -3837,8 +4297,8 @@ async function deleteDocumentService(documentId) {
     return {
       message: "\u6587\u7AE0\u5220\u9664\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u5220\u9664\u6587\u7AE0\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5220\u9664\u6587\u7AE0\u5931\u8D25:", error2);
     throw new Error("\u5220\u9664\u6587\u7AE0\u5931\u8D25");
   }
 }
@@ -3856,8 +4316,8 @@ async function publishDocumentService(documentId) {
     return {
       message: "\u6587\u7AE0\u53D1\u5E03\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u53D1\u5E03\u6587\u7AE0\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u53D1\u5E03\u6587\u7AE0\u5931\u8D25:", error2);
     throw new Error("\u53D1\u5E03\u6587\u7AE0\u5931\u8D25");
   }
 }
@@ -3871,11 +4331,11 @@ async function getDocumentTypeListController(req, res) {
       message: "\u64CD\u4F5C\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u6587\u7AE0\u7C7B\u578B\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u6587\u7AE0\u7C7B\u578B\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error2);
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u6587\u7AE0\u7C7B\u578B\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u6587\u7AE0\u7C7B\u578B\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -3911,11 +4371,11 @@ async function createDocumentController(req, res) {
       message: result.message,
       data: { id: result.id }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") || error.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") || error.message.includes("\u65E0\u6548") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") || error2.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") || error2.message.includes("\u65E0\u6548") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u521B\u5EFA\u6587\u7AE0\u5931\u8D25",
+      message: error2.message || "\u521B\u5EFA\u6587\u7AE0\u5931\u8D25",
       data: null
     });
   }
@@ -3956,11 +4416,11 @@ async function getDocumentListController(req, res) {
       message: "\u83B7\u53D6\u6587\u7AE0\u5217\u8868\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u6587\u7AE0\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u6587\u7AE0\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error2);
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u6587\u7AE0\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u6587\u7AE0\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -3981,11 +4441,11 @@ async function getDocumentDetailController(req, res) {
       message: "\u83B7\u53D6\u6587\u7AE0\u8BE6\u60C5\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u6587\u7AE0\u8BE6\u60C5\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u6587\u7AE0\u8BE6\u60C5\u5931\u8D25",
       data: null
     });
   }
@@ -4013,11 +4473,11 @@ async function updateDocumentController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u66F4\u65B0\u6587\u7AE0\u5931\u8D25",
+      message: error2.message || "\u66F4\u65B0\u6587\u7AE0\u5931\u8D25",
       data: null
     });
   }
@@ -4038,11 +4498,11 @@ async function deleteDocumentController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u5220\u9664\u6587\u7AE0\u5931\u8D25",
+      message: error2.message || "\u5220\u9664\u6587\u7AE0\u5931\u8D25",
       data: null
     });
   }
@@ -4063,11 +4523,11 @@ async function publishDocumentController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u53D1\u5E03\u6587\u7AE0\u5931\u8D25",
+      message: error2.message || "\u53D1\u5E03\u6587\u7AE0\u5931\u8D25",
       data: null
     });
   }
@@ -4112,8 +4572,8 @@ async function getPersonalInfoService(userId) {
         hour12: false
       }) : ""
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25");
   }
 }
@@ -4149,9 +4609,9 @@ async function updatePersonalInfoService(userId, params) {
     return {
       message: "\u4E2A\u4EBA\u4FE1\u606F\u66F4\u65B0\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u66F4\u65B0\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25:", error);
-    throw new Error(error.message || "\u66F4\u65B0\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25");
+  } catch (error2) {
+    console.error("\u66F4\u65B0\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25:", error2);
+    throw new Error(error2.message || "\u66F4\u65B0\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25");
   }
 }
 async function getPersonalStatsService(userId) {
@@ -4200,8 +4660,8 @@ async function getPersonalStatsService(userId) {
       messageCount,
       myAssignedCount
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u4E2A\u4EBA\u7EDF\u8BA1\u6570\u636E\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u4E2A\u4EBA\u7EDF\u8BA1\u6570\u636E\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u4E2A\u4EBA\u7EDF\u8BA1\u6570\u636E\u5931\u8D25");
   }
 }
@@ -4226,8 +4686,8 @@ async function getPersonalNoticesService(userId, page = 1, pageSize = 10) {
       list,
       total
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u901A\u77E5\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u901A\u77E5\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u901A\u77E5\u5217\u8868\u5931\u8D25");
   }
 }
@@ -4259,9 +4719,9 @@ async function changePasswordService(userId, params) {
     return {
       message: "\u5BC6\u7801\u4FEE\u6539\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u4FEE\u6539\u5BC6\u7801\u5931\u8D25:", error);
-    throw new Error(error.message || "\u4FEE\u6539\u5BC6\u7801\u5931\u8D25");
+  } catch (error2) {
+    console.error("\u4FEE\u6539\u5BC6\u7801\u5931\u8D25:", error2);
+    throw new Error(error2.message || "\u4FEE\u6539\u5BC6\u7801\u5931\u8D25");
   }
 }
 
@@ -4282,11 +4742,11 @@ async function getPersonalInfoController(req, res) {
       message: "\u83B7\u53D6\u4E2A\u4EBA\u4FE1\u606F\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25",
       data: null
     });
   }
@@ -4314,11 +4774,11 @@ async function updatePersonalInfoController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") || error.message.includes("\u683C\u5F0F") || error.message.includes("\u65E0\u6548") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") || error2.message.includes("\u683C\u5F0F") || error2.message.includes("\u65E0\u6548") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u66F4\u65B0\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25",
+      message: error2.message || "\u66F4\u65B0\u4E2A\u4EBA\u4FE1\u606F\u5931\u8D25",
       data: null
     });
   }
@@ -4339,10 +4799,10 @@ async function getPersonalStatsController(req, res) {
       message: "\u83B7\u53D6\u7EDF\u8BA1\u6570\u636E\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u7EDF\u8BA1\u6570\u636E\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u7EDF\u8BA1\u6570\u636E\u5931\u8D25",
       data: null
     });
   }
@@ -4368,10 +4828,10 @@ async function getPersonalNoticesController(req, res) {
       message: "\u83B7\u53D6\u901A\u77E5\u5217\u8868\u6210\u529F",
       data: result
     });
-  } catch (error) {
+  } catch (error2) {
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u901A\u77E5\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u901A\u77E5\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -4403,11 +4863,11 @@ async function changePasswordController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u6B63\u786E") || error.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") || error.message.includes("\u957F\u5EA6") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u6B63\u786E") || error2.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") || error2.message.includes("\u957F\u5EA6") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u4FEE\u6539\u5BC6\u7801\u5931\u8D25",
+      message: error2.message || "\u4FEE\u6539\u5BC6\u7801\u5931\u8D25",
       data: null
     });
   }
@@ -4426,14 +4886,14 @@ var personalRoutes_default = router10;
 import { Router as Router11 } from "express";
 
 // src/services/mapService.ts
-import { Op as Op11 } from "sequelize";
+import { Op as Op12 } from "sequelize";
 async function getMapStationListService() {
   try {
     const stations = await Station_default.findAll({
       attributes: ["id", "name", "longitude", "latitude", "status", "city"],
       where: {
-        longitude: { [Op11.not]: null },
-        latitude: { [Op11.not]: null }
+        longitude: { [Op12.not]: null },
+        latitude: { [Op12.not]: null }
       }
     });
     const stationsWithCount = await Promise.all(
@@ -4453,8 +4913,8 @@ async function getMapStationListService() {
       })
     );
     return stationsWithCount;
-  } catch (error) {
-    console.error("\u83B7\u53D6\u5730\u56FE\u5145\u7535\u7AD9\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5730\u56FE\u5145\u7535\u7AD9\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u5730\u56FE\u5145\u7535\u7AD9\u5217\u8868\u5931\u8D25");
   }
 }
@@ -4542,8 +5002,8 @@ async function getMapStatsService() {
       maxFaultStation: maxFaultStation || "\u6682\u65E0\u6570\u636E"
       // 故障率最高
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u5730\u56FE\u7EDF\u8BA1\u4FE1\u606F\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5730\u56FE\u7EDF\u8BA1\u4FE1\u606F\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u5730\u56FE\u7EDF\u8BA1\u4FE1\u606F\u5931\u8D25");
   }
 }
@@ -4583,8 +5043,8 @@ async function createStationFromMapService(params) {
       id: station.id,
       message: "\u5145\u7535\u7AD9\u521B\u5EFA\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u521B\u5EFA\u5145\u7535\u7AD9\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u521B\u5EFA\u5145\u7535\u7AD9\u5931\u8D25:", error2);
     throw new Error("\u521B\u5EFA\u5145\u7535\u7AD9\u5931\u8D25");
   }
 }
@@ -4598,12 +5058,12 @@ async function getMapStationListController(req, res) {
       success: true,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u5730\u56FE\u5145\u7535\u7AD9\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5730\u56FE\u5145\u7535\u7AD9\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error2);
     return res.status(500).json({
       code: 500,
       success: false,
-      message: error.message || "\u83B7\u53D6\u5730\u56FE\u5145\u7535\u7AD9\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u5730\u56FE\u5145\u7535\u7AD9\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -4616,11 +5076,11 @@ async function getMapStatsController(req, res) {
       message: "\u83B7\u53D6\u5730\u56FE\u7EDF\u8BA1\u4FE1\u606F\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u5730\u56FE\u7EDF\u8BA1\u4FE1\u606F\u63A7\u5236\u5668\u9519\u8BEF:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5730\u56FE\u7EDF\u8BA1\u4FE1\u606F\u63A7\u5236\u5668\u9519\u8BEF:", error2);
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u5730\u56FE\u7EDF\u8BA1\u4FE1\u606F\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u5730\u56FE\u7EDF\u8BA1\u4FE1\u606F\u5931\u8D25",
       data: null
     });
   }
@@ -4648,11 +5108,11 @@ async function createStationFromMapController(req, res) {
       message: result.message,
       data: { id: result.id }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") || error.message.includes("\u683C\u5F0F") || error.message.includes("\u8303\u56F4") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") || error2.message.includes("\u683C\u5F0F") || error2.message.includes("\u8303\u56F4") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u521B\u5EFA\u5145\u7535\u7AD9\u5931\u8D25",
+      message: error2.message || "\u521B\u5EFA\u5145\u7535\u7AD9\u5931\u8D25",
       data: null
     });
   }
@@ -4669,7 +5129,7 @@ var mapRoutes_default = router11;
 import { Router as Router12 } from "express";
 
 // src/services/pileService.ts
-import { Op as Op12 } from "sequelize";
+import { Op as Op13 } from "sequelize";
 async function getPileListService(params) {
   const {
     page = 1,
@@ -4687,12 +5147,12 @@ async function getPileListService(params) {
     where.status = status;
   }
   if (type) {
-    where.type = { [Op12.like]: `%${type}%` };
+    where.type = { [Op13.like]: `%${type}%` };
   }
   if (keyword) {
-    where[Op12.or] = [
-      { id: { [Op12.like]: `%${keyword}%` } },
-      { type: { [Op12.like]: `%${keyword}%` } }
+    where[Op13.or] = [
+      { id: { [Op13.like]: `%${keyword}%` } },
+      { type: { [Op13.like]: `%${keyword}%` } }
     ];
   }
   try {
@@ -4727,8 +5187,8 @@ async function getPileListService(params) {
       list,
       total
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u5145\u7535\u6869\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5145\u7535\u6869\u5217\u8868\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u5145\u7535\u6869\u5217\u8868\u5931\u8D25");
   }
 }
@@ -4800,8 +5260,8 @@ async function createPileService(params) {
       id: pile.id,
       message: "\u5145\u7535\u6869\u521B\u5EFA\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u521B\u5EFA\u5145\u7535\u6869\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u521B\u5EFA\u5145\u7535\u6869\u5931\u8D25:", error2);
     throw new Error("\u521B\u5EFA\u5145\u7535\u6869\u5931\u8D25");
   }
 }
@@ -4859,8 +5319,8 @@ async function updatePileService(pileId, params) {
     return {
       message: "\u5145\u7535\u6869\u66F4\u65B0\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u66F4\u65B0\u5145\u7535\u6869\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u66F4\u65B0\u5145\u7535\u6869\u5931\u8D25:", error2);
     throw new Error("\u66F4\u65B0\u5145\u7535\u6869\u5931\u8D25");
   }
 }
@@ -4889,8 +5349,8 @@ async function deletePileService(pileId) {
     return {
       message: "\u5145\u7535\u6869\u5220\u9664\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u5220\u9664\u5145\u7535\u6869\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5220\u9664\u5145\u7535\u6869\u5931\u8D25:", error2);
     throw new Error("\u5220\u9664\u5145\u7535\u6869\u5931\u8D25");
   }
 }
@@ -4911,8 +5371,8 @@ async function updatePileStatusService(pileId, status) {
     return {
       message: "\u5145\u7535\u6869\u72B6\u6001\u66F4\u65B0\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u66F4\u65B0\u5145\u7535\u6869\u72B6\u6001\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u66F4\u65B0\u5145\u7535\u6869\u72B6\u6001\u5931\u8D25:", error2);
     throw new Error("\u66F4\u65B0\u5145\u7535\u6869\u72B6\u6001\u5931\u8D25");
   }
 }
@@ -4956,8 +5416,8 @@ async function getPileUsageRecordsService(pileId, page = 1, pageSize = 10) {
       list,
       total
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u5145\u7535\u6869\u4F7F\u7528\u8BB0\u5F55\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5145\u7535\u6869\u4F7F\u7528\u8BB0\u5F55\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u5145\u7535\u6869\u4F7F\u7528\u8BB0\u5F55\u5931\u8D25");
   }
 }
@@ -4994,8 +5454,8 @@ async function getPileMaintenanceService(pileId, page = 1, pageSize = 10) {
       list,
       total
     };
-  } catch (error) {
-    console.error("\u83B7\u53D6\u5145\u7535\u6869\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5145\u7535\u6869\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25:", error2);
     throw new Error("\u83B7\u53D6\u5145\u7535\u6869\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25");
   }
 }
@@ -5032,8 +5492,8 @@ async function createPileMaintenanceService(pileId, params) {
       id: maintenance.id,
       message: "\u7EF4\u4FDD\u8BB0\u5F55\u521B\u5EFA\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u521B\u5EFA\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u521B\u5EFA\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25:", error2);
     throw new Error("\u521B\u5EFA\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25");
   }
 }
@@ -5069,8 +5529,8 @@ async function updatePileMaintenanceService(maintenanceId, params) {
     return {
       message: "\u7EF4\u4FDD\u8BB0\u5F55\u66F4\u65B0\u6210\u529F"
     };
-  } catch (error) {
-    console.error("\u66F4\u65B0\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u66F4\u65B0\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25:", error2);
     throw new Error("\u66F4\u65B0\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25");
   }
 }
@@ -5108,11 +5568,11 @@ async function getPileListController(req, res) {
       message: "\u83B7\u53D6\u5145\u7535\u6869\u5217\u8868\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u5145\u7535\u6869\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5145\u7535\u6869\u5217\u8868\u63A7\u5236\u5668\u9519\u8BEF:", error2);
     return res.status(500).json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u5145\u7535\u6869\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u5145\u7535\u6869\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -5133,11 +5593,11 @@ async function getPileDetailController(req, res) {
       message: "\u83B7\u53D6\u5145\u7535\u6869\u8BE6\u60C5\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u5145\u7535\u6869\u8BE6\u60C5\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u5145\u7535\u6869\u8BE6\u60C5\u5931\u8D25",
       data: null
     });
   }
@@ -5176,11 +5636,11 @@ async function createPileController(req, res) {
       message: result.message,
       data: { id: result.id }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") || error.message.includes("\u5FC5\u987B\u4E3A") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") || error2.message.includes("\u5FC5\u987B\u4E3A") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u521B\u5EFA\u5145\u7535\u6869\u5931\u8D25",
+      message: error2.message || "\u521B\u5EFA\u5145\u7535\u6869\u5931\u8D25",
       data: null
     });
   }
@@ -5211,11 +5671,11 @@ async function updatePileController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") || error.message.includes("\u5FC5\u987B\u4E3A") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") || error2.message.includes("\u5FC5\u987B\u4E3A") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u66F4\u65B0\u5145\u7535\u6869\u5931\u8D25",
+      message: error2.message || "\u66F4\u65B0\u5145\u7535\u6869\u5931\u8D25",
       data: null
     });
   }
@@ -5236,11 +5696,11 @@ async function deletePileController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") || error.message.includes("\u5173\u8054\u8BA2\u5355") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") || error2.message.includes("\u5173\u8054\u8BA2\u5355") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u5220\u9664\u5145\u7535\u6869\u5931\u8D25",
+      message: error2.message || "\u5220\u9664\u5145\u7535\u6869\u5931\u8D25",
       data: null
     });
   }
@@ -5269,11 +5729,11 @@ async function updatePileStatusController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") || error.message.includes("\u65E0\u6548") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") || error2.message.includes("\u65E0\u6548") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u66F4\u65B0\u5145\u7535\u6869\u72B6\u6001\u5931\u8D25",
+      message: error2.message || "\u66F4\u65B0\u5145\u7535\u6869\u72B6\u6001\u5931\u8D25",
       data: null
     });
   }
@@ -5299,11 +5759,11 @@ async function getPileUsageRecordsController(req, res) {
       message: "\u83B7\u53D6\u4F7F\u7528\u8BB0\u5F55\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u4F7F\u7528\u8BB0\u5F55\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u4F7F\u7528\u8BB0\u5F55\u5931\u8D25",
       data: null
     });
   }
@@ -5329,11 +5789,11 @@ async function getPileMaintenanceController(req, res) {
       message: "\u83B7\u53D6\u7EF4\u4FDD\u8BB0\u5F55\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u83B7\u53D6\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25",
       data: null
     });
   }
@@ -5378,11 +5838,11 @@ async function createPileMaintenanceController(req, res) {
       message: result.message,
       data: { id: result.id }
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") || error.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") ? 400 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") || error2.message.includes("\u4E0D\u80FD\u4E3A\u7A7A") ? 400 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u521B\u5EFA\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25",
+      message: error2.message || "\u521B\u5EFA\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25",
       data: null
     });
   }
@@ -5427,11 +5887,218 @@ async function updatePileMaintenanceController(req, res) {
       message: result.message,
       data: null
     });
-  } catch (error) {
-    const statusCode = error.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
     return res.status(statusCode).json({
       code: statusCode,
-      message: error.message || "\u66F4\u65B0\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25",
+      message: error2.message || "\u66F4\u65B0\u7EF4\u4FDD\u8BB0\u5F55\u5931\u8D25",
+      data: null
+    });
+  }
+}
+
+// src/utils/qrcodeGenerator.ts
+import QRCode from "qrcode";
+function generateQRCodeContent(pileId, options = {}) {
+  const { format = "PILE_ID", includeInfo = false, stationId, stationName, pileName } = options;
+  switch (format) {
+    case "PILE_ID":
+      return `PILE_${pileId}`;
+    case "number":
+      return `${pileId}`;
+    case "json":
+      const jsonData = { pileId };
+      if (includeInfo && stationId) {
+        jsonData.stationId = stationId;
+      }
+      if (includeInfo && stationName) {
+        jsonData.stationName = stationName;
+      }
+      if (includeInfo && pileName) {
+        jsonData.pileName = pileName;
+      }
+      return JSON.stringify(jsonData);
+    default:
+      return `PILE_${pileId}`;
+  }
+}
+async function generateQRCodeImage(content, size = 300) {
+  try {
+    const options = {
+      width: size,
+      margin: 2,
+      color: {
+        dark: "#000000",
+        // 二维码前景色
+        light: "#FFFFFF"
+        // 二维码背景色
+      },
+      errorCorrectionLevel: "M"
+      // 错误纠正级别：L(7%) M(15%) Q(25%) H(30%)
+    };
+    const dataUrl = await QRCode.toDataURL(content, options);
+    return dataUrl;
+  } catch (error2) {
+    console.error("\u751F\u6210\u4E8C\u7EF4\u7801\u56FE\u7247\u5931\u8D25:", error2);
+    throw new Error("\u751F\u6210\u4E8C\u7EF4\u7801\u56FE\u7247\u5931\u8D25");
+  }
+}
+async function generateQRCodeBuffer(content, size = 300) {
+  try {
+    const options = {
+      width: size,
+      margin: 2,
+      color: {
+        dark: "#000000",
+        light: "#FFFFFF"
+      },
+      errorCorrectionLevel: "M"
+    };
+    const buffer = await QRCode.toBuffer(content, options);
+    return buffer;
+  } catch (error2) {
+    console.error("\u751F\u6210\u4E8C\u7EF4\u7801Buffer\u5931\u8D25:", error2);
+    throw new Error("\u751F\u6210\u4E8C\u7EF4\u7801Buffer\u5931\u8D25");
+  }
+}
+async function generateQRCodeData(pileId, stationId, stationName, pileName, options = {}) {
+  const { format = "PILE_ID", size = 300, includeInfo = false } = options;
+  const qrCode = generateQRCodeContent(pileId, {
+    format,
+    includeInfo: includeInfo || false,
+    stationId,
+    stationName,
+    pileName
+  });
+  const qrCodeImage = await generateQRCodeImage(qrCode, size);
+  return {
+    qrCode,
+    qrCodeImage,
+    pileId,
+    stationId,
+    stationName,
+    pileName
+  };
+}
+
+// src/services/pileQRCodeService.ts
+async function getPileQRCodeService(pileId, params = {}) {
+  const pile = await Pile_default.findByPk(pileId, {
+    include: [
+      {
+        model: Station_default,
+        as: "station",
+        attributes: ["id", "name"]
+      }
+    ]
+  });
+  if (!pile) {
+    throw new Error("\u5145\u7535\u6869\u4E0D\u5B58\u5728");
+  }
+  const pileData = pile;
+  const station = pileData.station;
+  try {
+    const { format = "PILE_ID", size = 300, includeInfo = false } = params;
+    const qrCodeData = await generateQRCodeData(
+      pileId,
+      station?.id,
+      station?.name || "",
+      pileData.name || `${pileId}\u53F7\u6869`,
+      {
+        format,
+        size,
+        includeInfo
+      }
+    );
+    return {
+      ...qrCodeData,
+      stationId: station?.id || pileData.station_id,
+      stationName: station?.name || "\u672A\u77E5\u7AD9\u70B9",
+      pileName: pileData.name || `${pileId}\u53F7\u6869`,
+      downloadUrl: `/api/piles/${pileId}/qrcode/download?size=${size}`
+    };
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5145\u7535\u6869\u4E8C\u7EF4\u7801\u5931\u8D25:", error2);
+    throw new Error(error2.message || "\u83B7\u53D6\u5145\u7535\u6869\u4E8C\u7EF4\u7801\u5931\u8D25");
+  }
+}
+async function generatePileQRCodeService(pileId, size = 300) {
+  const pile = await Pile_default.findByPk(pileId);
+  if (!pile) {
+    throw new Error("\u5145\u7535\u6869\u4E0D\u5B58\u5728");
+  }
+  try {
+    const qrCodeContent = `PILE_${pileId}`;
+    const qrCodeBuffer = await generateQRCodeBuffer(qrCodeContent, size);
+    return qrCodeBuffer;
+  } catch (error2) {
+    console.error("\u751F\u6210\u4E8C\u7EF4\u7801Buffer\u5931\u8D25:", error2);
+    throw new Error("\u751F\u6210\u4E8C\u7EF4\u7801Buffer\u5931\u8D25");
+  }
+}
+
+// src/controllers/pileQRCodeController.ts
+async function getPileQRCodeController(req, res) {
+  try {
+    const { id } = req.params;
+    const { format, size, includeInfo } = req.query;
+    if (!id || isNaN(Number(id))) {
+      return res.status(400).json({
+        code: 400,
+        message: "\u5145\u7535\u6869ID\u65E0\u6548",
+        data: null
+      });
+    }
+    const params = {};
+    if (format && ["PILE_ID", "number", "json"].includes(format)) {
+      params.format = format;
+    }
+    if (size && !isNaN(Number(size))) {
+      params.size = Number(size);
+    }
+    if (includeInfo === "true") {
+      params.includeInfo = true;
+    }
+    const result = await getPileQRCodeService(Number(id), params);
+    return res.json({
+      code: 200,
+      message: "\u83B7\u53D6\u4E8C\u7EF4\u7801\u6210\u529F",
+      data: result
+    });
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+    return res.status(statusCode).json({
+      code: statusCode,
+      message: error2.message || "\u83B7\u53D6\u4E8C\u7EF4\u7801\u5931\u8D25",
+      data: null
+    });
+  }
+}
+async function downloadPileQRCodeController(req, res) {
+  try {
+    const { id } = req.params;
+    const { size, format } = req.query;
+    if (!id || isNaN(Number(id))) {
+      return res.status(400).json({
+        code: 400,
+        message: "\u5145\u7535\u6869ID\u65E0\u6548",
+        data: null
+      });
+    }
+    const qrCodeSize = size && !isNaN(Number(size)) ? Number(size) : 300;
+    const fileFormat = format || "png";
+    const qrCodeBuffer = await generatePileQRCodeService(Number(id), qrCodeSize);
+    res.setHeader("Content-Type", `image/${fileFormat}`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="pile_${id}_qrcode.${fileFormat}"`
+    );
+    return res.send(qrCodeBuffer);
+  } catch (error2) {
+    const statusCode = error2.message.includes("\u4E0D\u5B58\u5728") ? 404 : 500;
+    return res.status(statusCode).json({
+      code: statusCode,
+      message: error2.message || "\u4E0B\u8F7D\u4E8C\u7EF4\u7801\u5931\u8D25",
       data: null
     });
   }
@@ -5449,13 +6116,15 @@ router12.get("/piles/:id/usage-records", authMiddleware, getPileUsageRecordsCont
 router12.get("/piles/:id/maintenance", authMiddleware, getPileMaintenanceController);
 router12.post("/piles/:id/maintenance", authMiddleware, createPileMaintenanceController);
 router12.put("/piles/:id/maintenance/:maintenanceId", authMiddleware, updatePileMaintenanceController);
+router12.get("/piles/:id/qrcode", authMiddleware, getPileQRCodeController);
+router12.get("/piles/:id/qrcode/download", authMiddleware, downloadPileQRCodeController);
 var pileRoutes_default = router12;
 
 // src/routes/monitorDataRoutes.ts
 import { Router as Router13 } from "express";
 
 // src/services/monitorDataService.ts
-import { Op as Op13, fn, col, literal } from "sequelize";
+import { Op as Op14, fn, col, literal } from "sequelize";
 MonitorData_default.belongsTo(User_default, {
   foreignKey: "user_id",
   targetKey: "id",
@@ -5534,15 +6203,15 @@ async function getMonitorDataList(params) {
   }
   if (startTime && endTime) {
     where.timestamp = {
-      [Op13.between]: [startTime, endTime]
+      [Op14.between]: [startTime, endTime]
     };
   } else if (startTime) {
     where.timestamp = {
-      [Op13.gte]: startTime
+      [Op14.gte]: startTime
     };
   } else if (endTime) {
     where.timestamp = {
-      [Op13.lte]: endTime
+      [Op14.lte]: endTime
     };
   }
   const { count, rows } = await MonitorData_default.findAndCountAll({
@@ -5603,7 +6272,7 @@ async function getOverviewStats(params) {
   }
   if (startTime && endTime) {
     where.timestamp = {
-      [Op13.between]: [startTime, endTime]
+      [Op14.between]: [startTime, endTime]
     };
   }
   const categoryStats = await MonitorData_default.findAll({
@@ -5636,7 +6305,7 @@ async function getOverviewStats(params) {
     where: {
       ...where,
       created_at: {
-        [Op13.gte]: today
+        [Op14.gte]: today
       }
     }
   });
@@ -5669,7 +6338,7 @@ async function getTrendData(params) {
   const { startTime, endTime, groupBy = "hour", category, appId } = params;
   const where = {
     timestamp: {
-      [Op13.between]: [startTime, endTime]
+      [Op14.between]: [startTime, endTime]
     }
   };
   if (category) {
@@ -5704,7 +6373,7 @@ async function getPerformanceMetrics(params) {
   }
   if (startTime && endTime) {
     where.timestamp = {
-      [Op13.between]: [startTime, endTime]
+      [Op14.between]: [startTime, endTime]
     };
   }
   const performanceData = await MonitorData_default.findAll({
@@ -5774,7 +6443,7 @@ async function getErrorStats(params) {
   }
   if (startTime && endTime) {
     where.timestamp = {
-      [Op13.between]: [startTime, endTime]
+      [Op14.between]: [startTime, endTime]
     };
   }
   const typeStats = await MonitorData_default.findAll({
@@ -5821,7 +6490,7 @@ async function getBehaviorStats(params) {
   }
   if (startTime && endTime) {
     where.timestamp = {
-      [Op13.between]: [startTime, endTime]
+      [Op14.between]: [startTime, endTime]
     };
   }
   const pageViewStats = await MonitorData_default.findAll({
@@ -5865,7 +6534,7 @@ async function deleteMonitorData(ids) {
   return MonitorData_default.destroy({
     where: {
       id: {
-        [Op13.in]: ids
+        [Op14.in]: ids
       }
     }
   });
@@ -5875,7 +6544,7 @@ async function cleanOldData(daysToKeep = 30) {
   return MonitorData_default.destroy({
     where: {
       timestamp: {
-        [Op13.lt]: cutoffTime
+        [Op14.lt]: cutoffTime
       }
     }
   });
@@ -5905,12 +6574,12 @@ async function getUserTrackingData(params) {
   };
   if (startTime && endTime) {
     where.timestamp = {
-      [Op13.between]: [startTime, endTime]
+      [Op14.between]: [startTime, endTime]
     };
   } else if (startTime) {
-    where.timestamp = { [Op13.gte]: startTime };
+    where.timestamp = { [Op14.gte]: startTime };
   } else if (endTime) {
-    where.timestamp = { [Op13.lte]: endTime };
+    where.timestamp = { [Op14.lte]: endTime };
   }
   if (category) {
     where.category = category;
@@ -5986,14 +6655,14 @@ async function getActiveUsers(params) {
   const where = {};
   if (startTime && endTime) {
     where.timestamp = {
-      [Op13.between]: [startTime, endTime]
+      [Op14.between]: [startTime, endTime]
     };
   }
   const userIds = await MonitorData_default.findAll({
     where: {
       ...where,
       user_id: {
-        [Op13.ne]: null
+        [Op14.ne]: null
       }
     },
     attributes: [
@@ -6010,7 +6679,7 @@ async function getActiveUsers(params) {
   const users = await User_default.findAll({
     where: {
       id: {
-        [Op13.in]: userIds.map((item) => item.user_id)
+        [Op14.in]: userIds.map((item) => item.user_id)
       }
     },
     attributes: ["id", "name", "account"],
@@ -6044,13 +6713,13 @@ async function getErrorBehaviorContext(params) {
   const endTime = errorTimestamp;
   const where = {
     timestamp: {
-      [Op13.between]: [startTime, endTime]
+      [Op14.between]: [startTime, endTime]
     },
     category: "behavior"
     // 只查询行为类型的数据
   };
   if (sessionInfo?.sessionId) {
-    where[Op13.or] = [
+    where[Op14.or] = [
       { "session_info.sessionId": sessionInfo.sessionId },
       ...userId ? [{ user_id: userId }] : []
     ];
@@ -6112,12 +6781,12 @@ async function reportData(req, res) {
       message: "\u4E0A\u62A5\u6210\u529F",
       count: dataList.length
     });
-  } catch (error) {
-    console.error("\u76D1\u63A7\u6570\u636E\u4E0A\u62A5\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u76D1\u63A7\u6570\u636E\u4E0A\u62A5\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u4E0A\u62A5\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6137,12 +6806,12 @@ async function getDataList(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u76D1\u63A7\u6570\u636E\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u76D1\u63A7\u6570\u636E\u5217\u8868\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6160,12 +6829,12 @@ async function getErrors(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u9519\u8BEF\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u9519\u8BEF\u5217\u8868\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6183,12 +6852,12 @@ async function getPerformance(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u6027\u80FD\u6570\u636E\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u6027\u80FD\u6570\u636E\u5217\u8868\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6206,12 +6875,12 @@ async function getBehaviors(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u884C\u4E3A\u6570\u636E\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u884C\u4E3A\u6570\u636E\u5217\u8868\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6228,12 +6897,12 @@ async function getNetworks(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u7F51\u7EDC\u8BF7\u6C42\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u7F51\u7EDC\u8BF7\u6C42\u5217\u8868\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6249,12 +6918,12 @@ async function getOverview(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u7EDF\u8BA1\u6982\u89C8\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u7EDF\u8BA1\u6982\u89C8\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6278,12 +6947,12 @@ async function getTrend(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u8D8B\u52BF\u6570\u636E\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u8D8B\u52BF\u6570\u636E\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6299,12 +6968,12 @@ async function getPerformanceMetrics2(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u6027\u80FD\u6307\u6807\u7EDF\u8BA1\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u6027\u80FD\u6307\u6807\u7EDF\u8BA1\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6320,12 +6989,12 @@ async function getErrorStats2(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u9519\u8BEF\u7EDF\u8BA1\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u9519\u8BEF\u7EDF\u8BA1\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6341,12 +7010,12 @@ async function getBehaviorStats2(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u7528\u6237\u884C\u4E3A\u7EDF\u8BA1\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u7528\u6237\u884C\u4E3A\u7EDF\u8BA1\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6365,12 +7034,12 @@ async function deleteData(req, res) {
       message: "\u5220\u9664\u6210\u529F",
       deletedCount: count
     });
-  } catch (error) {
-    console.error("\u5220\u9664\u76D1\u63A7\u6570\u636E\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5220\u9664\u76D1\u63A7\u6570\u636E\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u5220\u9664\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6384,12 +7053,12 @@ async function cleanOldData2(req, res) {
       message: `\u5DF2\u6E05\u7406${daysToKeep}\u5929\u524D\u7684\u6570\u636E`,
       deletedCount: count
     });
-  } catch (error) {
-    console.error("\u6E05\u7406\u8FC7\u671F\u6570\u636E\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u6E05\u7406\u8FC7\u671F\u6570\u636E\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u6E05\u7406\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6414,12 +7083,12 @@ async function getUserTracking(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u7528\u6237\u8FFD\u8E2A\u6570\u636E\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u7528\u6237\u8FFD\u8E2A\u6570\u636E\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6434,12 +7103,12 @@ async function getActiveUsers2(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u6D3B\u8DC3\u7528\u6237\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u6D3B\u8DC3\u7528\u6237\u5217\u8868\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6460,12 +7129,12 @@ async function getErrorBehaviorContext2(req, res) {
       code: 200,
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u9519\u8BEF\u884C\u4E3A\u4E0A\u4E0B\u6587\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u9519\u8BEF\u884C\u4E3A\u4E0A\u4E0B\u6587\u5931\u8D25:", error2);
     res.status(500).json({
       code: 500,
       message: "\u83B7\u53D6\u6570\u636E\u5931\u8D25",
-      error: error.message
+      error: error2.message
     });
   }
 }
@@ -6494,15 +7163,15 @@ var monitorDataRoutes_default = router13;
 import { Router as Router14 } from "express";
 
 // src/services/aiAgentService.ts
-import { Op as Op14 } from "sequelize";
+import { Op as Op15 } from "sequelize";
 var getAgentList = async (params) => {
   const { page = 1, pageSize = 10, keyword, type, status, creatorId } = params;
   const offset = (page - 1) * pageSize;
   const where = {};
   if (keyword) {
-    where[Op14.or] = [
-      { name: { [Op14.like]: `%${keyword}%` } },
-      { description: { [Op14.like]: `%${keyword}%` } }
+    where[Op15.or] = [
+      { name: { [Op15.like]: `%${keyword}%` } },
+      { description: { [Op15.like]: `%${keyword}%` } }
     ];
   }
   if (type) {
@@ -6957,11 +7626,11 @@ var getAgentList2 = async (req, res) => {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u667A\u80FD\u4F53\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u667A\u80FD\u4F53\u5217\u8868\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u667A\u80FD\u4F53\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u667A\u80FD\u4F53\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -6975,11 +7644,11 @@ var getAgentDetail2 = async (req, res) => {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u667A\u80FD\u4F53\u8BE6\u60C5\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u667A\u80FD\u4F53\u8BE6\u60C5\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u667A\u80FD\u4F53\u8BE6\u60C5\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u667A\u80FD\u4F53\u8BE6\u60C5\u5931\u8D25",
       data: null
     });
   }
@@ -6993,11 +7662,11 @@ var createAgent2 = async (req, res) => {
       message: "\u521B\u5EFA\u6210\u529F",
       data: { id: result.id }
     });
-  } catch (error) {
-    console.error("\u521B\u5EFA\u667A\u80FD\u4F53\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u521B\u5EFA\u667A\u80FD\u4F53\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u521B\u5EFA\u667A\u80FD\u4F53\u5931\u8D25",
+      message: error2.message || "\u521B\u5EFA\u667A\u80FD\u4F53\u5931\u8D25",
       data: null
     });
   }
@@ -7011,11 +7680,11 @@ var updateAgent2 = async (req, res) => {
       message: "\u66F4\u65B0\u6210\u529F",
       data: null
     });
-  } catch (error) {
-    console.error("\u66F4\u65B0\u667A\u80FD\u4F53\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u66F4\u65B0\u667A\u80FD\u4F53\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u66F4\u65B0\u667A\u80FD\u4F53\u5931\u8D25",
+      message: error2.message || "\u66F4\u65B0\u667A\u80FD\u4F53\u5931\u8D25",
       data: null
     });
   }
@@ -7029,11 +7698,11 @@ var deleteAgent2 = async (req, res) => {
       message: "\u5220\u9664\u6210\u529F",
       data: null
     });
-  } catch (error) {
-    console.error("\u5220\u9664\u667A\u80FD\u4F53\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5220\u9664\u667A\u80FD\u4F53\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u5220\u9664\u667A\u80FD\u4F53\u5931\u8D25",
+      message: error2.message || "\u5220\u9664\u667A\u80FD\u4F53\u5931\u8D25",
       data: null
     });
   }
@@ -7047,11 +7716,11 @@ var publishAgent2 = async (req, res) => {
       message: "\u53D1\u5E03\u6210\u529F",
       data: null
     });
-  } catch (error) {
-    console.error("\u53D1\u5E03\u667A\u80FD\u4F53\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u53D1\u5E03\u667A\u80FD\u4F53\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u53D1\u5E03\u667A\u80FD\u4F53\u5931\u8D25",
+      message: error2.message || "\u53D1\u5E03\u667A\u80FD\u4F53\u5931\u8D25",
       data: null
     });
   }
@@ -7065,11 +7734,11 @@ var disableAgent2 = async (req, res) => {
       message: "\u505C\u7528\u6210\u529F",
       data: null
     });
-  } catch (error) {
-    console.error("\u505C\u7528\u667A\u80FD\u4F53\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u505C\u7528\u667A\u80FD\u4F53\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u505C\u7528\u667A\u80FD\u4F53\u5931\u8D25",
+      message: error2.message || "\u505C\u7528\u667A\u80FD\u4F53\u5931\u8D25",
       data: null
     });
   }
@@ -7084,11 +7753,11 @@ var copyAgent2 = async (req, res) => {
       message: "\u590D\u5236\u6210\u529F",
       data: { id: result.id }
     });
-  } catch (error) {
-    console.error("\u590D\u5236\u667A\u80FD\u4F53\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u590D\u5236\u667A\u80FD\u4F53\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u590D\u5236\u667A\u80FD\u4F53\u5931\u8D25",
+      message: error2.message || "\u590D\u5236\u667A\u80FD\u4F53\u5931\u8D25",
       data: null
     });
   }
@@ -7102,11 +7771,11 @@ var exportAgent2 = async (req, res) => {
       message: "\u5BFC\u51FA\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u5BFC\u51FA\u667A\u80FD\u4F53\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5BFC\u51FA\u667A\u80FD\u4F53\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u5BFC\u51FA\u667A\u80FD\u4F53\u5931\u8D25",
+      message: error2.message || "\u5BFC\u51FA\u667A\u80FD\u4F53\u5931\u8D25",
       data: null
     });
   }
@@ -7139,11 +7808,11 @@ var importAgent = async (req, res) => {
       message: "\u5BFC\u5165\u6210\u529F",
       data: { id: result.id }
     });
-  } catch (error) {
-    console.error("\u5BFC\u5165\u667A\u80FD\u4F53\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5BFC\u5165\u667A\u80FD\u4F53\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u5BFC\u5165\u667A\u80FD\u4F53\u5931\u8D25",
+      message: error2.message || "\u5BFC\u5165\u667A\u80FD\u4F53\u5931\u8D25",
       data: null
     });
   }
@@ -7164,11 +7833,11 @@ var chatWithAgent2 = async (req, res) => {
       message: "\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u5BF9\u8BDD\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5BF9\u8BDD\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u5BF9\u8BDD\u5931\u8D25",
+      message: error2.message || "\u5BF9\u8BDD\u5931\u8D25",
       data: null
     });
   }
@@ -7186,11 +7855,11 @@ var getChatHistory2 = async (req, res) => {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u5BF9\u8BDD\u5386\u53F2\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u5BF9\u8BDD\u5386\u53F2\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u5BF9\u8BDD\u5386\u53F2\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u5BF9\u8BDD\u5386\u53F2\u5931\u8D25",
       data: null
     });
   }
@@ -7208,11 +7877,11 @@ var getKnowledgeBaseList2 = async (req, res) => {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u77E5\u8BC6\u5E93\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u77E5\u8BC6\u5E93\u5217\u8868\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u77E5\u8BC6\u5E93\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u77E5\u8BC6\u5E93\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -7226,11 +7895,11 @@ var createKnowledgeBase2 = async (req, res) => {
       message: "\u521B\u5EFA\u6210\u529F",
       data: { id: result.id }
     });
-  } catch (error) {
-    console.error("\u521B\u5EFA\u77E5\u8BC6\u5E93\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u521B\u5EFA\u77E5\u8BC6\u5E93\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u521B\u5EFA\u77E5\u8BC6\u5E93\u5931\u8D25",
+      message: error2.message || "\u521B\u5EFA\u77E5\u8BC6\u5E93\u5931\u8D25",
       data: null
     });
   }
@@ -7244,11 +7913,11 @@ var deleteKnowledgeBase2 = async (req, res) => {
       message: "\u5220\u9664\u6210\u529F",
       data: null
     });
-  } catch (error) {
-    console.error("\u5220\u9664\u77E5\u8BC6\u5E93\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u5220\u9664\u77E5\u8BC6\u5E93\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u5220\u9664\u77E5\u8BC6\u5E93\u5931\u8D25",
+      message: error2.message || "\u5220\u9664\u77E5\u8BC6\u5E93\u5931\u8D25",
       data: null
     });
   }
@@ -7265,11 +7934,11 @@ var uploadDocument = async (req, res) => {
         // 处理中
       }
     });
-  } catch (error) {
-    console.error("\u4E0A\u4F20\u6587\u6863\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u4E0A\u4F20\u6587\u6863\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u4E0A\u4F20\u6587\u6863\u5931\u8D25",
+      message: error2.message || "\u4E0A\u4F20\u6587\u6863\u5931\u8D25",
       data: null
     });
   }
@@ -7283,11 +7952,11 @@ var getKnowledgeBaseDocuments2 = async (req, res) => {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u77E5\u8BC6\u5E93\u6587\u6863\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u77E5\u8BC6\u5E93\u6587\u6863\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u77E5\u8BC6\u5E93\u6587\u6863\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u77E5\u8BC6\u5E93\u6587\u6863\u5931\u8D25",
       data: null
     });
   }
@@ -7300,11 +7969,11 @@ var getPlugins2 = async (req, res) => {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6\u63D2\u4EF6\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6\u63D2\u4EF6\u5217\u8868\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u83B7\u53D6\u63D2\u4EF6\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6\u63D2\u4EF6\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -7317,11 +7986,11 @@ var getMcpServers2 = async (req, res) => {
       message: "\u83B7\u53D6\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u83B7\u53D6MCP\u670D\u52A1\u5217\u8868\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u83B7\u53D6MCP\u670D\u52A1\u5217\u8868\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u83B7\u53D6MCP\u670D\u52A1\u5217\u8868\u5931\u8D25",
+      message: error2.message || "\u83B7\u53D6MCP\u670D\u52A1\u5217\u8868\u5931\u8D25",
       data: null
     });
   }
@@ -7334,11 +8003,11 @@ var testMcpConnection2 = async (req, res) => {
       message: "\u6D4B\u8BD5\u6210\u529F",
       data: result
     });
-  } catch (error) {
-    console.error("\u6D4B\u8BD5MCP\u8FDE\u63A5\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u6D4B\u8BD5MCP\u8FDE\u63A5\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u6D4B\u8BD5MCP\u8FDE\u63A5\u5931\u8D25",
+      message: error2.message || "\u6D4B\u8BD5MCP\u8FDE\u63A5\u5931\u8D25",
       data: null
     });
   }
@@ -7356,11 +8025,11 @@ var saveWorkflow = async (req, res) => {
       message: "\u4FDD\u5B58\u6210\u529F",
       data: null
     });
-  } catch (error) {
-    console.error("\u4FDD\u5B58\u5DE5\u4F5C\u6D41\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u4FDD\u5B58\u5DE5\u4F5C\u6D41\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u4FDD\u5B58\u5DE5\u4F5C\u6D41\u5931\u8D25",
+      message: error2.message || "\u4FDD\u5B58\u5DE5\u4F5C\u6D41\u5931\u8D25",
       data: null
     });
   }
@@ -7378,11 +8047,11 @@ var executeWorkflow = async (req, res) => {
         nodes: []
       }
     });
-  } catch (error) {
-    console.error("\u6267\u884C\u5DE5\u4F5C\u6D41\u5931\u8D25:", error);
+  } catch (error2) {
+    console.error("\u6267\u884C\u5DE5\u4F5C\u6D41\u5931\u8D25:", error2);
     res.json({
       code: 500,
-      message: error.message || "\u6267\u884C\u5DE5\u4F5C\u6D41\u5931\u8D25",
+      message: error2.message || "\u6267\u884C\u5DE5\u4F5C\u6D41\u5931\u8D25",
       data: null
     });
   }
@@ -7414,16 +8083,1662 @@ router14.post("/workflow/:agentId", saveWorkflow);
 router14.post("/workflow/:agentId/execute", executeWorkflow);
 var aiAgentRoutes_default = router14;
 
+// src/routes/mobileRoutes.ts
+import express from "express";
+
+// src/services/mobileUserService.ts
+import "sequelize";
+import jwt2 from "jsonwebtoken";
+var JWT_SECRET2 = process.env.JWT_SECRET || "charging-station-mobile-secret";
+var JWT_EXPIRES_IN = "7d";
+var verificationCodes = /* @__PURE__ */ new Map();
+function generateCode() {
+  return String(Math.floor(1e5 + Math.random() * 9e5));
+}
+function generateMemberCardNo() {
+  const timestamp = Date.now().toString().slice(-8);
+  const random = Math.floor(Math.random() * 1e4).toString().padStart(4, "0");
+  return `M${timestamp}${random}`;
+}
+function generateToken2(userId, phone) {
+  return jwt2.sign(
+    { userId, phone, type: "mobile" },
+    JWT_SECRET2,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+}
+function verifyToken2(token) {
+  try {
+    const decoded = jwt2.verify(token, JWT_SECRET2);
+    if (decoded.type !== "mobile") return null;
+    return { userId: decoded.userId, phone: decoded.phone };
+  } catch {
+    return null;
+  }
+}
+async function sendVerificationCode(phone, type = "login") {
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
+    throw new Error("\u624B\u673A\u53F7\u683C\u5F0F\u4E0D\u6B63\u786E");
+  }
+  const existing = verificationCodes.get(phone);
+  if (existing && existing.expireAt > Date.now() - 24e4) {
+    throw new Error("\u9A8C\u8BC1\u7801\u5DF2\u53D1\u9001\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5");
+  }
+  const code = generateCode();
+  verificationCodes.set(phone, {
+    code,
+    expireAt: Date.now() + 3e5
+  });
+  console.log(`[SMS] \u53D1\u9001\u9A8C\u8BC1\u7801\u5230 ${phone}: ${code}`);
+  return { success: true, message: "\u9A8C\u8BC1\u7801\u5DF2\u53D1\u9001" };
+}
+function validateCode(phone, code) {
+  const stored = verificationCodes.get(phone);
+  if (process.env.NODE_ENV === "development" && code === "123456") {
+    return true;
+  }
+  if (!stored) return false;
+  if (stored.expireAt < Date.now()) {
+    verificationCodes.delete(phone);
+    return false;
+  }
+  if (stored.code !== code) return false;
+  verificationCodes.delete(phone);
+  return true;
+}
+async function loginByPhone(params) {
+  const { phone, code } = params;
+  if (!validateCode(phone, code)) {
+    throw new Error("\u9A8C\u8BC1\u7801\u9519\u8BEF\u6216\u5DF2\u8FC7\u671F");
+  }
+  let user = await ChargingUser_default.findOne({ where: { phone } });
+  let isNewUser = false;
+  if (!user) {
+    isNewUser = true;
+    user = await ChargingUser_default.create({
+      phone,
+      member_card_no: generateMemberCardNo(),
+      card_type: "\u666E\u901A\u5361",
+      balance: 0,
+      issue_date: /* @__PURE__ */ new Date(),
+      valid_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1e3),
+      // 一年后
+      status: 1
+    });
+  }
+  if (user.status !== 1) {
+    throw new Error("\u8D26\u53F7\u5DF2\u88AB\u7981\u7528");
+  }
+  const token = generateToken2(user.id, phone);
+  const userInfo = {
+    id: user.id,
+    phone: user.phone,
+    name: user.name,
+    avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${phone}`,
+    memberCardNo: user.member_card_no,
+    cardType: user.card_type,
+    balance: parseFloat(user.balance) || 0
+  };
+  return {
+    token,
+    userInfo,
+    isNewUser
+  };
+}
+async function loginByWechat(wxCode) {
+  throw new Error("\u5FAE\u4FE1\u767B\u5F55\u9700\u8981\u914D\u7F6E\u5FAE\u4FE1\u5F00\u653E\u5E73\u53F0");
+}
+async function getUserInfo(userId) {
+  const user = await ChargingUser_default.findByPk(userId);
+  if (!user) {
+    throw new Error("\u7528\u6237\u4E0D\u5B58\u5728");
+  }
+  return {
+    id: user.id,
+    phone: user.phone,
+    name: user.name,
+    avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.phone}`,
+    gender: user.gender || 0,
+    birthday: user.birthday || null,
+    memberCardNo: user.member_card_no,
+    cardType: user.card_type,
+    balance: parseFloat(user.balance) || 0
+  };
+}
+async function updateUserInfo(userId, data) {
+  const user = await ChargingUser_default.findByPk(userId);
+  if (!user) {
+    throw new Error("\u7528\u6237\u4E0D\u5B58\u5728");
+  }
+  const updateData = {};
+  if (data.name !== void 0) updateData.name = data.name;
+  if (data.avatar !== void 0) updateData.avatar = data.avatar;
+  if (data.gender !== void 0) updateData.gender = data.gender;
+  if (data.birthday !== void 0) updateData.birthday = data.birthday;
+  updateData.updated_at = /* @__PURE__ */ new Date();
+  await ChargingUser_default.update(updateData, { where: { id: userId } });
+  return getUserInfo(userId);
+}
+async function getUserBalance(userId) {
+  const user = await ChargingUser_default.findByPk(userId);
+  if (!user) {
+    throw new Error("\u7528\u6237\u4E0D\u5B58\u5728");
+  }
+  return {
+    balance: parseFloat(user.balance) || 0
+  };
+}
+async function recharge(userId, amount) {
+  const user = await ChargingUser_default.findByPk(userId);
+  if (!user) {
+    throw new Error("\u7528\u6237\u4E0D\u5B58\u5728");
+  }
+  if (amount <= 0) {
+    throw new Error("\u5145\u503C\u91D1\u989D\u5FC5\u987B\u5927\u4E8E0");
+  }
+  const userData = user;
+  const currentBalance = parseFloat(userData.balance) || 0;
+  let actualAmount = amount;
+  let memberDiscount = 0;
+  let isRechargeMember = false;
+  if (userData.card_type === "\u5145\u503C\u4F1A\u5458" && userData.valid_until) {
+    const validUntil = new Date(userData.valid_until);
+    const now = /* @__PURE__ */ new Date();
+    if (validUntil > now) {
+      actualAmount = Math.round(amount / 0.95 * 100) / 100;
+      memberDiscount = actualAmount - amount;
+      isRechargeMember = true;
+    }
+  }
+  const newBalance = currentBalance + actualAmount;
+  await ChargingUser_default.update(
+    { balance: newBalance },
+    { where: { id: userId } }
+  );
+  return {
+    balance: newBalance,
+    amount: actualAmount,
+    // 实际到账金额
+    payAmount: amount,
+    // 支付金额
+    memberDiscount: isRechargeMember ? memberDiscount : 0,
+    isRechargeMember,
+    message: "\u5145\u503C\u6210\u529F"
+  };
+}
+async function deductBalance(userId, amount) {
+  const user = await ChargingUser_default.findByPk(userId);
+  if (!user) {
+    throw new Error("\u7528\u6237\u4E0D\u5B58\u5728");
+  }
+  const currentBalance = parseFloat(user.balance) || 0;
+  if (currentBalance < amount) {
+    throw new Error("\u4F59\u989D\u4E0D\u8DB3");
+  }
+  const newBalance = currentBalance - amount;
+  await ChargingUser_default.update(
+    { balance: newBalance },
+    { where: { id: userId } }
+  );
+  return {
+    balance: newBalance
+  };
+}
+
+// src/services/mobileStationService.ts
+import { Op as Op17 } from "sequelize";
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+async function calculatePileStats(stationId) {
+  const piles = await Pile_default.findAll({
+    where: { station_id: stationId }
+  });
+  let fastTotal = 0;
+  let slowTotal = 0;
+  let fastFree = 0;
+  let slowFree = 0;
+  for (const pile of piles) {
+    const pileData = pile;
+    if (pileData.type === "\u5FEB\u5145" || pileData.type === "fast") {
+      fastTotal++;
+      if (pileData.status === 1) fastFree++;
+    } else {
+      slowTotal++;
+      if (pileData.status === 1) slowFree++;
+    }
+  }
+  return { fastTotal, slowTotal, fastFree, slowFree };
+}
+async function getStationMinPrice(stationId) {
+  const pile = await Pile_default.findOne({
+    where: { station_id: stationId },
+    order: [["price", "ASC"]]
+  });
+  if (pile) {
+    return parseFloat(pile.price) || 1.2;
+  }
+  return 1.2;
+}
+async function formatStation(station, userLat, userLon) {
+  const stats = await calculatePileStats(station.id);
+  const price = await getStationMinPrice(station.id);
+  const stationInfo = {
+    id: station.id,
+    name: station.name,
+    city: station.city || "",
+    address: station.address || station.city || "",
+    latitude: parseFloat(station.latitude) || 39.9,
+    longitude: parseFloat(station.longitude) || 116.4,
+    fast: stats.fastTotal || parseInt(station.fast) || 0,
+    slow: stats.slowTotal || parseInt(station.slow) || 0,
+    fastFree: stats.fastFree,
+    slowFree: stats.slowFree,
+    status: station.status,
+    person: station.person || "",
+    tel: station.tel || "",
+    price,
+    rating: 4.5 + Math.random() * 0.5,
+    // 模拟评分
+    tags: ["\u505C\u8F66\u514D\u8D39", "24\u5C0F\u65F6"]
+  };
+  if (userLat && userLon && station.latitude && station.longitude) {
+    stationInfo.distance = calculateDistance(
+      userLat,
+      userLon,
+      parseFloat(station.latitude),
+      parseFloat(station.longitude)
+    );
+  }
+  return stationInfo;
+}
+async function getNearbyStations(params) {
+  const {
+    latitude,
+    longitude,
+    radius = 5e3,
+    type,
+    page = 1,
+    pageSize = 10
+  } = params;
+  const shouldFilterByDistance = radius && radius < 1e6 && latitude && longitude;
+  const stations = await Station_default.findAll({
+    where: { status: { [Op17.ne]: 0 } }
+    // 非关闭状态
+  });
+  const formattedStations = [];
+  for (const station of stations) {
+    const stationInfo = await formatStation(station, latitude, longitude);
+    if (shouldFilterByDistance) {
+      if (stationInfo.distance && stationInfo.distance <= radius) {
+        if (type === "fast" && stationInfo.fastFree === 0) continue;
+        if (type === "slow" && stationInfo.slowFree === 0) continue;
+        formattedStations.push(stationInfo);
+      }
+    } else {
+      if (type === "fast" && stationInfo.fastFree === 0) continue;
+      if (type === "slow" && stationInfo.slowFree === 0) continue;
+      formattedStations.push(stationInfo);
+    }
+  }
+  if (latitude && longitude) {
+    formattedStations.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+  }
+  let paginatedList = formattedStations;
+  if (pageSize && pageSize < formattedStations.length) {
+    const startIndex = (page - 1) * pageSize;
+    paginatedList = formattedStations.slice(startIndex, startIndex + pageSize);
+  }
+  return {
+    list: paginatedList,
+    total: formattedStations.length
+  };
+}
+async function searchStations(params) {
+  const { keyword, city, page = 1, pageSize = 10, latitude, longitude } = params;
+  const where = { status: { [Op17.ne]: 0 } };
+  if (keyword) {
+    where.name = { [Op17.like]: `%${keyword}%` };
+  }
+  if (city) {
+    where.city = { [Op17.like]: `%${city}%` };
+  }
+  const { rows, count } = await Station_default.findAndCountAll({
+    where,
+    limit: pageSize,
+    offset: (page - 1) * pageSize
+  });
+  const formattedStations = [];
+  for (const station of rows) {
+    const stationInfo = await formatStation(station, latitude, longitude);
+    formattedStations.push(stationInfo);
+  }
+  return {
+    list: formattedStations,
+    total: count
+  };
+}
+async function getStationDetail(stationId, userLat, userLon, userId) {
+  const station = await Station_default.findByPk(stationId);
+  if (!station) {
+    throw new Error("\u7AD9\u70B9\u4E0D\u5B58\u5728");
+  }
+  const stationInfo = await formatStation(station, userLat, userLon);
+  if (userId) {
+    const isFavorite = await checkIsFavorite(userId, stationId);
+    stationInfo.isFavorite = isFavorite;
+  }
+  return stationInfo;
+}
+async function getStationPiles(stationId) {
+  const piles = await Pile_default.findAll({
+    where: { station_id: stationId },
+    order: [["id", "ASC"]]
+  });
+  return piles.map((pile) => ({
+    id: pile.id,
+    stationId: pile.station_id,
+    name: pile.name || `${pile.id}\u53F7\u6869`,
+    type: pile.type === "\u5FEB\u5145" || pile.type === "fast" ? "fast" : "slow",
+    status: pile.status,
+    power: parseFloat(pile.power) || (pile.type === "\u5FEB\u5145" ? 120 : 7),
+    price: parseFloat(pile.price) || 1.2,
+    voltage: parseFloat(pile.voltage) || null,
+    current: parseFloat(pile.current) || null
+  }));
+}
+async function getPileDetail(pileId) {
+  const pile = await Pile_default.findByPk(pileId);
+  if (!pile) {
+    throw new Error("\u5145\u7535\u6869\u4E0D\u5B58\u5728");
+  }
+  const pileData = pile;
+  return {
+    id: pileData.id,
+    stationId: pileData.station_id,
+    name: pileData.name || `${pileData.id}\u53F7\u6869`,
+    type: pileData.type === "\u5FEB\u5145" || pileData.type === "fast" ? "fast" : "slow",
+    status: pileData.status,
+    power: parseFloat(pileData.power) || (pileData.type === "\u5FEB\u5145" ? 120 : 7),
+    price: parseFloat(pileData.price) || 1.2,
+    voltage: parseFloat(pileData.voltage) || null,
+    current: parseFloat(pileData.current) || null
+  };
+}
+async function getHotStations(city, limit = 5) {
+  const where = { status: { [Op17.ne]: 0 } };
+  if (city) {
+    where.city = { [Op17.like]: `%${city}%` };
+  }
+  const stations = await Station_default.findAll({
+    where,
+    limit,
+    order: [["id", "DESC"]]
+    // 可以根据实际热度排序
+  });
+  const formattedStations = [];
+  for (const station of stations) {
+    const stationInfo = await formatStation(station);
+    formattedStations.push(stationInfo);
+  }
+  return formattedStations;
+}
+async function favoriteStation(userId, stationId) {
+  const existing = await UserFavorite_default.findOne({
+    where: {
+      user_id: userId,
+      station_id: stationId
+    }
+  });
+  if (existing) {
+    throw new Error("\u8BE5\u7AD9\u70B9\u5DF2\u6536\u85CF");
+  }
+  const station = await Station_default.findByPk(stationId);
+  if (!station) {
+    throw new Error("\u7AD9\u70B9\u4E0D\u5B58\u5728");
+  }
+  await UserFavorite_default.create({
+    user_id: userId,
+    station_id: stationId
+  });
+  return { success: true };
+}
+async function unfavoriteStation(userId, stationId) {
+  const result = await UserFavorite_default.destroy({
+    where: {
+      user_id: userId,
+      station_id: stationId
+    }
+  });
+  if (result === 0) {
+    throw new Error("\u8BE5\u7AD9\u70B9\u672A\u6536\u85CF");
+  }
+  return { success: true };
+}
+async function getFavoriteStations(userId) {
+  const validUserId = Number(userId);
+  if (isNaN(validUserId) || validUserId <= 0) {
+    throw new Error("\u65E0\u6548\u7684\u7528\u6237ID");
+  }
+  const favorites = await UserFavorite_default.findAll({
+    where: { user_id: validUserId },
+    order: [["created_at", "DESC"]]
+  });
+  const formattedStations = [];
+  for (const favorite of favorites) {
+    const favoriteData = favorite;
+    const stationId = favoriteData.station_id;
+    if (!stationId || isNaN(Number(stationId))) {
+      continue;
+    }
+    const station = await Station_default.findByPk(stationId);
+    if (station) {
+      const stationData = station;
+      if (stationData.status !== 0 && stationData.status !== null) {
+        const stationInfo = await formatStation(station);
+        stationInfo.isFavorite = true;
+        formattedStations.push(stationInfo);
+      }
+    }
+  }
+  return formattedStations;
+}
+async function checkIsFavorite(userId, stationId) {
+  const favorite = await UserFavorite_default.findOne({
+    where: {
+      user_id: userId,
+      station_id: stationId
+    }
+  });
+  return !!favorite;
+}
+
+// src/services/mobileChargingService.ts
+import "sequelize";
+function generateOrderNo2() {
+  const date = /* @__PURE__ */ new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const random = Math.floor(Math.random() * 1e4).toString().padStart(4, "0");
+  return `${year}${month}${day}${hours}${minutes}${seconds}${random}`;
+}
+async function scanPile(qrCode) {
+  let pileId;
+  if (qrCode.startsWith("PILE_")) {
+    pileId = parseInt(qrCode.replace("PILE_", ""));
+  } else if (/^\d+$/.test(qrCode)) {
+    pileId = parseInt(qrCode);
+  } else {
+    try {
+      const data = JSON.parse(qrCode);
+      pileId = data.pileId || data.id;
+    } catch {
+      throw new Error("\u65E0\u6548\u7684\u4E8C\u7EF4\u7801\u683C\u5F0F");
+    }
+  }
+  if (!pileId || isNaN(pileId)) {
+    throw new Error("\u65E0\u6548\u7684\u5145\u7535\u6869\u7F16\u53F7");
+  }
+  const pile = await Pile_default.findByPk(pileId, {
+    include: [{ model: Station_default, as: "station" }]
+  });
+  if (!pile) {
+    throw new Error("\u5145\u7535\u6869\u4E0D\u5B58\u5728");
+  }
+  const pileData = pile;
+  const station = pileData.station;
+  return {
+    pileId: pileData.id,
+    stationId: station?.id || pileData.station_id,
+    stationName: station?.name || "\u672A\u77E5\u7AD9\u70B9",
+    pileName: pileData.name || `${pileData.id}\u53F7\u6869`,
+    type: pileData.type === "\u5FEB\u5145" || pileData.type === "fast" ? "fast" : "slow",
+    power: parseFloat(pileData.power) || (pileData.type === "\u5FEB\u5145" ? 120 : 7),
+    price: parseFloat(pileData.price) || 1.2,
+    status: pileData.status
+  };
+}
+async function startCharging(userId, pileId) {
+  const existingOrder = await Order_default.findOne({
+    where: {
+      user_id: userId,
+      status: 2
+      // 充电中
+    }
+  });
+  if (existingOrder) {
+    throw new Error("\u60A8\u5DF2\u6709\u8FDB\u884C\u4E2D\u7684\u5145\u7535\u8BA2\u5355");
+  }
+  const pile = await Pile_default.findByPk(pileId, {
+    include: [{ model: Station_default, as: "station" }]
+  });
+  if (!pile) {
+    throw new Error("\u5145\u7535\u6869\u4E0D\u5B58\u5728");
+  }
+  const pileData = pile;
+  if (pileData.status !== 1) {
+    throw new Error("\u5145\u7535\u6869\u5F53\u524D\u4E0D\u53EF\u7528");
+  }
+  const user = await ChargingUser_default.findByPk(userId);
+  if (!user || parseFloat(user.balance) < 10) {
+    throw new Error("\u4F59\u989D\u4E0D\u8DB3\uFF0C\u8BF7\u5148\u5145\u503C");
+  }
+  const station = pileData.station;
+  const orderNo = generateOrderNo2();
+  const now = /* @__PURE__ */ new Date();
+  await Order_default.create({
+    order_no: orderNo,
+    user_id: userId,
+    station_id: station?.id || pileData.station_id,
+    pile_id: pileId,
+    equipment_no: `PILE${pileId}`,
+    date: now,
+    start_time: now,
+    status: 2,
+    // 充电中
+    money: 0,
+    pay: "balance"
+  });
+  await Pile_default.update(
+    { status: 2 },
+    { where: { id: pileId } }
+  );
+  return {
+    orderId: orderNo,
+    pileId: pileData.id,
+    stationId: station?.id || pileData.station_id,
+    stationName: station?.name || "\u672A\u77E5\u7AD9\u70B9",
+    pileName: pileData.name || `${pileData.id}\u53F7\u6869`,
+    startTime: now.toISOString(),
+    status: 2
+  };
+}
+async function stopCharging(userId, orderId) {
+  const order = await Order_default.findOne({
+    where: {
+      order_no: orderId,
+      user_id: userId,
+      status: 2
+      // 充电中
+    }
+  });
+  if (!order) {
+    throw new Error("\u672A\u627E\u5230\u8FDB\u884C\u4E2D\u7684\u5145\u7535\u8BA2\u5355");
+  }
+  const orderData = order;
+  const endTime = /* @__PURE__ */ new Date();
+  const startTime = new Date(orderData.start_time);
+  const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1e3);
+  const hours = duration / 3600;
+  const avgPower = 30;
+  const electricity = hours * avgPower;
+  const pricePerKwh = 1.2;
+  const electricityFee = electricity * pricePerKwh;
+  const serviceFee = electricityFee * 0.1;
+  const totalAmount = electricityFee + serviceFee;
+  await Order_default.update(
+    {
+      end_time: endTime,
+      status: 3,
+      // 已完成
+      money: totalAmount.toFixed(2)
+    },
+    { where: { order_no: orderId } }
+  );
+  await Pile_default.update(
+    { status: 1 },
+    { where: { id: orderData.pile_id } }
+  );
+  try {
+    await deductBalance(userId, parseFloat(totalAmount.toFixed(2)));
+  } catch (error2) {
+    console.error("\u6263\u6B3E\u5931\u8D25:", error2);
+    await Order_default.update(
+      { status: 0 },
+      { where: { order_no: orderId } }
+    );
+  }
+  return {
+    orderId,
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    duration,
+    electricity: parseFloat(electricity.toFixed(2)),
+    amount: parseFloat(totalAmount.toFixed(2)),
+    payStatus: 1
+    // 已支付
+  };
+}
+async function getChargingStatus(userId) {
+  const order = await Order_default.findOne({
+    where: {
+      user_id: userId,
+      status: 2
+      // 充电中
+    },
+    include: [
+      { model: Station_default, as: "station" }
+    ]
+  });
+  if (!order) {
+    return null;
+  }
+  const orderData = order;
+  const station = orderData.station;
+  const startTime = new Date(orderData.start_time);
+  const now = /* @__PURE__ */ new Date();
+  const duration = Math.floor((now.getTime() - startTime.getTime()) / 1e3);
+  const hours = duration / 3600;
+  const avgPower = 25 + Math.random() * 10;
+  const electricity = hours * avgPower;
+  const pricePerKwh = 1.2;
+  const amount = electricity * pricePerKwh * 1.1;
+  const pile = await Pile_default.findByPk(orderData.pile_id);
+  const pileData = pile;
+  return {
+    orderId: orderData.order_no,
+    pileId: orderData.pile_id,
+    stationId: station?.id || orderData.station_id,
+    stationName: station?.name || "\u672A\u77E5\u7AD9\u70B9",
+    pileName: pileData?.name || `${orderData.pile_id}\u53F7\u6869`,
+    startTime: startTime.toISOString(),
+    duration,
+    power: parseFloat(avgPower.toFixed(1)),
+    voltage: 380 + Math.random() * 20,
+    current: avgPower * 1e3 / 380,
+    electricity: parseFloat(electricity.toFixed(2)),
+    amount: parseFloat(amount.toFixed(2)),
+    percent: Math.min(95, Math.floor(duration / 60)),
+    // 模拟电量百分比
+    status: 1
+    // 充电中
+  };
+}
+async function getChargingHistory(userId, page = 1, pageSize = 10) {
+  const { rows, count } = await Order_default.findAndCountAll({
+    where: {
+      user_id: userId,
+      status: 3
+      // 已完成
+    },
+    include: [
+      { model: Station_default, as: "station", attributes: ["id", "name"] }
+    ],
+    order: [["date", "DESC"]],
+    limit: pageSize,
+    offset: (page - 1) * pageSize
+  });
+  const list = rows.map((order) => {
+    const startTime = new Date(order.start_time);
+    const endTime = order.end_time ? new Date(order.end_time) : /* @__PURE__ */ new Date();
+    const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1e3);
+    const hours = duration / 3600;
+    const electricity = hours * 30;
+    return {
+      orderId: order.order_no,
+      startTime: order.start_time,
+      endTime: order.end_time,
+      duration,
+      electricity: parseFloat(electricity.toFixed(2)),
+      amount: parseFloat(order.money) || 0,
+      payStatus: 1
+    };
+  });
+  return {
+    list,
+    total: count
+  };
+}
+
+// src/services/mobileOrderService.ts
+import { Op as Op19 } from "sequelize";
+async function formatOrder(order) {
+  const startTime = order.start_time ? new Date(order.start_time) : null;
+  const endTime = order.end_time ? new Date(order.end_time) : null;
+  let duration = 0;
+  let electricity = 0;
+  if (startTime && endTime) {
+    duration = Math.floor((endTime.getTime() - startTime.getTime()) / 1e3);
+    const hours = duration / 3600;
+    electricity = hours * 30;
+  }
+  const totalAmount = parseFloat(order.money) || 0;
+  const electricityFee = totalAmount * 0.85;
+  const serviceFee = totalAmount * 0.1;
+  const parkingFee = totalAmount * 0.05;
+  let stationName = "\u672A\u77E5\u7AD9\u70B9";
+  let pileName = "\u672A\u77E5\u5145\u7535\u6869";
+  if (order.station) {
+    stationName = order.station.name;
+  } else if (order.station_id) {
+    const station = await Station_default.findByPk(order.station_id);
+    if (station) stationName = station.name;
+  }
+  if (order.pile_id) {
+    const pile = await Pile_default.findByPk(order.pile_id);
+    if (pile) pileName = pile.name || `${order.pile_id}\u53F7\u6869`;
+  }
+  return {
+    orderNo: order.order_no,
+    userId: order.user_id,
+    stationId: order.station_id,
+    stationName,
+    pileId: order.pile_id,
+    pileName,
+    startTime: startTime?.toISOString() || "",
+    endTime: endTime?.toISOString(),
+    duration,
+    electricity: parseFloat(electricity.toFixed(2)),
+    electricityFee: parseFloat(electricityFee.toFixed(2)),
+    serviceFee: parseFloat(serviceFee.toFixed(2)),
+    parkingFee: parseFloat(parkingFee.toFixed(2)),
+    totalAmount,
+    payType: order.pay,
+    payTime: order.pay_time,
+    status: order.status,
+    createTime: order.date?.toISOString() || order.created_at?.toISOString() || ""
+  };
+}
+async function getOrderList(params) {
+  const { userId, status, page = 1, pageSize = 10, startDate, endDate } = params;
+  const where = { user_id: userId };
+  if (status !== void 0 && status !== -1) {
+    where.status = status;
+  }
+  if (startDate && endDate) {
+    where.date = {
+      [Op19.between]: [new Date(startDate), new Date(endDate)]
+    };
+  }
+  const { rows, count } = await Order_default.findAndCountAll({
+    where,
+    include: [
+      { model: Station_default, as: "station", attributes: ["id", "name"] }
+    ],
+    order: [["date", "DESC"]],
+    limit: pageSize,
+    offset: (page - 1) * pageSize
+  });
+  const list = [];
+  for (const order of rows) {
+    const formattedOrder = await formatOrder(order);
+    list.push(formattedOrder);
+  }
+  return {
+    list,
+    total: count
+  };
+}
+async function getOrderDetail(orderNo, userId) {
+  const order = await Order_default.findOne({
+    where: { order_no: orderNo, user_id: userId },
+    include: [
+      { model: Station_default, as: "station", attributes: ["id", "name", "city", "person", "tel"] }
+    ]
+  });
+  if (!order) {
+    throw new Error("\u8BA2\u5355\u4E0D\u5B58\u5728");
+  }
+  return formatOrder(order);
+}
+async function payOrder(orderNo, userId, payType) {
+  const order = await Order_default.findOne({
+    where: { order_no: orderNo, user_id: userId, status: 0 }
+    // 待支付
+  });
+  if (!order) {
+    throw new Error("\u8BA2\u5355\u4E0D\u5B58\u5728\u6216\u72B6\u6001\u5F02\u5E38");
+  }
+  const orderData = order;
+  const amount = parseFloat(orderData.money) || 0;
+  if (payType === "balance") {
+    await deductBalance(userId, amount);
+    await Order_default.update(
+      {
+        status: 3,
+        // 已完成
+        pay: "balance",
+        pay_time: /* @__PURE__ */ new Date()
+      },
+      { where: { order_no: orderNo } }
+    );
+    return { success: true };
+  }
+  throw new Error("\u6682\u4E0D\u652F\u6301\u8BE5\u652F\u4ED8\u65B9\u5F0F");
+}
+async function cancelOrder(orderNo, userId) {
+  const order = await Order_default.findOne({
+    where: { order_no: orderNo, user_id: userId, status: 0 }
+    // 待支付
+  });
+  if (!order) {
+    throw new Error("\u8BA2\u5355\u4E0D\u5B58\u5728\u6216\u65E0\u6CD5\u53D6\u6D88");
+  }
+  await Order_default.update(
+    { status: 4 },
+    // 已取消
+    { where: { order_no: orderNo } }
+  );
+  return { success: true };
+}
+async function refundOrder(orderNo, userId, reason) {
+  const order = await Order_default.findOne({
+    where: { order_no: orderNo, user_id: userId, status: 3 }
+    // 已完成
+  });
+  if (!order) {
+    throw new Error("\u8BA2\u5355\u4E0D\u5B58\u5728\u6216\u65E0\u6CD5\u9000\u6B3E");
+  }
+  await Order_default.update(
+    { status: 5 },
+    // 已退款
+    { where: { order_no: orderNo } }
+  );
+  return { success: true };
+}
+async function getOrderStatistics(userId) {
+  const totalOrders = await Order_default.findAll({
+    where: { user_id: userId, status: 3 }
+    // 已完成
+  });
+  let totalCount = totalOrders.length;
+  let totalAmount = 0;
+  let totalElectricity = 0;
+  for (const order of totalOrders) {
+    const orderData = order;
+    totalAmount += parseFloat(orderData.money) || 0;
+    if (orderData.start_time && orderData.end_time) {
+      const startTime = new Date(orderData.start_time);
+      const endTime = new Date(orderData.end_time);
+      const duration = (endTime.getTime() - startTime.getTime()) / 1e3;
+      const hours = duration / 3600;
+      totalElectricity += hours * 30;
+    }
+  }
+  const thisMonthStart = /* @__PURE__ */ new Date();
+  thisMonthStart.setDate(1);
+  thisMonthStart.setHours(0, 0, 0, 0);
+  const thisMonthOrders = await Order_default.findAll({
+    where: {
+      user_id: userId,
+      status: 3,
+      date: { [Op19.gte]: thisMonthStart }
+    }
+  });
+  let thisMonthCount = thisMonthOrders.length;
+  let thisMonthAmount = 0;
+  for (const order of thisMonthOrders) {
+    thisMonthAmount += parseFloat(order.money) || 0;
+  }
+  return {
+    totalCount,
+    totalAmount: parseFloat(totalAmount.toFixed(2)),
+    totalElectricity: parseFloat(totalElectricity.toFixed(2)),
+    thisMonthCount,
+    thisMonthAmount: parseFloat(thisMonthAmount.toFixed(2))
+  };
+}
+
+// src/services/mobileMemberCardService.ts
+async function getMyMemberCardService(userId) {
+  const user = await ChargingUser_default.findByPk(userId);
+  if (!user) {
+    throw new Error("\u7528\u6237\u4E0D\u5B58\u5728");
+  }
+  const userData = user;
+  const orders = await Order_default.findAll({
+    where: {
+      user_id: userId,
+      status: 3
+      // 只统计已完成的订单
+    },
+    order: [["date", "DESC"]],
+    attributes: ["order_no", "date", "money", "pay", "station_id"]
+  });
+  const transactionRecords = orders.map((order) => {
+    let transactionType = "\u5176\u4ED6";
+    if (order.pay === "\u4F1A\u5458\u5361" || order.pay === "\u4F59\u989D") {
+      transactionType = "\u5145\u7535\u6263\u6B3E";
+    } else if (order.pay?.includes("\u670D\u52A1\u8D39")) {
+      transactionType = "\u670D\u52A1\u8D39\u6263\u6B3E";
+    } else if (order.pay?.includes("\u505C\u8F66")) {
+      transactionType = "\u505C\u8F66\u8D39\u6263\u6B3E";
+    }
+    return {
+      transactionDate: order.date ? formatTransactionDate(order.date) : "",
+      transactionAmount: Number(order.money || 0).toFixed(2),
+      transactionType,
+      orderNo: order.order_no
+    };
+  });
+  function formatTransactionDate(date) {
+    if (!date) return "";
+    try {
+      const d = typeof date === "string" ? new Date(date) : date;
+      if (isNaN(d.getTime())) return "";
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}/${month}/${day}`;
+    } catch {
+      return "";
+    }
+  }
+  function formatDate(date) {
+    if (!date) return "";
+    try {
+      const d = typeof date === "string" ? new Date(date) : date;
+      if (isNaN(d.getTime())) return "";
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}/${month}/${day}`;
+    } catch {
+      return "";
+    }
+  }
+  return {
+    memberCardNumber: userData.member_card_no || "",
+    cardType: userData.card_type || "\u666E\u901A\u5361",
+    issueDate: formatDate(userData.issue_date) || formatDate(userData.created_at) || "",
+    holderName: userData.name || "",
+    holderPhone: userData.phone || "",
+    cardBalance: Number(userData.balance || 0).toFixed(2),
+    transactionRecords,
+    validUntil: formatDate(userData.valid_until) || "",
+    idNo: userData.id_no || void 0,
+    status: userData.status
+  };
+}
+async function purchaseRechargeMemberService(userId) {
+  const user = await ChargingUser_default.findByPk(userId);
+  if (!user) {
+    throw new Error("\u7528\u6237\u4E0D\u5B58\u5728");
+  }
+  const userData = user;
+  const currentCardType = userData.card_type || "\u666E\u901A\u5361";
+  if (currentCardType === "\u5145\u503C\u4F1A\u5458") {
+    const validUntil2 = userData.valid_until ? new Date(userData.valid_until) : null;
+    const now2 = /* @__PURE__ */ new Date();
+    if (validUntil2 && validUntil2 > now2) {
+      throw new Error("\u60A8\u5DF2\u7ECF\u662F\u5145\u503C\u4F1A\u5458\uFF0C\u6709\u6548\u671F\u81F3 " + formatDate(validUntil2));
+    }
+  }
+  const price = 198;
+  const now = /* @__PURE__ */ new Date();
+  const validUntil = new Date(now);
+  validUntil.setFullYear(validUntil.getFullYear() + 1);
+  await ChargingUser_default.update(
+    {
+      card_type: "\u5145\u503C\u4F1A\u5458",
+      issue_date: now,
+      valid_until: validUntil
+    },
+    { where: { id: userId } }
+  );
+  return {
+    success: true,
+    message: "\u8D2D\u4E70\u6210\u529F\uFF01\u5145\u503C\u4F1A\u5458\u5E74\u5361\u5DF2\u6FC0\u6D3B\uFF0C\u6709\u6548\u671F\u81F3 " + formatDate(validUntil),
+    cardType: "\u5145\u503C\u4F1A\u5458",
+    validUntil: formatDate(validUntil),
+    discount: 0.95
+    // 95折
+  };
+  function formatDate(date) {
+    if (!date) return "";
+    try {
+      const d = typeof date === "string" ? new Date(date) : date;
+      if (isNaN(d.getTime())) return "";
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}/${month}/${day}`;
+    } catch {
+      return "";
+    }
+  }
+}
+
+// src/routes/mobileRoutes.ts
+var router15 = express.Router();
+function authMiddleware2(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ code: 401, message: "\u672A\u767B\u5F55\u6216\u767B\u5F55\u5DF2\u8FC7\u671F" });
+  }
+  const token = authHeader.substring(7);
+  const decoded = verifyToken2(token);
+  if (!decoded || !decoded.userId) {
+    return res.status(401).json({ code: 401, message: "\u767B\u5F55\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55" });
+  }
+  const userId = Number(decoded.userId);
+  if (isNaN(userId) || userId <= 0) {
+    return res.status(401).json({ code: 401, message: "\u65E0\u6548\u7684\u7528\u6237ID" });
+  }
+  req.userId = userId;
+  req.phone = decoded.phone;
+  next();
+}
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+    const decoded = verifyToken2(token);
+    if (decoded && decoded.userId) {
+      const userId = Number(decoded.userId);
+      if (!isNaN(userId) && userId > 0) {
+        req.userId = userId;
+        req.phone = decoded.phone;
+      }
+    }
+  }
+  next();
+}
+function success(data) {
+  return { code: 200, data, message: "success" };
+}
+function error(message, code = 400) {
+  return { code, message, data: null };
+}
+router15.post("/user/sendCode", async (req, res) => {
+  try {
+    const { phone, type } = req.body;
+    const result = await sendVerificationCode(phone, type);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/user/loginByPhone", async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+    const result = await loginByPhone({ phone, code });
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/user/loginByWechat", async (req, res) => {
+  try {
+    const { code } = req.body;
+    const result = await loginByWechat(code);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/user/info", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const result = await getUserInfo(userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.put("/user/info", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const result = await updateUserInfo(userId, req.body);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/user/balance", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const result = await getUserBalance(userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/user/recharge", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { amount } = req.body;
+    const result = await recharge(userId, amount);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/wallet/balance", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const result = await getUserBalance(userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/wallet/packages", async (req, res) => {
+  try {
+    const packages = [
+      { id: 1, amount: 50, giftAmount: 0, description: "\u57FA\u7840\u5145\u503C" },
+      { id: 2, amount: 100, giftAmount: 5, description: "\u5145100\u90015" },
+      { id: 3, amount: 200, giftAmount: 15, description: "\u5145200\u900115" },
+      { id: 4, amount: 500, giftAmount: 50, description: "\u5145500\u900150" },
+      { id: 5, amount: 1e3, giftAmount: 150, description: "\u51451000\u9001150" }
+    ];
+    res.json(success(packages));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/wallet/consume", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
+    const result = await getOrderList({
+      userId,
+      status: 3,
+      // 已完成的订单
+      page,
+      pageSize
+    });
+    const list = result.list.map((order) => ({
+      id: order.orderNo ? parseInt(order.orderNo.replace(/\D/g, "")) || 0 : 0,
+      // 从订单号中提取数字作为ID
+      orderNo: order.orderNo,
+      amount: order.totalAmount || 0,
+      type: "\u5145\u7535\u6D88\u8D39",
+      createTime: order.endTime || order.startTime || order.createTime || (/* @__PURE__ */ new Date()).toISOString()
+    }));
+    res.json(success({ list, total: result.total }));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/wallet/records", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (typeof userId !== "number" || isNaN(userId) || userId <= 0) {
+      return res.json(error("\u65E0\u6548\u7684\u7528\u6237ID"));
+    }
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
+    const { rows, count } = await RechargeRecord_default.findAndCountAll({
+      where: { user_id: userId },
+      order: [["created_at", "DESC"]],
+      limit: pageSize,
+      offset: (page - 1) * pageSize
+    });
+    const list = rows.map((record) => ({
+      id: record.id,
+      orderNo: record.order_no,
+      amount: parseFloat(record.actual_amount || 0),
+      // 实际到账金额
+      payAmount: parseFloat(record.amount || 0),
+      // 支付金额
+      giftAmount: parseFloat(record.gift_amount || 0),
+      memberDiscount: parseFloat(record.member_discount || 0),
+      packageId: record.package_id,
+      payType: record.pay_type,
+      status: record.status,
+      createTime: record.created_at ? new Date(record.created_at).toISOString() : (/* @__PURE__ */ new Date()).toISOString()
+    }));
+    res.json(success({ list, total: count }));
+  } catch (err) {
+    console.error("\u83B7\u53D6\u5145\u503C\u8BB0\u5F55\u5931\u8D25:", err);
+    res.json(error(err.message || "\u83B7\u53D6\u5145\u503C\u8BB0\u5F55\u5931\u8D25"));
+  }
+});
+router15.post("/wallet/recharge", authMiddleware2, async (req, res) => {
+  try {
+    const userId = Number(req.userId);
+    if (isNaN(userId) || userId <= 0) {
+      return res.json(error("\u65E0\u6548\u7684\u7528\u6237ID"));
+    }
+    const { amount, packageId, payType } = req.body;
+    if (process.env.NODE_ENV === "development") {
+      const packages = [
+        { id: 1, amount: 50, giftAmount: 0 },
+        { id: 2, amount: 100, giftAmount: 5 },
+        { id: 3, amount: 200, giftAmount: 15 },
+        { id: 4, amount: 500, giftAmount: 50 },
+        { id: 5, amount: 1e3, giftAmount: 150 }
+      ];
+      const pkg = packages.find((p) => p.id === packageId);
+      const giftAmount = pkg?.giftAmount || 0;
+      const result = await testRecharge(userId, amount, giftAmount);
+      const orderNo = `R${Date.now()}`;
+      try {
+        await RechargeRecord_default.create({
+          user_id: userId,
+          order_no: orderNo,
+          amount,
+          actual_amount: result.amount,
+          gift_amount: giftAmount,
+          member_discount: result.memberDiscount || 0,
+          package_id: packageId || null,
+          pay_type: payType || "test",
+          status: 1,
+          created_at: /* @__PURE__ */ new Date()
+        });
+      } catch (recordErr) {
+        console.error("\u4FDD\u5B58\u5145\u503C\u8BB0\u5F55\u5931\u8D25:", recordErr);
+      }
+      res.json(success({
+        orderId: orderNo,
+        payInfo: null,
+        ...result
+      }));
+      return;
+    }
+    res.json(success({
+      orderId: `R${Date.now()}`,
+      payInfo: {
+        // 微信/支付宝支付参数
+      }
+    }));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/station/nearby", optionalAuth, async (req, res) => {
+  try {
+    const params = {
+      latitude: req.query.latitude ? parseFloat(req.query.latitude) : void 0,
+      longitude: req.query.longitude ? parseFloat(req.query.longitude) : void 0,
+      radius: req.query.radius ? parseInt(req.query.radius) : void 0,
+      type: req.query.type,
+      page: req.query.page ? parseInt(req.query.page) : 1,
+      pageSize: req.query.pageSize ? parseInt(req.query.pageSize) : 10
+    };
+    const result = await getNearbyStations(params);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/station/search", async (req, res) => {
+  try {
+    const params = {
+      keyword: req.query.keyword,
+      city: req.query.city,
+      latitude: req.query.latitude ? parseFloat(req.query.latitude) : void 0,
+      longitude: req.query.longitude ? parseFloat(req.query.longitude) : void 0,
+      page: req.query.page ? parseInt(req.query.page) : 1,
+      pageSize: req.query.pageSize ? parseInt(req.query.pageSize) : 10
+    };
+    const result = await searchStations(params);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/station/hot", async (req, res) => {
+  try {
+    const city = req.query.city;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 5;
+    const result = await getHotStations(city, limit);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/station/:id/piles", async (req, res) => {
+  try {
+    const stationId = parseInt(req.params.id);
+    const result = await getStationPiles(stationId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/station/:id", optionalAuth, async (req, res) => {
+  try {
+    const stationId = parseInt(req.params.id);
+    const latitude = req.query.latitude ? parseFloat(req.query.latitude) : void 0;
+    const longitude = req.query.longitude ? parseFloat(req.query.longitude) : void 0;
+    const userId = req.userId;
+    const result = await getStationDetail(stationId, latitude, longitude, userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/pile/:id", async (req, res) => {
+  try {
+    const pileId = parseInt(req.params.id);
+    const result = await getPileDetail(pileId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/station/favorite", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { stationId } = req.body;
+    const result = await favoriteStation(userId, stationId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.delete("/station/favorite/:id", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const stationId = parseInt(req.params.id);
+    const result = await unfavoriteStation(userId, stationId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/station/favorites", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (typeof userId !== "number" || isNaN(userId) || userId <= 0) {
+      return res.json(error("\u65E0\u6548\u7684\u7528\u6237ID"));
+    }
+    const result = await getFavoriteStations(userId);
+    res.json(success(result));
+  } catch (err) {
+    console.error("\u83B7\u53D6\u6536\u85CF\u5217\u8868\u5931\u8D25:", err);
+    res.json(error(err.message || "\u83B7\u53D6\u6536\u85CF\u5217\u8868\u5931\u8D25"));
+  }
+});
+router15.post("/charging/scan", authMiddleware2, async (req, res) => {
+  try {
+    const { qrCode } = req.body;
+    const result = await scanPile(qrCode);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/charging/start", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { pileId } = req.body;
+    const result = await startCharging(userId, pileId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/charging/stop", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { orderId } = req.body;
+    const result = await stopCharging(userId, orderId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/charging/status", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const result = await getChargingStatus(userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/charging/history", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
+    const result = await getChargingHistory(userId, page, pageSize);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/order/list", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const statusStr = req.query.status;
+    const params = {
+      userId,
+      status: statusStr !== void 0 && statusStr !== "" && statusStr !== "undefined" ? parseInt(statusStr) : void 0,
+      page: req.query.page ? parseInt(req.query.page) : 1,
+      pageSize: req.query.pageSize ? parseInt(req.query.pageSize) : 10,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate
+    };
+    if (params.status !== void 0 && isNaN(params.status)) {
+      params.status = void 0;
+    }
+    const result = await getOrderList(params);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/order/statistics", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const result = await getOrderStatistics(userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/order/:orderNo", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { orderNo } = req.params;
+    const result = await getOrderDetail(orderNo, userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/order/pay", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { orderNo, payType } = req.body;
+    const result = await payOrder(orderNo, userId, payType);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/order/:orderNo/cancel", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { orderNo } = req.params;
+    const result = await cancelOrder(orderNo, userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/order/:orderNo/refund", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { orderNo } = req.params;
+    const { reason } = req.body;
+    const result = await refundOrder(orderNo, userId, reason);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/test/recharge", authMiddleware2, async (req, res) => {
+  try {
+    if (process.env.NODE_ENV !== "development") {
+      return res.json(error("\u6B64\u63A5\u53E3\u4EC5\u5728\u5F00\u53D1\u73AF\u5883\u53EF\u7528"));
+    }
+    const userId = req.userId;
+    const { amount, giftAmount = 0 } = req.body;
+    if (!amount || amount <= 0) {
+      return res.json(error("\u5145\u503C\u91D1\u989D\u5FC5\u987B\u5927\u4E8E0"));
+    }
+    const result = await testRecharge(userId, amount, giftAmount);
+    const orderNo = `R${Date.now()}`;
+    try {
+      await RechargeRecord_default.create({
+        user_id: userId,
+        order_no: orderNo,
+        amount,
+        actual_amount: result.amount,
+        gift_amount: giftAmount,
+        member_discount: result.memberDiscount || 0,
+        package_id: null,
+        pay_type: "test",
+        status: 1,
+        created_at: /* @__PURE__ */ new Date()
+      });
+    } catch (recordErr) {
+      console.error("\u4FDD\u5B58\u5145\u503C\u8BB0\u5F55\u5931\u8D25:", recordErr);
+    }
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/test/init-stations", async (req, res) => {
+  try {
+    if (process.env.NODE_ENV !== "development") {
+      return res.json(error("\u6B64\u63A5\u53E3\u4EC5\u5728\u5F00\u53D1\u73AF\u5883\u53EF\u7528"));
+    }
+    await initCityStations();
+    res.json(success({ message: "\u957F\u6C99\u548C\u5929\u6D25\u5145\u7535\u7AD9\u6570\u636E\u521D\u59CB\u5316\u5B8C\u6210" }));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/test/init-orders", async (req, res) => {
+  try {
+    if (process.env.NODE_ENV !== "development") {
+      return res.json(error("\u6B64\u63A5\u53E3\u4EC5\u5728\u5F00\u53D1\u73AF\u5883\u53EF\u7528"));
+    }
+    const { phone = "19282249442" } = req.body;
+    await initTestUserOrders(phone);
+    res.json(success({ message: `\u7528\u6237 ${phone} \u8BA2\u5355\u6570\u636E\u521D\u59CB\u5316\u5B8C\u6210` }));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/test/init-all", async (req, res) => {
+  try {
+    if (process.env.NODE_ENV !== "development") {
+      return res.json(error("\u6B64\u63A5\u53E3\u4EC5\u5728\u5F00\u53D1\u73AF\u5883\u53EF\u7528"));
+    }
+    await initAllTestData();
+    res.json(success({ message: "\u6240\u6709\u6D4B\u8BD5\u6570\u636E\u521D\u59CB\u5316\u5B8C\u6210" }));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/member/card", authMiddleware2, async (req, res) => {
+  try {
+    const userId = Number(req.userId);
+    if (isNaN(userId) || userId <= 0) {
+      return res.json(error("\u65E0\u6548\u7684\u7528\u6237ID"));
+    }
+    const result = await getMyMemberCardService(userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/member/purchase-recharge-member", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId || isNaN(Number(userId)) || Number(userId) <= 0) {
+      return res.json(error("\u65E0\u6548\u7684\u7528\u6237ID"));
+    }
+    if (process.env.NODE_ENV === "development") {
+      const result2 = await purchaseRechargeMemberService(Number(userId));
+      res.json(success(result2));
+      return;
+    }
+    const result = await purchaseRechargeMemberService(Number(userId));
+    res.json(success({
+      ...result,
+      payInfo: {
+        // 支付信息（需要对接实际支付接口）
+      }
+    }));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.post("/user/upload-avatar", authMiddleware2, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { avatar } = req.body;
+    if (!avatar) {
+      return res.json(error("\u5934\u50CF\u6570\u636E\u4E0D\u80FD\u4E3A\u7A7A"));
+    }
+    const updateData = { avatar };
+    updateData.updated_at = /* @__PURE__ */ new Date();
+    await ChargingUser_default.update(updateData, { where: { id: userId } });
+    const result = await getUserInfo(userId);
+    res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+var mobileRoutes_default = router15;
+
 // src/app.ts
 dotenv2.config();
-var app = express();
+function getLocalIP() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    const nets = interfaces[name];
+    if (nets) {
+      for (const net of nets) {
+        if (net.family === "IPv4" && !net.internal) {
+          return net.address;
+        }
+      }
+    }
+  }
+  return "localhost";
+}
+var app = express2();
+var isDevelopment = process.env.NODE_ENV !== "production";
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"],
+  origin: (origin, callback) => {
+    if (isDevelopment) {
+      if (!origin) {
+        return callback(null, true);
+      }
+      if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+        return callback(null, true);
+      }
+      const localNetworkRegex = /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?$/;
+      if (localNetworkRegex.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    }
+    const allowedOrigins = [
+      "https://api.example.com"
+      // 添加生产环境的前端域名
+    ];
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("\u4E0D\u5141\u8BB8\u7684\u8DE8\u57DF\u8BF7\u6C42"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "token"]
 }));
-app.use(express.json());
+app.use(express2.json());
 app.use((req, res, next) => {
   if (req.path.length > 1 && req.path.endsWith("/")) {
     const query = req.url.slice(req.path.length);
@@ -7446,6 +9761,7 @@ app.use("/api", mapRoutes_default);
 app.use("/api", pileRoutes_default);
 app.use("/api/monitor", monitorDataRoutes_default);
 app.use("/api/ai-agent", aiAgentRoutes_default);
+app.use("/api/mobile", mobileRoutes_default);
 app.use("/api", alarmRoutes_default);
 async function updateExistingUsersData() {
   try {
@@ -7494,20 +9810,20 @@ async function updateExistingUsersData() {
     if (users.length > 0) {
       console.log(`\u2705 \u5DF2\u66F4\u65B0 ${users.length} \u4E2A\u7528\u6237\u7684\u4E2A\u4EBA\u4FE1\u606F\u5B57\u6BB5`);
     }
-  } catch (error) {
-    console.error("\u26A0\uFE0F  \u66F4\u65B0\u7528\u6237\u6570\u636E\u65F6\u51FA\u9519:", error);
+  } catch (error2) {
+    console.error("\u26A0\uFE0F  \u66F4\u65B0\u7528\u6237\u6570\u636E\u65F6\u51FA\u9519:", error2);
   }
 }
 async function addMissingColumnsIfNeeded() {
   try {
+    const queries = [];
     const [chargingUserResults] = await db_default.query(`
-      SELECT COLUMN_NAME 
-      FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_SCHEMA = DATABASE() 
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = 'charging_user'
     `);
     const chargingUserColumns = chargingUserResults.map((r) => r.COLUMN_NAME);
-    const queries = [];
     if (!chargingUserColumns.includes("card_type")) {
       queries.push(`ALTER TABLE charging_user ADD COLUMN card_type VARCHAR(20) DEFAULT '\u666E\u901A\u5361' COMMENT '\u5361\u7C7B\u578B\uFF1A\u666E\u901A\u5361\u3001VIP\u5361\u3001\u5B63\u5361'`);
     }
@@ -7518,9 +9834,9 @@ async function addMissingColumnsIfNeeded() {
       queries.push(`ALTER TABLE charging_user ADD COLUMN valid_until DATETIME COMMENT '\u6709\u6548\u671F\u81F3'`);
     }
     const [userResults] = await db_default.query(`
-      SELECT COLUMN_NAME 
-      FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_SCHEMA = DATABASE() 
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = 'user'
     `);
     const userColumns = userResults.map((r) => r.COLUMN_NAME);
@@ -7536,17 +9852,59 @@ async function addMissingColumnsIfNeeded() {
     if (!userColumns.includes("avatar")) {
       queries.push(`ALTER TABLE user ADD COLUMN avatar VARCHAR(500) COMMENT '\u5934\u50CFURL'`);
     }
+    const [orderResults] = await db_default.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'order'
+    `);
+    const orderColumns = orderResults.map((r) => r.COLUMN_NAME);
+    if (!orderColumns.includes("pile_id")) {
+      queries.push(`ALTER TABLE \`order\` ADD COLUMN pile_id BIGINT COMMENT '\u5145\u7535\u6869ID'`);
+    }
+    if (!orderColumns.includes("pay_time")) {
+      queries.push(`ALTER TABLE \`order\` ADD COLUMN pay_time DATETIME COMMENT '\u652F\u4ED8\u65F6\u95F4'`);
+    }
+    const [pileResults] = await db_default.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'pile'
+    `);
+    const pileColumns = pileResults.map((r) => r.COLUMN_NAME);
+    if (!pileColumns.includes("name")) {
+      queries.push(`ALTER TABLE pile ADD COLUMN name VARCHAR(50) COMMENT '\u5145\u7535\u6869\u540D\u79F0'`);
+    }
+    if (!pileColumns.includes("price")) {
+      queries.push(`ALTER TABLE pile ADD COLUMN price DECIMAL(10,2) COMMENT '\u4EF7\u683C \u5143/\u5EA6'`);
+    }
+    const [stationResults] = await db_default.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'station'
+    `);
+    const stationColumns = stationResults.map((r) => r.COLUMN_NAME);
+    if (!stationColumns.includes("address")) {
+      queries.push(`ALTER TABLE station ADD COLUMN address VARCHAR(200) COMMENT '\u8BE6\u7EC6\u5730\u5740'`);
+    }
     for (const query of queries) {
-      await db_default.query(query);
+      try {
+        await db_default.query(query);
+      } catch (e) {
+        if (!e.message?.includes("Duplicate column")) {
+          console.warn(`\u26A0\uFE0F  \u6267\u884C\u5931\u8D25: ${query}`, e.message);
+        }
+      }
     }
     if (queries.length > 0) {
-      console.log(`\u2705 \u5DF2\u6DFB\u52A0 ${queries.length} \u4E2A\u7F3A\u5931\u7684\u5B57\u6BB5`);
+      console.log(`\u2705 \u5DF2\u68C0\u67E5/\u6DFB\u52A0 ${queries.length} \u4E2A\u5B57\u6BB5`);
     }
-  } catch (error) {
-    console.error("\u26A0\uFE0F  \u6DFB\u52A0\u7F3A\u5931\u5B57\u6BB5\u65F6\u51FA\u9519\uFF08\u53EF\u80FD\u5B57\u6BB5\u5DF2\u5B58\u5728\uFF09:", error);
+  } catch (error2) {
+    console.error("\u26A0\uFE0F  \u6DFB\u52A0\u7F3A\u5931\u5B57\u6BB5\u65F6\u51FA\u9519:", error2);
   }
 }
-var PORT = process.env.PORT || 3001;
+var PORT = parseInt(process.env.PORT || "3001", 10);
 db_default.authenticate().then(async () => {
   console.log("\u2705 \u6570\u636E\u5E93\u8FDE\u63A5\u6210\u529F\uFF01");
   try {
@@ -7580,20 +9938,30 @@ db_default.authenticate().then(async () => {
       await initMockData();
     } else if (chargingUserCount === 0) {
       console.log("\u{1F4E6} \u5F00\u59CB\u521D\u59CB\u5316\u5145\u7535\u7528\u6237\u6570\u636E...");
-      const { initChargingUsers } = await import("./initMockData-JZZZUJE7.js");
+      const { initChargingUsers } = await import("./initMockData-ORURZM6Y.js");
       await initChargingUsers();
       console.log("\u2705 \u5145\u7535\u7528\u6237\u6570\u636E\u521D\u59CB\u5316\u5B8C\u6210");
     } else {
       console.log("\u2139\uFE0F  \u6570\u636E\u5E93\u5DF2\u6709\u6570\u636E\uFF0C\u8DF3\u8FC7Mock\u6570\u636E\u521D\u59CB\u5316");
       console.log("\u{1F4A1} \u63D0\u793A\uFF1A\u5982\u9700\u5F3A\u5236\u91CD\u65B0\u521D\u59CB\u5316\uFF0C\u8BF7\u5728 .env \u6587\u4EF6\u4E2D\u8BBE\u7F6E FORCE_INIT_MOCK=true");
     }
-  } catch (error) {
-    console.error("\u274C \u6570\u636E\u521D\u59CB\u5316\u5931\u8D25:", error);
+    if (process.env.NODE_ENV === "development") {
+      try {
+        await initAllTestData();
+      } catch (e) {
+        console.log("\u2139\uFE0F  \u79FB\u52A8\u7AEF\u6D4B\u8BD5\u6570\u636E\u5DF2\u5B58\u5728\u6216\u521D\u59CB\u5316\u5931\u8D25");
+      }
+    }
+  } catch (error2) {
+    console.error("\u274C \u6570\u636E\u521D\u59CB\u5316\u5931\u8D25:", error2);
     console.log("\u26A0\uFE0F  \u670D\u52A1\u5668\u5C06\u7EE7\u7EED\u542F\u52A8\uFF0C\u4F46\u53EF\u80FD\u7F3A\u5C11\u521D\u59CB\u6570\u636E");
   }
-  app.listen(PORT, () => {
+  const HOST = process.env.HOST || "0.0.0.0";
+  app.listen(PORT, HOST, () => {
     console.log(`\u{1F680} Server running at http://localhost:${PORT}`);
+    console.log(`\u{1F310} \u5C40\u57DF\u7F51\u8BBF\u95EE: http://${getLocalIP()}:${PORT}`);
     console.log(`\u{1F4DD} API \u6587\u6863: http://localhost:${PORT}/api`);
+    console.log(`\u{1F4F1} \u79FB\u52A8\u7AEFAPI: http://${getLocalIP()}:${PORT}/api/mobile`);
   });
 }).catch((err) => {
   console.error("\u274C \u542F\u52A8\u5931\u8D25\uFF1A");
