@@ -4,6 +4,7 @@ declare module 'monitor-sdk' {
   export interface MonitorOptions {
     appId: string;
     reportUrl: string;
+    platform?: 'web' | 'uniapp' | 'mini-program'; // 平台类型（可选，自动检测）
     userId?: string;
     enableError?: boolean;
     enablePerformance?: boolean;

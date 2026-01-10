@@ -6,6 +6,7 @@ import { ref, computed } from 'vue'
 import { STORAGE_KEYS, PAGE_PATH } from '@/constants'
 import { setStorage, getStorage, removeStorage } from '@/utils/storage'
 import { userApi } from '@/api/user'
+import { setMonitorUserId, trackEvent } from '@/monitor'
 
 export interface UserInfo {
   id: number
@@ -59,6 +60,17 @@ export const useUserStore = defineStore('user', () => {
   function setUserInfo(info: UserInfo) {
     userInfo.value = info
     setStorage(STORAGE_KEYS.USER_INFO, info)
+    
+    // 设置监控SDK用户ID
+    if (info.id) {
+      setMonitorUserId(String(info.id))
+      // 上报登录事件
+      trackEvent('user_login', {
+        userId: info.id,
+        phone: info.phone,
+        name: info.name,
+      })
+    }
   }
 
   /**
@@ -70,7 +82,22 @@ export const useUserStore = defineStore('user', () => {
       const res = await userApi.loginByPhone({ phone, code })
       setToken(res.token)
       setUserInfo(res.userInfo)
+      
+      // 上报登录方式
+      trackEvent('login_method', {
+        method: 'phone',
+        phone,
+      })
+      
       return res
+    } catch (error) {
+      // 上报登录失败
+      trackEvent('login_error', {
+        method: 'phone',
+        phone,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
     } finally {
       isLoading.value = false
     }
@@ -100,7 +127,20 @@ export const useUserStore = defineStore('user', () => {
       if (res.userInfo) {
         setUserInfo(res.userInfo)
       }
+      
+      // 上报登录方式
+      trackEvent('login_method', {
+        method: 'wechat',
+      })
+      
       return res
+    } catch (error) {
+      // 上报登录失败
+      trackEvent('login_error', {
+        method: 'wechat',
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
     } finally {
       isLoading.value = false
     }
@@ -133,10 +173,20 @@ export const useUserStore = defineStore('user', () => {
    * 退出登录
    */
   function logout() {
+    // 上报退出登录事件
+    if (userInfo.value?.id) {
+      trackEvent('user_logout', {
+        userId: userInfo.value.id,
+      })
+    }
+    
     token.value = ''
     userInfo.value = null
     removeStorage(STORAGE_KEYS.TOKEN)
     removeStorage(STORAGE_KEYS.USER_INFO)
+    
+    // 清除监控SDK用户ID（设置为空字符串）
+    setMonitorUserId('')
   }
 
   /**

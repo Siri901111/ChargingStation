@@ -10,6 +10,7 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@charging/monitor-sdk": "workspace:*",
     "@dcloudio/uni-app": "3.0.0-alpha-5000020260104004",
     "@dcloudio/uni-components": "3.0.0-alpha-5000020260104004",
     "@dcloudio/uni-h5": "3.0.0-alpha-5000020260104004",
