@@ -45,6 +45,7 @@
                     <div>
                         <p class="fl ml" style="font-size: 12px;color: rgba(0, 0, 0, 0.45);">暂无预警</p>
                         <div class="fr" style="text-align: right;">
+                            <el-button size="small" type="success" @click="openQRCodeDialog(item.id)" class="mr">二维码</el-button>
                             <el-button size="small" @click="openMaintenanceDialog(item.id)">维保记录</el-button>
 
                             <el-popover 
@@ -115,6 +116,14 @@
             <el-empty v-if="!maintenanceLoading && maintenanceRecords.length === 0" description="暂无维保记录" :image-size="100"></el-empty>
         </div>
     </el-dialog>
+
+    <!-- 二维码对话框 -->
+    <PileQRCode
+        v-model="qrCodeDialogVisible"
+        :pile-id="currentQRCodePileId"
+        :size="300"
+        format="PILE_ID"
+    />
 </template>
 <script setup lang="ts">
 import free from "@/assets/free.png"
@@ -125,6 +134,7 @@ import { getPileUsageRecordsApi, getPileMaintenanceApi } from "@/api/pile"
 import { onMounted, ref } from "vue";
 import { computed, watch } from "vue";
 import { ElMessage } from 'element-plus';
+import PileQRCode from "@/components/PileQRCode.vue";
 
 
 const options = ref<any>([]) //下拉菜单数据
@@ -254,6 +264,15 @@ const loadMaintenanceRecords = async (pileId: string | number) => {
     } finally {
         maintenanceLoading.value = false;
     }
+}
+
+// 二维码相关
+const qrCodeDialogVisible = ref<boolean>(false);
+const currentQRCodePileId = ref<string | number>('');
+
+const openQRCodeDialog = (pileId: string | number) => {
+    currentQRCodePileId.value = pileId;
+    qrCodeDialogVisible.value = true;
 }
 
 </script>

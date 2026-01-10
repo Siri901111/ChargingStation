@@ -41,8 +41,14 @@
       <!-- #endif -->
     </view>
 
-    <!-- 充电桩信息 -->
+      <!-- 充电桩信息 -->
     <view v-else class="pile-info">
+      <!-- 返回按钮 -->
+      <view class="back-btn" @click="handleBack">
+        <text class="iconfont icon-arrow-left"></text>
+        <text>重新扫码</text>
+      </view>
+
       <view class="info-card card">
         <view class="card-header">
           <view class="pile-icon">
@@ -60,7 +66,11 @@
         <view class="card-body">
           <view class="info-row">
             <text class="info-label">充电类型</text>
-            <text class="info-value">{{ pileInfo.type === 'fast' ? '快充' : '慢充' }}</text>
+            <view class="info-value-right">
+              <text :class="['type-tag', pileInfo.type === 'fast' ? 'type-fast' : 'type-slow']">
+                {{ pileInfo.type === 'fast' ? '⚡ 快充' : '🔋 慢充' }}
+              </text>
+            </view>
           </view>
           <view class="info-row">
             <text class="info-label">额定功率</text>
@@ -68,8 +78,27 @@
           </view>
           <view class="info-row">
             <text class="info-label">当前电价</text>
-            <text class="info-value price">¥{{ pileInfo.price }}/度</text>
+            <text class="info-value price">¥{{ pileInfo.price.toFixed(2) }}/度</text>
           </view>
+        </view>
+      </view>
+
+      <!-- 状态提示 -->
+      <view v-if="!canCharge" class="warning-card card">
+        <view class="warning-title">
+          <text class="iconfont icon-warning"></text>
+          <text>无法充电</text>
+        </view>
+        <view class="warning-content">
+          <text v-if="pileInfo.status !== PILE_STATUS.FREE">
+            {{ getStatusText(pileInfo.status) }}，请选择其他充电桩
+          </text>
+          <text v-else-if="userStore.balance < 10">
+            账户余额不足（当前余额：¥{{ userStore.balance.toFixed(2) }}），请先充值
+          </text>
+        </view>
+        <view v-if="userStore.balance < 10" class="warning-action">
+          <view class="btn btn-outline" @click="goToRecharge">去充值</view>
         </view>
       </view>
 
@@ -83,6 +112,7 @@
           <view class="notice-item">1. 请确保充电枪已正确连接</view>
           <view class="notice-item">2. 充电过程中请勿拔出充电枪</view>
           <view class="notice-item">3. 如遇异常请立即停止充电</view>
+          <view class="notice-item">4. 充电完成后请及时拔出充电枪</view>
         </view>
       </view>
 
@@ -91,6 +121,7 @@
         <view class="balance-info">
           <text class="balance-label">账户余额</text>
           <text class="balance-value">¥{{ userStore.balance.toFixed(2) }}</text>
+          <text v-if="userStore.balance < 10" class="balance-warning">余额不足</text>
         </view>
         <view
           :class="['btn', 'btn-primary', { 'btn-disabled': !canCharge }]"
@@ -98,6 +129,14 @@
         >
           {{ startBtnText }}
         </view>
+      </view>
+    </view>
+
+    <!-- 加载遮罩 -->
+    <view v-if="loading" class="loading-mask">
+      <view class="loading-content">
+        <view class="loading-spinner"></view>
+        <text class="loading-text">正在识别二维码...</text>
       </view>
     </view>
   </view>
@@ -160,15 +199,57 @@ onMounted(() => {
 
 // 处理扫码结果
 async function handleQRCode(code: string) {
-  loading.value = true
-  try {
-    const result = await chargingApi.scanPile(code)
-    pileInfo.value = result
-  } catch (error) {
+  if (!code || !code.trim()) {
     uni.showToast({
-      title: '无效的充电桩二维码',
+      title: '二维码内容为空',
       icon: 'none',
     })
+    return
+  }
+
+  loading.value = true
+  try {
+    const result = await chargingApi.scanPile(code.trim())
+    pileInfo.value = result
+    
+    // 扫码成功提示
+    uni.showToast({
+      title: '扫码成功',
+      icon: 'success',
+      duration: 1500,
+    })
+    
+    // 小程序扫码成功后震动反馈
+    // #ifdef MP-WEIXIN
+    uni.vibrateShort()
+    // #endif
+  } catch (error: any) {
+    console.error('扫码失败:', error)
+    
+    // 根据不同错误显示不同提示
+    let errorMsg = '无效的充电桩二维码'
+    if (error?.message) {
+      if (error.message.includes('不存在')) {
+        errorMsg = '充电桩不存在'
+      } else if (error.message.includes('格式')) {
+        errorMsg = '二维码格式错误，请重试'
+      } else if (error.message.includes('网络')) {
+        errorMsg = '网络错误，请检查网络连接'
+      } else {
+        errorMsg = error.message
+      }
+    }
+    
+    uni.showToast({
+      title: errorMsg,
+      icon: 'none',
+      duration: 2000,
+    })
+    
+    // 清空输入框（H5）
+    // #ifdef H5
+    manualCode.value = ''
+    // #endif
   } finally {
     loading.value = false
   }
@@ -208,35 +289,102 @@ function getStatusText(status: number): string {
   return PILE_STATUS_TEXT[status] || '未知'
 }
 
+// 返回重新扫码
+function handleBack() {
+  uni.showModal({
+    title: '提示',
+    content: '确定要返回重新扫码吗？',
+    success: (res) => {
+      if (res.confirm) {
+        pileInfo.value = null
+        manualCode.value = ''
+      }
+    },
+  })
+}
+
+// 跳转到充值页面
+function goToRecharge() {
+  uni.navigateTo({ url: PAGE_PATH.RECHARGE })
+}
+
 // 开始充电
 async function handleStartCharging() {
-  if (!canCharge.value || !pileInfo.value) return
+  if (!canCharge.value || !pileInfo.value) {
+    // 如果余额不足，引导充值
+    if (userStore.balance < 10) {
+      uni.showModal({
+        title: '余额不足',
+        content: `当前余额 ¥${userStore.balance.toFixed(2)}，需要至少 ¥10 才能开始充电，是否前往充值？`,
+        confirmText: '去充值',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            goToRecharge()
+          }
+        },
+      })
+    } else if (pileInfo.value.status !== PILE_STATUS.FREE) {
+      uni.showToast({
+        title: getStatusText(pileInfo.value.status) + '，无法充电',
+        icon: 'none',
+        duration: 2000,
+      })
+    }
+    return
+  }
 
+  // 确认开始充电
   uni.showModal({
     title: '确认开始充电',
-    content: `即将在 ${pileInfo.value.pileName} 开始充电，当前电价 ¥${pileInfo.value.price}/度`,
+    content: `充电桩：${pileInfo.value.pileName}\n所属站点：${pileInfo.value.stationName}\n充电类型：${pileInfo.value.type === 'fast' ? '快充' : '慢充'}\n当前电价：¥${pileInfo.value.price.toFixed(2)}/度\n\n确认开始充电吗？`,
+    confirmText: '确认开始',
+    cancelText: '取消',
     success: async (res) => {
       if (res.confirm) {
         try {
-          uni.showLoading({ title: '正在启动...' })
+          uni.showLoading({ title: '正在启动充电...' })
           await chargingStore.startCharging(pileInfo.value!.pileId)
           uni.hideLoading()
 
           uni.showToast({
             title: '充电已启动',
             icon: 'success',
+            duration: 2000,
           })
 
           // 跳转到充电页面
           setTimeout(() => {
             uni.redirectTo({ url: PAGE_PATH.CHARGING })
-          }, 1500)
-        } catch (error) {
+          }, 2000)
+        } catch (error: any) {
           uni.hideLoading()
+          
+          let errorMsg = '启动失败，请重试'
+          if (error?.message) {
+            if (error.message.includes('余额')) {
+              errorMsg = '余额不足，请先充值'
+            } else if (error.message.includes('订单')) {
+              errorMsg = '您已有进行中的充电订单'
+            } else if (error.message.includes('不可用')) {
+              errorMsg = '充电桩当前不可用，请选择其他充电桩'
+            } else {
+              errorMsg = error.message
+            }
+          }
+          
           uni.showToast({
-            title: '启动失败，请重试',
+            title: errorMsg,
             icon: 'none',
+            duration: 2000,
           })
+          
+          // 如果余额不足，引导充值
+          if (errorMsg.includes('余额')) {
+            setTimeout(() => {
+              goToRecharge()
+            }, 2000)
+          }
         }
       }
     },
@@ -367,9 +515,19 @@ async function handleStartCharging() {
 .pile-info {
   padding: 24rpx;
   padding-bottom: 200rpx;
+  min-height: 100vh;
+  background-color: var(--bg-color);
 }
 
 .info-card {
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  margin-left: 0;
+  margin-right: 0;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+
   .card-header {
     display: flex;
     align-items: center;
@@ -456,6 +614,14 @@ async function handleStartCharging() {
 }
 
 .notice {
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-top: 24rpx;
+  margin-left: 0;
+  margin-right: 0;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+
   .notice-title {
     display: flex;
     align-items: center;
@@ -466,6 +632,7 @@ async function handleStartCharging() {
     .iconfont {
       color: var(--warning-color);
       margin-right: 10rpx;
+      font-size: 32rpx;
     }
   }
 
@@ -473,6 +640,7 @@ async function handleStartCharging() {
     font-size: 26rpx;
     color: var(--text-secondary);
     line-height: 2;
+    padding: 8rpx 0;
   }
 }
 
@@ -480,7 +648,7 @@ async function handleStartCharging() {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 52px;
   display: flex;
   align-items: center;
   padding: 24rpx;
@@ -505,6 +673,151 @@ async function handleStartCharging() {
 
   .btn {
     flex: 1;
+  }
+
+  .balance-warning {
+    display: block;
+    font-size: 22rpx;
+    color: var(--danger-color);
+    margin-top: 4rpx;
+  }
+}
+
+// 返回按钮
+.back-btn {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+  color: var(--text-primary);
+  font-size: 28rpx;
+  background-color: #FFFFFF;
+  border-radius: 12rpx;
+  margin-left: 24rpx;
+  margin-right: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+
+  .iconfont {
+    margin-right: 8rpx;
+    font-size: 32rpx;
+    color: var(--text-primary);
+  }
+}
+
+// 类型标签
+.type-tag {
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+
+  &.type-fast {
+    color: #FF6B35;
+    background-color: rgba(255, 107, 53, 0.1);
+  }
+
+  &.type-slow {
+    color: #4ECDC4;
+    background-color: rgba(78, 205, 196, 0.1);
+  }
+}
+
+.info-value-right {
+  display: flex;
+  align-items: center;
+}
+
+// 警告卡片
+.warning-card {
+  margin-top: 24rpx;
+  margin-left: 0;
+  margin-right: 0;
+  background-color: #FFF7E6;
+  border: 1rpx solid #FFE58F;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+
+  .warning-title {
+    display: flex;
+    align-items: center;
+    font-size: 28rpx;
+    font-weight: bold;
+    color: #FA8C16;
+    margin-bottom: 12rpx;
+
+    .iconfont {
+      margin-right: 8rpx;
+      font-size: 32rpx;
+    }
+  }
+
+  .warning-content {
+    font-size: 26rpx;
+    color: #AD6800;
+    line-height: 1.8;
+    margin-bottom: 16rpx;
+  }
+
+  .warning-action {
+    padding-top: 16rpx;
+    border-top: 1rpx solid #FFE58F;
+
+    .btn-outline {
+      border: 1rpx solid var(--primary-color);
+      color: var(--primary-color);
+      background-color: transparent;
+      width: 100%;
+      padding: 20rpx;
+      text-align: center;
+      border-radius: 12rpx;
+    }
+  }
+}
+
+// 加载遮罩
+.loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40rpx;
+    background-color: #FFFFFF;
+    border-radius: 16rpx;
+
+    .loading-spinner {
+      width: 60rpx;
+      height: 60rpx;
+      border: 4rpx solid #F3F3F3;
+      border-top: 4rpx solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20rpx;
+    }
+
+    .loading-text {
+      font-size: 26rpx;
+      color: var(--text-secondary);
+    }
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 </style>

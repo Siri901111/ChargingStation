@@ -11,6 +11,10 @@ import {
   createPileMaintenanceController,
   updatePileMaintenanceController,
 } from '../controllers/pileController.js';
+import {
+  getPileQRCodeController,
+  downloadPileQRCodeController,
+} from '../controllers/pileQRCodeController.js';
 import { authMiddleware } from '../middlewares/auth.js';
 
 const router = Router();
@@ -44,6 +48,12 @@ router.post('/piles/:id/maintenance', authMiddleware, createPileMaintenanceContr
 
 // 更新维保记录
 router.put('/piles/:id/maintenance/:maintenanceId', authMiddleware, updatePileMaintenanceController);
+
+// 获取充电桩二维码数据（必须在 /piles/:id 之后）
+router.get('/piles/:id/qrcode', authMiddleware, getPileQRCodeController);
+
+// 下载充电桩二维码（必须在 /piles/:id 之后）
+router.get('/piles/:id/qrcode/download', authMiddleware, downloadPileQRCodeController);
 
 export default router;
 

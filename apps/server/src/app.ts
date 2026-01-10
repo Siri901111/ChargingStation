@@ -304,7 +304,7 @@ async function addMissingColumnsIfNeeded() {
   }
 }
 
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // 测试数据库连接
 sequelize.authenticate()

@@ -4,7 +4,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { chargingApi } from '@/api/charging'
-import config from '@/config'
 
 export interface ChargingStatus {
   orderId: string
@@ -27,7 +26,6 @@ export const useChargingStore = defineStore('charging', () => {
   // State
   const isCharging = ref(false)
   const chargingStatus = ref<ChargingStatus | null>(null)
-  const wsConnection = ref<UniApp.SocketTask | null>(null)
 
   // Getters
   const currentOrderId = computed(() => chargingStatus.value?.orderId)
@@ -43,8 +41,8 @@ export const useChargingStore = defineStore('charging', () => {
     const result = await chargingApi.startCharging({ pileId })
     isCharging.value = true
     chargingStatus.value = result
-    // 建立 WebSocket 连接获取实时状态
-    connectWebSocket(result.orderId)
+    // 使用轮询方式获取实时状态
+    startPolling(result.orderId)
     return result
   }
 
@@ -59,92 +57,97 @@ export const useChargingStore = defineStore('charging', () => {
     })
 
     isCharging.value = false
-    disconnectWebSocket()
+    stopPolling()
 
     return result
   }
 
+  // 轮询定时器
+  let pollingTimer: ReturnType<typeof setInterval> | null = null
+
   /**
-   * 获取充电状态
+   * 获取充电状态（内部方法，不自动启动轮询）
    */
-  async function fetchChargingStatus() {
+  async function fetchChargingStatusInternal() {
     try {
       const status = await chargingApi.getChargingStatus()
       if (status) {
+        // 有进行中的充电订单，更新状态
         isCharging.value = true
         chargingStatus.value = status
-        connectWebSocket(status.orderId)
+        // 后端返回status: 1表示充电中，继续轮询
+        // 如果返回null，说明订单已完成（状态不是2），会进入else分支
       } else {
-        isCharging.value = false
-        chargingStatus.value = null
+        // 没有进行中的订单（返回null），说明充电已完成或未开始
+        if (isCharging.value) {
+          // 如果之前正在充电，现在没有状态了，说明充电已完成
+          // 需要停止轮询，但无法获取最终数据（因为返回null）
+          // 实际场景中，充电完成应该通过stopCharging接口返回完整数据
+          isCharging.value = false
+          stopPolling()
+          chargingStatus.value = null
+        } else {
+          // 之前就没有在充电，直接清空状态
+          chargingStatus.value = null
+        }
       }
       return status
     } catch (error) {
       console.warn('获取充电状态失败', error)
-      isCharging.value = false
-      chargingStatus.value = null
+      // 获取状态失败时，不立即停止轮询，继续尝试
+      // 这样可以处理临时网络问题
       return null
     }
   }
 
   /**
-   * 建立 WebSocket 连接
+   * 获取充电状态（公开方法，会自动启动轮询）
    */
-  function connectWebSocket(orderId: string) {
-    if (wsConnection.value) {
-      disconnectWebSocket()
+  async function fetchChargingStatus() {
+    const status = await fetchChargingStatusInternal()
+    // 如果获取到状态且正在充电，但还没有启动轮询，则启动轮询
+    if (status && isCharging.value && !pollingTimer) {
+      startPolling(status.orderId)
     }
-
-    const token = uni.getStorageSync('user_token')
-    wsConnection.value = uni.connectSocket({
-      url: `${config.wsUrl}/charging/${orderId}?token=${token}`,
-      success: () => {
-        console.log('WebSocket 连接成功')
-      },
-    })
-
-    // 监听消息
-    uni.onSocketMessage((res) => {
-      try {
-        const data = JSON.parse(res.data as string)
-        if (data.type === 'charging_status') {
-          chargingStatus.value = {
-            ...chargingStatus.value,
-            ...data.payload,
-          } as ChargingStatus
-        } else if (data.type === 'charging_complete') {
-          isCharging.value = false
-          uni.showModal({
-            title: '充电完成',
-            content: `本次充电 ${data.payload.electricity.toFixed(2)} kWh，费用 ¥${data.payload.amount.toFixed(2)}`,
-            showCancel: false,
-          })
-        }
-      } catch (e) {
-        console.error('WebSocket 消息解析失败', e)
-      }
-    })
-
-    // 监听关闭
-    uni.onSocketClose(() => {
-      console.log('WebSocket 连接关闭')
-      wsConnection.value = null
-    })
-
-    // 监听错误
-    uni.onSocketError(() => {
-      console.error('WebSocket 连接错误')
-      wsConnection.value = null
-    })
+    return status
   }
 
   /**
-   * 断开 WebSocket 连接
+   * 开始轮询充电状态
+   * 每5秒获取一次充电状态，确保状态实时更新
    */
-  function disconnectWebSocket() {
-    if (wsConnection.value) {
-      uni.closeSocket()
-      wsConnection.value = null
+  function startPolling(orderId: string) {
+    // 清除之前的定时器（如果存在）
+    if (pollingTimer) {
+      clearInterval(pollingTimer)
+      pollingTimer = null
+    }
+
+    // 立即获取一次状态（使用内部方法，避免重复启动轮询）
+    fetchChargingStatusInternal().catch((error) => {
+      console.warn('获取充电状态失败:', error)
+    })
+
+    // 每5秒轮询一次充电状态
+    pollingTimer = setInterval(() => {
+      if (isCharging.value) {
+        fetchChargingStatusInternal().catch((error) => {
+          console.warn('轮询获取充电状态失败:', error)
+        })
+      } else {
+        // 如果不在充电中，停止轮询
+        stopPolling()
+      }
+    }, 5000)
+  }
+
+  /**
+   * 停止轮询
+   */
+  function stopPolling() {
+    if (pollingTimer) {
+      clearInterval(pollingTimer)
+      pollingTimer = null
     }
   }
 
@@ -154,7 +157,7 @@ export const useChargingStore = defineStore('charging', () => {
   function reset() {
     isCharging.value = false
     chargingStatus.value = null
-    disconnectWebSocket()
+    stopPolling()
   }
 
   return {
@@ -170,8 +173,8 @@ export const useChargingStore = defineStore('charging', () => {
     startCharging,
     stopCharging,
     fetchChargingStatus,
-    connectWebSocket,
-    disconnectWebSocket,
+    startPolling,
+    stopPolling,
     reset,
   }
 })

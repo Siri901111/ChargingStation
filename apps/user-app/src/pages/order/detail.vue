@@ -1,5 +1,16 @@
 <template>
   <view class="page">
+    <!-- 顶部导航栏 -->
+    <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
+      <view class="nav-content">
+        <view class="back-btn" @click="handleBack">
+          <text class="iconfont icon-arrow-left"></text>
+        </view>
+        <text class="nav-title">订单详情</text>
+        <view class="placeholder"></view>
+      </view>
+    </view>
+
     <view v-if="loading" class="loading-wrap">
       <text>加载中...</text>
     </view>
@@ -119,10 +130,19 @@ import { orderApi, type Order } from '@/api/order'
 import { ORDER_STATUS, ORDER_STATUS_TEXT, PAGE_PATH } from '@/constants'
 import { formatDate, formatDuration, copyToClipboard } from '@/utils'
 
+// 状态栏高度
+const statusBarHeight = ref(0)
+
 // 状态
 const orderNo = ref('')
 const order = ref<Order | null>(null)
 const loading = ref(false)
+
+// 获取状态栏高度
+onMounted(() => {
+  const systemInfo = uni.getSystemInfoSync()
+  statusBarHeight.value = systemInfo.statusBarHeight || 0
+})
 
 // 页面加载
 onLoad((options) => {
@@ -243,6 +263,17 @@ function handleInvoice() {
   uni.showToast({ title: '功能开发中', icon: 'none' })
 }
 
+// 返回
+function handleBack() {
+  uni.navigateBack({
+    delta: 1,
+    fail: () => {
+      // 如果没有上一页，返回首页
+      uni.switchTab({ url: PAGE_PATH.INDEX })
+    },
+  })
+}
+
 // 再次充电
 function handleRecharge() {
   if (order.value) {
@@ -258,6 +289,43 @@ function handleRecharge() {
   min-height: 100vh;
   background-color: var(--bg-color);
   padding-bottom: 150rpx;
+}
+
+.nav-bar {
+  background-color: #FFFFFF;
+  border-bottom: 1rpx solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  padding: 0 24rpx;
+
+  .back-btn,
+  .placeholder {
+    width: 80rpx;
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .iconfont {
+      font-size: 40rpx;
+      color: var(--text-primary);
+    }
+  }
+
+  .nav-title {
+    font-size: 34rpx;
+    font-weight: bold;
+    color: var(--text-primary);
+  }
 }
 
 .loading-wrap {

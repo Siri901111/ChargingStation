@@ -105,11 +105,70 @@ GET /api/mobile/member/card
 
 | 接口 | 方法 | 说明 | 认证 |
 |------|------|------|------|
-| `/charging/scan` | POST | 扫码获取充电桩 | ✅ |
+| `/charging/scan` | POST | 扫码获取充电桩信息 | ✅ |
 | `/charging/start` | POST | 开始充电 | ✅ |
 | `/charging/stop` | POST | 停止充电 | ✅ |
 | `/charging/status` | GET | 当前充电状态 | ✅ |
 | `/charging/history` | GET | 充电历史 | ✅ |
+
+#### 扫码获取充电桩信息
+
+```
+POST /api/mobile/charging/scan
+```
+
+**请求头**：需要 Token
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| qrCode | string | 是 | 二维码内容（支持 PILE_123、纯数字、JSON格式） |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "pileId": 123,
+    "stationId": 1,
+    "stationName": "北京朝阳充电站",
+    "pileName": "1号桩",
+    "type": "fast",
+    "power": 120,
+    "price": 1.2,
+    "status": 1
+  }
+}
+```
+
+**字段说明**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| pileId | number | 充电桩ID |
+| stationId | number | 所属充电站ID |
+| stationName | string | 所属充电站名称 |
+| pileName | string | 充电桩名称 |
+| type | string | 充电类型：fast快充、slow慢充 |
+| power | number | 额定功率（kW） |
+| price | number | 当前电价（元/度） |
+| status | number | 充电桩状态：1空闲，2充电中，6故障/离线 |
+
+**二维码格式支持**
+
+- **格式1**: `PILE_123`（推荐）
+- **格式2**: `123`（纯数字）
+- **格式3**: `{"pileId": 123}`（JSON格式）
+
+**错误响应**
+
+| 错误码 | 说明 |
+|--------|------|
+| 400 | 无效的二维码格式 |
+| 404 | 充电桩不存在 |
+| 500 | 服务器错误 |
 
 ### 订单模块
 
@@ -434,6 +493,165 @@ GET /api/mobile/order/list
 | 2 | 待支付（充电完成） |
 | 3 | 已完成 |
 | 4 | 已取消 |
+
+---
+
+## 充电接口详细说明
+
+### 开始充电
+
+```
+POST /api/mobile/charging/start
+```
+
+**请求头**：需要 Token
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| pileId | number | 是 | 充电桩ID |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "orderId": "202411201430251234",
+    "pileId": 123,
+    "stationId": 1,
+    "stationName": "北京朝阳充电站",
+    "pileName": "1号桩",
+    "startTime": "2024-11-20T14:30:25.000Z",
+    "status": 2
+  }
+}
+```
+
+**业务规则**
+
+- 用户同时只能有一个进行中的充电订单
+- 充电桩状态必须为"空闲"（status=1）才能开始充电
+- 用户余额必须不少于10元才能开始充电
+- 开始充电后，充电桩状态自动更新为"充电中"（status=2）
+
+---
+
+### 停止充电
+
+```
+POST /api/mobile/charging/stop
+```
+
+**请求头**：需要 Token
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| orderId | string | 是 | 订单号 |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "orderId": "202411201430251234",
+    "startTime": "2024-11-20T14:30:25.000Z",
+    "endTime": "2024-11-20T16:45:30.000Z",
+    "duration": 8105,
+    "electricity": 67.54,
+    "amount": 89.16,
+    "payStatus": 1
+  }
+}
+```
+
+**字段说明**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| duration | number | 充电时长（秒） |
+| electricity | number | 充电量（kWh） |
+| amount | number | 费用（元） |
+| payStatus | number | 支付状态：0待支付，1已支付 |
+
+---
+
+### 获取当前充电状态
+
+```
+GET /api/mobile/charging/status
+```
+
+**请求头**：需要 Token
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "orderId": "202411201430251234",
+    "pileId": 123,
+    "stationId": 1,
+    "stationName": "北京朝阳充电站",
+    "pileName": "1号桩",
+    "startTime": "2024-11-20T14:30:25.000Z",
+    "duration": 1800,
+    "power": 28.5,
+    "voltage": 385.2,
+    "current": 74.1,
+    "electricity": 14.25,
+    "amount": 18.81,
+    "percent": 30,
+    "status": 1
+  }
+}
+```
+
+**说明**：如果用户没有进行中的充电订单，返回 `null`
+
+---
+
+### 获取充电历史
+
+```
+GET /api/mobile/charging/history
+```
+
+**请求头**：需要 Token
+
+**请求参数**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| page | number | 否 | 页码，默认1 |
+| pageSize | number | 否 | 每页数量，默认10 |
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "list": [
+      {
+        "orderId": "202411201430251234",
+        "startTime": "2024-11-20T14:30:25.000Z",
+        "endTime": "2024-11-20T16:45:30.000Z",
+        "duration": 8105,
+        "electricity": 67.54,
+        "amount": 89.16,
+        "payStatus": 1
+      }
+    ],
+    "total": 25
+  }
+}
+```
 
 ---
 
