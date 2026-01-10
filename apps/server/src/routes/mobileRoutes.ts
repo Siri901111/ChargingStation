@@ -49,6 +49,10 @@ import {
 } from '../utils/initTestData.js';
 import { getMyMemberCardService, purchaseRechargeMemberService } from '../services/mobileMemberCardService.js';
 import RechargeRecord from '../models/RechargeRecord.js';
+import {
+  getDocumentListController,
+  getDocumentDetailController,
+} from '../controllers/documentController.js';
 
 const router = express.Router();
 
@@ -865,6 +869,41 @@ router.post('/user/upload-avatar', authMiddleware, async (req, res) => {
     // 返回更新后的用户信息
     const result = await getUserInfo(userId);
     res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+// ==================== 公告相关 ====================
+
+/**
+ * 获取公告列表（已发布的公告类文章，小程序渠道）
+ * 可选认证，小程序端可以无需登录查看公告
+ */
+router.get('/announcement/list', optionalAuth, async (req, res) => {
+  try {
+    // 设置查询参数：只查询已发布的公告类文章，小程序渠道
+    req.query.type = '公告类';
+    req.query.status = '2'; // 已发布
+    req.query.publish = '小程序'; // 小程序渠道
+    await getDocumentListController(req, res);
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 获取公告详情
+ * 可选认证，小程序端可以无需登录查看公告详情
+ */
+router.get('/announcement/:id', optionalAuth, async (req, res) => {
+  try {
+    // 将移动端的 userId 映射到 req.user.userId，以便控制器使用
+    const userId = (req as any).userId;
+    if (userId && !req.user) {
+      (req as any).user = { userId };
+    }
+    await getDocumentDetailController(req, res);
   } catch (err: any) {
     res.json(error(err.message));
   }

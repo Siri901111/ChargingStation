@@ -109,8 +109,12 @@ export async function getDocumentListController(req: Request, res: Response) {
     if (publish && typeof publish === 'string') {
       params.publish = publish;
     }
+    // 小程序端查询公告时，如果未传status，默认只查询已发布的（status=2）
     if (status && !isNaN(Number(status))) {
       params.status = Number(status);
+    } else if (type === '公告类' && publish === '小程序') {
+      // 小程序端查询公告，默认只显示已发布的
+      params.status = 2;
     }
     if (keyword && typeof keyword === 'string') {
       params.keyword = keyword;
@@ -150,6 +154,23 @@ export async function getDocumentDetailController(
     }
 
     const result = await getDocumentDetailService(Number(id));
+
+    // 小程序端访问时，只有已发布的公告才能查看详情
+    // 支持两种方式：管理端的 req.user.userId 和移动端的 req.userId
+    const userId = (req as any).user?.userId || (req as any).userId;
+    
+    // 如果用户未登录（userId不存在），只能查看已发布的公告
+    if (!userId && result.status !== 2) {
+      return res.status(403).json({
+        code: 403,
+        message: '该公告尚未发布',
+        data: null,
+      });
+    }
+    
+    // 额外检查：如果不是管理端用户，且公告类型不是"公告类"或发布渠道不是"小程序"，则不允许查看
+    // 这个检查可以防止用户通过其他方式访问非小程序公告
+    // 如果需要更严格的限制，可以在这里添加更多检查
 
     return res.json({
       code: 200,

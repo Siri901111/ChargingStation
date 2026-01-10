@@ -341,7 +341,7 @@ const getTimeParams = () => {
   if (dateRange.value?.[0] && dateRange.value?.[1]) {
     params.startTime = dateRange.value[0].getTime()
     params.endTime = dateRange.value[1].getTime()
-  }
+    }
   if (filterAppId.value) {
     params.appId = filterAppId.value
   }

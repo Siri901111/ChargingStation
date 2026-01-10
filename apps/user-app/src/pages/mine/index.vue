@@ -101,6 +101,16 @@
         <text class="section-title">服务</text>
       </view>
       <view class="list-card">
+        <view class="list-item" @click="goToAnnouncement">
+          <view class="item-left">
+            <text class="item-emoji">📢</text>
+            <text class="item-text">公告</text>
+          </view>
+          <view class="item-right">
+            <text class="item-hint">查看公告</text>
+            <text class="item-arrow">›</text>
+          </view>
+        </view>
         <view class="list-item" @click="goToMemberCard">
           <view class="item-left">
             <text class="item-emoji">💳</text>
@@ -226,6 +236,10 @@ function goToWallet() {
 function goToOrders() {
   if (!userStore.checkLoginAndNavigate()) return
   uni.switchTab({ url: PAGE_PATH.ORDER })
+}
+
+function goToAnnouncement() {
+  uni.navigateTo({ url: '/pages/announcement/index' })
 }
 
 function goToMemberCard() {

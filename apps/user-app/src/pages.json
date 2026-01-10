@@ -106,6 +106,20 @@
         "navigationBarTitleText": "",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/announcement/index",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/announcement/detail",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "subPackages": [

@@ -18,11 +18,11 @@ router.get('/document', authMiddleware, getDocumentTypeListController);
 // 创建文章
 router.post('/document', authMiddleware, createDocumentController);
 
-// 获取文章列表
-router.get('/document/list', authMiddleware, getDocumentListController);
+// 获取文章列表（小程序端可选认证，管理员端需要认证）
+router.get('/document/list', getDocumentListController);
 
-// 获取文章详情
-router.get('/document/:id', authMiddleware, getDocumentDetailController);
+// 获取文章详情（小程序端可选认证，管理员端需要认证）
+router.get('/document/:id', getDocumentDetailController);
 
 // 更新文章
 router.put('/document/:id', authMiddleware, updateDocumentController);

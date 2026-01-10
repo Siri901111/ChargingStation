@@ -684,10 +684,10 @@ const handleSearch = () => {
   }
   
   // 重置分页并加载数据
-  pageInfo.page = 1
-  loadBehaviorList()
-  loadBehaviorStats()
-  loadTrendData()
+    pageInfo.page = 1
+    loadBehaviorList()
+    loadBehaviorStats()
+    loadTrendData()
 }
 const handleReset = () => {
   filterParams.type = ''
