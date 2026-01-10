@@ -163,6 +163,9 @@ export async function getNearbyStations(params: StationListParams) {
     pageSize = 10,
   } = params;
 
+  // 判断是否需要距离筛选（如果radius很大或未提供位置信息，则获取所有站点）
+  const shouldFilterByDistance = radius && radius < 1000000 && latitude && longitude; // radius小于1000公里且有位置信息时才筛选
+
   // 获取所有正常状态的站点
   const stations = await Station.findAll({
     where: { status: { [Op.ne]: 0 } }, // 非关闭状态
@@ -174,25 +177,36 @@ export async function getNearbyStations(params: StationListParams) {
   for (const station of stations) {
     const stationInfo = await formatStation(station, latitude, longitude);
 
-    // 按距离筛选
-    if (stationInfo.distance && stationInfo.distance <= radius) {
+    // 按距离筛选（如果radius很大，则不筛选距离）
+    if (shouldFilterByDistance) {
+      if (stationInfo.distance && stationInfo.distance <= radius) {
+        // 按类型筛选
+        if (type === 'fast' && stationInfo.fastFree === 0) continue;
+        if (type === 'slow' && stationInfo.slowFree === 0) continue;
+
+        formattedStations.push(stationInfo);
+      }
+    } else {
+      // 不按距离筛选，获取所有站点（但可能按类型筛选）
       // 按类型筛选
       if (type === 'fast' && stationInfo.fastFree === 0) continue;
       if (type === 'slow' && stationInfo.slowFree === 0) continue;
 
       formattedStations.push(stationInfo);
-    } else if (!latitude || !longitude) {
-      // 没有位置信息时返回所有
-      formattedStations.push(stationInfo);
     }
   }
 
-  // 按距离排序
-  formattedStations.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+  // 按距离排序（如果有距离信息）
+  if (latitude && longitude) {
+    formattedStations.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+  }
 
-  // 分页
-  const startIndex = (page - 1) * pageSize;
-  const paginatedList = formattedStations.slice(startIndex, startIndex + pageSize);
+  // 分页（如果pageSize很大，则不进行分页）
+  let paginatedList = formattedStations;
+  if (pageSize && pageSize < formattedStations.length) {
+    const startIndex = (page - 1) * pageSize;
+    paginatedList = formattedStations.slice(startIndex, startIndex + pageSize);
+  }
 
   return {
     list: paginatedList,

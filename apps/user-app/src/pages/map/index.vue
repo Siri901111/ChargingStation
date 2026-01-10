@@ -58,8 +58,9 @@
     <!-- #endif -->
 
     <!-- 重新定位按钮 -->
-    <view class="location-btn" @click="relocate">
+    <view class="location-btn touchable" @click="relocate">
       <text class="btn-icon">📍</text>
+      <view class="btn-pulse"></view>
     </view>
 
     <!-- 站点列表弹窗 -->
@@ -145,9 +146,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { useLocationStore } from '@/store/modules/location'
+import { useLocationStore, type Location } from '@/store/modules/location'
 import { stationApi, type Station } from '@/api/station'
-import { formatDistance, openNavigation } from '@/utils'
+import { formatDistance, openNavigation, calculateDistance } from '@/utils'
 import { PAGE_PATH } from '@/constants'
 import config from '@/config'
 
@@ -158,7 +159,7 @@ const locationStore = useLocationStore()
 const statusBarHeight = ref(0)
 const keyword = ref('')
 const currentFilter = ref('all')
-const mapScale = ref(14)
+const mapScale = ref(13) // 初始缩放级别13，显示开福区局部区域
 const showStationList = ref(false)
 const stationList = ref<Station[]>([])
 const selectedStation = ref<Station | null>(null)
@@ -172,11 +173,14 @@ let amapMap: any = null
 let amapMarkers: any[] = []
 // #endif
 
-// 地图中心点（默认长沙）
+// 地图中心点（默认开福区）
 const mapCenter = ref({
   latitude: 28.1963,
   longitude: 112.9822,
 })
+
+// 初始缩放级别（13级别，显示开福区局部区域）
+const initialMapScale = 13
 
 // 筛选选项
 const filterOptions = [
@@ -186,33 +190,52 @@ const filterOptions = [
   { label: '空闲', value: 'free' },
 ]
 
-// 地图标记点
+// 地图标记点（小程序/APP平台）
 const markers = computed(() => {
-  return stationList.value.map((station, index) => ({
-    id: station.id,
-    latitude: station.latitude,
-    longitude: station.longitude,
-    width: 40,
-    height: 50,
-    iconPath: getMarkerIcon(station),
-    callout: {
-      content: station.name,
-      color: '#333333',
-      fontSize: 12,
-      borderRadius: 4,
-      padding: 6,
-      display: 'BYCLICK',
-      bgColor: '#FFFFFF',
-    },
-  }))
+  return stationList.value.map((station, index) => {
+    const hasFree = station.fastFree > 0 || station.slowFree > 0
+    return {
+      id: station.id,
+      latitude: station.latitude,
+      longitude: station.longitude,
+      width: 50,
+      height: 60,
+      iconPath: getMarkerIcon(station),
+      callout: {
+        content: station.name + (hasFree ? ' ✓' : ''),
+        color: hasFree ? '#4CAF50' : '#666666',
+        fontSize: 13,
+        borderRadius: 8,
+        padding: 8,
+        display: 'BYCLICK',
+        bgColor: '#FFFFFF',
+        borderColor: hasFree ? '#4CAF50' : '#CCCCCC',
+        borderWidth: 1,
+      },
+      label: {
+        content: hasFree ? '⚡' : '🔌',
+        color: hasFree ? '#4CAF50' : '#9E9E9E',
+        fontSize: 12,
+        anchorX: 0,
+        anchorY: 0,
+      },
+    }
+  })
 })
 
-// 获取标记图标
+// 获取标记图标（小程序/APP平台使用）
 function getMarkerIcon(station: Station): string {
   const hasFree = station.fastFree > 0 || station.slowFree > 0
-  return hasFree
-    ? '/static/marker/marker-green.png'
-    : '/static/marker/marker-gray.png'
+  // 创建自定义图标URL（使用在线图标生成服务或本地图标）
+  // 这里使用emoji作为图标占位，实际应该使用本地图标文件或在线图标服务
+  if (hasFree) {
+    // 有可用桩：使用绿色图标（可以替换为本地图标路径）
+    // 注意：uni-app小程序平台需要使用本地路径或base64
+    return 'https://webapi.amap.com/theme/v1.3/markers/n/mark_r.png'
+  } else {
+    // 无可用桩：使用灰色图标
+    return 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png'
+  }
 }
 
 // 初始化
@@ -316,10 +339,16 @@ function createMap() {
     }
     
     // 创建地图（严格按照官方文档，启用缩放、拖拽等功能）
+    // 默认显示长沙市/开福区局部区域，而不是全国范围
+    const defaultCenter = locationStore.currentLocation
+      ? [location.longitude, location.latitude]
+      : [112.9822, 28.1963] // 长沙市开福区中心（默认位置）
+    const defaultZoom = locationStore.currentLocation ? 14 : 13 // 有位置信息时14级别，否则13级别（显示开福区局部区域）
+    
     amapMap = new amapInstance.Map('amap-container', {
       viewMode: '3D', // 是否为3D地图模式
-      zoom: 14, // 初始化地图级别
-      center: [location.longitude, location.latitude], // 初始化地图中心点位置 [经度, 纬度]
+      zoom: defaultZoom, // 初始化地图级别
+      center: defaultCenter, // 初始化地图中心点位置 [经度, 纬度]
       // 启用缩放和交互功能
       zoomEnable: true, // 是否可以通过鼠标滚轮缩放
       dragEnable: true, // 是否可通过鼠标拖拽平移地图
@@ -351,7 +380,7 @@ function createMap() {
         const mapContainer = amapMap.getContainer()
         if (mapContainer) {
           // 使用 capture 阶段捕获滚轮事件，阻止冒泡到页面
-          mapContainer.addEventListener('wheel', (e) => {
+          mapContainer.addEventListener('wheel', (e: WheelEvent) => {
             e.stopPropagation()
             // 不阻止默认行为，让高德地图处理滚轮缩放
           }, { passive: false, capture: true })
@@ -410,25 +439,29 @@ async function loadMapStations() {
     })
     amapMarkers = []
     
-    // 获取站点列表
-    const location = locationStore.currentLocation || {
-      latitude: 28.1963,
-      longitude: 112.9822,
+    // 获取站点列表（使用已有数据，如果没有则重新获取）
+    if (stationList.value.length === 0) {
+      const location = locationStore.currentLocation || {
+        latitude: 28.1963,
+        longitude: 112.9822,
+      }
+      
+      console.log('📡 请求站点数据，位置:', location)
+      
+      const res = await stationApi.getNearbyStations({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        radius: 10000000, // 10000公里，获取所有站点
+        type: currentFilter.value === 'all' ? undefined : currentFilter.value as 'fast' | 'slow',
+        pageSize: 1000,
+      })
+      
+      console.log('✅ 获取到站点数据:', res.list?.length || 0, '个站点')
+      
+      stationList.value = res.list || []
+    } else {
+      console.log('✅ 使用已有站点数据:', stationList.value.length, '个站点')
     }
-    
-    console.log('📡 请求站点数据，位置:', location)
-    
-    const res = await stationApi.getNearbyStations({
-      latitude: location.latitude,
-      longitude: location.longitude,
-      radius: 10000,
-      type: currentFilter.value === 'all' ? undefined : currentFilter.value as 'fast' | 'slow',
-      pageSize: 50,
-    })
-    
-    console.log('✅ 获取到站点数据:', res.list?.length || 0, '个站点')
-    
-    stationList.value = res.list || []
     
     if (stationList.value.length === 0) {
       console.warn('⚠️ 没有找到附近的站点')
@@ -451,22 +484,44 @@ async function loadMapStations() {
       try {
         const hasFree = station.fastFree > 0 || station.slowFree > 0
         
-        // 根据官方文档创建Marker图标
-        // 使用AMap.Icon对象设置图标（更可靠，可以设置大小和偏移）
-        let iconUrl = ''
-        if (hasFree) {
-          // 有可用桩：使用红色标记
-          iconUrl = 'https://webapi.amap.com/theme/v1.3/markers/n/mark_r.png'
-        } else {
-          // 无可用桩：使用蓝色标记
-          iconUrl = 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png'
+        // 创建更美观的充电站图标
+        // 使用自定义SVG图标（更美观）
+        const createCustomIcon = (color: string) => {
+          // 使用canvas创建图标或直接使用SVG data URL
+          const svg = `
+            <svg width="50" height="60" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+                  <feOffset dx="0" dy="2" result="offsetblur"/>
+                  <feComponentTransfer>
+                    <feFuncA type="linear" slope="0.3"/>
+                  </feComponentTransfer>
+                  <feMerge>
+                    <feMergeNode/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <circle cx="25" cy="25" r="20" fill="${color}" stroke="#FFFFFF" stroke-width="3" filter="url(#shadow)"/>
+              <path d="M20 18 L25 13 L30 18 L30 22 L25 27 L20 22 Z" fill="#FFFFFF"/>
+              <rect x="23" y="27" width="4" height="10" fill="#FFFFFF"/>
+              <rect x="19" y="33" width="12" height="3" rx="1" fill="#FFFFFF"/>
+              <text x="25" y="52" font-family="Arial" font-size="10" font-weight="bold" fill="${color}" text-anchor="middle">⚡</text>
+            </svg>
+          `
+          return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
         }
+        
+        const iconUrl = hasFree
+          ? createCustomIcon('#4CAF50') // 绿色：有可用桩
+          : createCustomIcon('#9E9E9E') // 灰色：无可用桩
         
         // 创建Icon对象（根据官方文档，更可靠）
         const markerIcon = new amapInstance.Icon({
-          size: new amapInstance.Size(25, 34), // 图标实际尺寸
-          image: iconUrl, // 图标URL
-          imageSize: new amapInstance.Size(25, 34), // 图标显示尺寸
+          size: new amapInstance.Size(50, 60), // 图标实际尺寸
+          image: iconUrl, // 图标URL（SVG）
+          imageSize: new amapInstance.Size(50, 60), // 图标显示尺寸
           imageOffset: new amapInstance.Pixel(0, 0), // 图标偏移
         })
         
@@ -475,7 +530,9 @@ async function loadMapStations() {
           position: [station.longitude, station.latitude], // [经度, 纬度]
           icon: markerIcon, // 使用Icon对象
           title: station.name, // 鼠标悬停显示标题
-          offset: new amapInstance.Pixel(-12, -34), // 标记偏移，使图标底部对齐坐标点
+          offset: new amapInstance.Pixel(-25, -60), // 标记偏移，使图标底部对齐坐标点
+          zIndex: hasFree ? 100 : 50, // 有可用桩的标记层级更高
+          anchor: 'bottom-center', // 锚点位置
         })
         
         // 添加点击事件（参考admin端实现）
@@ -500,22 +557,132 @@ async function loadMapStations() {
     
     console.log('✅ 成功创建', amapMarkers.length, '个标记点')
     
-    // 如果有站点，调整地图视野（参考admin端实现）
+    // 如果有站点，调整地图视野以显示局部区域的站点（不显示全国范围）
     if (amapMarkers.length > 0) {
       try {
-        amapMap.setFitView(amapMarkers)
-        console.log('✅ 地图视野已调整')
+        // 获取当前位置或默认位置（开福区）
+        const currentLocation = locationStore.currentLocation || {
+          latitude: 28.1963,
+          longitude: 112.9822,
+        }
+        
+        // 只显示当前位置附近的站点（限制在局部区域）
+        const nearbyMarkers = amapMarkers.filter((marker: any) => {
+          const markerPos = marker.getPosition()
+          if (!markerPos || !Array.isArray(markerPos) || markerPos.length !== 2) {
+            return false
+          }
+          // 使用计算距离函数
+          const distance = calculateDistance(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            markerPos[1], // 纬度
+            markerPos[0]  // 经度
+          )
+          // 只显示距离当前位置30公里内的站点（局部区域）
+          return distance <= 30000
+        })
+        
+        if (nearbyMarkers.length > 0) {
+          // 使用setFitView自动调整视野以包含局部区域的标记点
+          // 设置最大缩放级别为14，最小缩放级别为13，避免显示全国范围
+          try {
+            // 先尝试使用setFitView，但限制最大缩放级别
+            amapMap.setFitView(nearbyMarkers, false, [50, 100, 50, 100], 14)
+            // 检查当前缩放级别，如果太小（显示全国范围），则设置为局部区域级别
+            const currentZoom = amapMap.getZoom()
+            if (currentZoom < 12) {
+              // 如果缩放级别太小，说明站点分布太广，使用当前位置的局部区域
+              amapMap.setCenter([currentLocation.longitude, currentLocation.latitude])
+              amapMap.setZoom(13) // 13级别，显示开福区局部区域
+              console.log('✅ 站点分布较广，已定位到当前位置，显示局部区域（13级别）')
+            } else {
+              console.log('✅ 地图视野已调整，显示', nearbyMarkers.length, '个局部站点（30公里内），缩放级别', currentZoom)
+            }
+          } catch (fitViewError) {
+            // 如果setFitView失败，使用当前位置的局部区域
+            amapMap.setCenter([currentLocation.longitude, currentLocation.latitude])
+            amapMap.setZoom(13) // 13级别，显示开福区局部区域
+            console.log('✅ 地图已定位到当前位置，显示局部区域（13级别）')
+          }
+        } else {
+          // 如果没有附近站点，显示当前位置的局部区域
+          amapMap.setCenter([currentLocation.longitude, currentLocation.latitude])
+          amapMap.setZoom(13) // 13级别，显示开福区局部区域
+          console.log('✅ 地图已定位到当前位置，显示局部区域（13级别）')
+        }
       } catch (viewError) {
-        console.warn('调整地图视野失败:', viewError)
+        console.warn('调整地图视野失败，使用默认局部区域:', viewError)
+        // 如果setFitView失败，使用当前位置的局部区域
+        const currentLocation = locationStore.currentLocation || {
+          latitude: 28.1963,
+          longitude: 112.9822,
+        }
+        amapMap.setCenter([currentLocation.longitude, currentLocation.latitude])
+        amapMap.setZoom(13) // 13级别，显示开福区局部区域
       }
+    } else {
+      // 如果没有站点，使用默认中心（开福区）
+      const currentLocation = locationStore.currentLocation || {
+        latitude: 28.1963,
+        longitude: 112.9822,
+      }
+      amapMap.setCenter([currentLocation.longitude, currentLocation.latitude])
+      amapMap.setZoom(13) // 13级别，显示开福区局部区域
     }
     
-    // 更新地图中心
-    if (res.list.length > 0 && !locationStore.currentLocation) {
-      mapCenter.value = {
-        latitude: res.list[0].latitude,
-        longitude: res.list[0].longitude,
+    // 更新地图中心（小程序/APP平台）
+    if (stationList.value.length > 0) {
+      // 获取当前位置或默认位置（开福区）
+      const currentLocation = locationStore.currentLocation || {
+        latitude: 28.1963,
+        longitude: 112.9822,
       }
+      
+      // 只显示当前位置附近的站点（限制在局部区域，30公里内）
+      const nearbyStations = stationList.value.filter((station) => {
+        if (!station.latitude || !station.longitude) return false
+        // 使用精确的距离计算函数
+        const distance = calculateDistance(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          station.latitude,
+          station.longitude
+        )
+        return distance <= 30000 // 30公里内（30000米）
+      })
+      
+      if (nearbyStations.length > 0) {
+        // 计算附近站点的中心点
+        const avgLat = nearbyStations.reduce((sum, s) => sum + s.latitude, 0) / nearbyStations.length
+        const avgLon = nearbyStations.reduce((sum, s) => sum + s.longitude, 0) / nearbyStations.length
+        mapCenter.value = {
+          latitude: avgLat,
+          longitude: avgLon,
+        }
+        // 根据附近站点数量调整缩放级别（局部区域）
+        if (nearbyStations.length > 20) {
+          mapScale.value = 12 // 显示更多站点时稍微缩小
+        } else if (nearbyStations.length > 10) {
+          mapScale.value = 13
+        } else {
+          mapScale.value = 14 // 默认显示局部区域
+        }
+      } else {
+        // 如果没有附近站点，使用当前位置
+        mapCenter.value = {
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+        }
+        mapScale.value = 13 // 13级别，显示开福区局部区域
+      }
+    } else {
+      // 如果没有站点，使用默认位置（开福区）
+      mapCenter.value = {
+        latitude: 28.1963,
+        longitude: 112.9822,
+      }
+      mapScale.value = 13 // 13级别，显示开福区局部区域
     }
     
     // 确保loading状态关闭
@@ -640,7 +807,7 @@ async function initLocation() {
   }
 }
 
-// 获取附近站点
+// 获取所有站点（地图显示需要）
 async function fetchNearbyStations() {
   try {
     // 使用当前位置或默认位置（长沙）
@@ -649,12 +816,13 @@ async function fetchNearbyStations() {
       longitude: 112.9822,
     }
     
+    // 传一个很大的 radius 来获取所有站点（10000 公里）
     const res = await stationApi.getNearbyStations({
       latitude: location.latitude,
       longitude: location.longitude,
-      radius: 10000,
+      radius: 10000000, // 10000公里，基本覆盖全国
       type: currentFilter.value === 'all' ? undefined : currentFilter.value as 'fast' | 'slow',
-      pageSize: 50,
+      pageSize: 1000, // 增加页面大小以获取更多站点
     })
     stationList.value = res.list || []
     
@@ -688,11 +856,8 @@ async function handleSearch() {
   }
 
   try {
-    const { latitude, longitude } = locationStore.currentLocation || {}
     const res = await stationApi.searchStations({
       keyword: keyword.value.trim(),
-      latitude,
-      longitude,
       pageSize: 50,
     })
     stationList.value = res.list
@@ -732,15 +897,210 @@ function handleFilterChange(value: string) {
   // #endif
 }
 
-// 重新定位
+// 重新定位到当前位置
 async function relocate() {
-  const location = await locationStore.getCurrentLocation()
-  if (location) {
-    mapCenter.value = {
-      latitude: location.latitude,
-      longitude: location.longitude,
+  try {
+    uni.showLoading({ title: '定位中...' })
+    
+    // 强制重新获取当前位置（不使用缓存）
+    let location: Location | null = null
+    
+    // #ifdef H5
+    // H5平台：直接使用浏览器定位，不使用缓存
+    try {
+      const coords = await new Promise<GeolocationPosition>((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error('浏览器不支持定位'))
+          return
+        }
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true, // 高精度定位
+            timeout: 10000, // 10秒超时
+            maximumAge: 0, // 不使用缓存，强制重新定位
+          }
+        )
+      })
+      
+      if (coords && coords.coords) {
+        const latitude = coords.coords.latitude
+        const longitude = coords.coords.longitude
+        console.log('📍 获取到实时定位坐标:', latitude, longitude)
+        
+        // 使用高德逆地理编码获取详细地址
+        const addressInfo = await locationStore.reverseGeocodeByAmap(latitude, longitude)
+        location = {
+          latitude,
+          longitude,
+          ...addressInfo,
+        }
+        // 更新store中的位置
+        locationStore.currentLocation = location
+      }
+    } catch (error) {
+      console.warn('定位失败，使用store中的位置:', error)
+      // 如果定位失败，尝试使用store中已有的位置
+      location = locationStore.currentLocation
     }
-    mapScale.value = 14
+    // #endif
+    
+    // #ifndef H5
+    // 小程序/APP平台：使用uni.getLocation，强制重新定位
+    try {
+      const locRes = await new Promise<UniApp.GetLocationSuccess>((resolve, reject) => {
+        uni.getLocation({
+          type: 'gcj02', // 返回可以用于高德地图的坐标类型
+          altitude: false,
+          geocode: true, // 获取地址信息
+          isHighAccuracy: true, // 高精度定位
+          highAccuracyExpireTime: 4000,
+          success: resolve,
+          fail: reject,
+        })
+      })
+      
+      if (locRes) {
+        location = {
+          latitude: locRes.latitude,
+          longitude: locRes.longitude,
+          address: locRes.address || '',
+          // city 和 district 可能需要通过逆地理编码获取
+        }
+        // 如果获取了地址信息，可以尝试解析城市信息
+        if (locRes.address) {
+          // 使用高德逆地理编码获取更详细的信息
+          try {
+            const addressInfo = await locationStore.reverseGeocodeByAmap(
+              locRes.latitude,
+              locRes.longitude
+            )
+            location = {
+              ...location,
+              ...addressInfo,
+            }
+          } catch (e) {
+            console.warn('逆地理编码失败:', e)
+          }
+        }
+        // 更新store中的位置
+        locationStore.currentLocation = location
+      } else {
+        location = locationStore.currentLocation
+      }
+    } catch (error) {
+      console.warn('定位失败，使用store中的位置:', error)
+      location = locationStore.currentLocation
+    }
+    // #endif
+    
+    if (location && location.latitude && location.longitude) {
+      console.log('✅ 定位成功，当前位置:', location.latitude, location.longitude)
+      
+      // 更新地图中心到当前位置
+      mapCenter.value = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+      }
+      mapScale.value = 17 // 17级别，街道级别视野，可以看到周围建筑物和道路详情
+      
+      // #ifdef H5
+      // H5平台：使用平滑动画移动到当前位置并设置街道级别的视野
+      if (amapMap) {
+        // 先清除之前的用户位置标记（如果存在）
+        if ((amapMap as any).userLocationMarker) {
+          try {
+            amapMap.remove((amapMap as any).userLocationMarker)
+          } catch (e) {
+            console.warn('移除用户位置标记失败:', e)
+          }
+        }
+        
+        // 创建用户位置标记（蓝色定位图标）
+        const userMarkerIcon = new amapInstance.Icon({
+          size: new amapInstance.Size(36, 36),
+          image: 'https://webapi.amap.com/theme/v1.3/markers/n/loc.png', // 蓝色定位图标
+          imageSize: new amapInstance.Size(36, 36),
+        })
+        
+        const userMarker = new amapInstance.Marker({
+          position: [location.longitude, location.latitude],
+          icon: userMarkerIcon,
+          zIndex: 1000, // 最高层级，显示在最上层
+          title: '我的位置',
+          anchor: 'center', // 锚点在中心
+        })
+        
+        amapMap.add(userMarker)
+        ;(amapMap as any).userLocationMarker = userMarker
+        
+        // 先设置缩放级别到街道级别（17级别，可以看到周围建筑物和道路详情）
+        amapMap.setZoom(17, false) // false 表示平滑缩放
+        
+        // 使用 panTo 实现平滑移动地图中心到当前位置（有动画效果）
+        amapMap.panTo([location.longitude, location.latitude], () => {
+          console.log('✅ 地图已平滑移动到当前位置，缩放级别17（街道级别视野，可以看到建筑物和道路详情）')
+        })
+      }
+      // #endif
+      
+      // #ifndef H5
+      // 小程序/APP平台：map组件会自动响应 mapCenter 和 mapScale 的变化
+      // 由于已经有 show-location="true"，会自动显示用户位置蓝点
+      // 使用 mapContext 来平滑移动地图到当前位置并设置街道级别视野
+      try {
+        // 在小程序中，createMapContext 不需要第二个参数（在 setup 语法中）
+        const mapContext = uni.createMapContext('map')
+        // moveToLocation 方法将地图中心平滑移动到指定位置
+        mapContext.moveToLocation({
+          latitude: location.latitude,
+          longitude: location.longitude,
+          success: () => {
+            console.log('✅ 地图已平滑移动到当前位置，缩放级别17（街道级别视野）')
+          },
+          fail: (err: any) => {
+            console.warn('移动地图失败，使用备用方案:', err)
+            // 即使失败，mapCenter 和 mapScale 的变化也会更新地图
+            // map组件会响应响应式数据的变化自动更新
+          },
+        })
+      } catch (error) {
+        console.warn('创建mapContext失败，使用备用方案:', error)
+        // 即使失败，mapCenter 和 mapScale 的变化也会自动更新地图
+        // 因为map组件绑定了 :latitude 和 :longitude，会自动响应变化
+      }
+      // map组件已经有 :show-location="true"，会自动显示用户位置蓝点
+      // mapScale 已设置为 17，会自动应用街道级别视野
+      console.log('✅ 地图中心已更新到当前位置，显示用户位置，缩放级别17（街道级别视野）')
+      // #endif
+      
+      // 重新加载附近的站点（使用当前位置，但范围较大以显示周围站点）
+      await fetchNearbyStations()
+      
+      uni.hideLoading()
+      const locationText = location.district || location.city || location.address || '当前位置'
+      uni.showToast({ 
+        title: `已定位到${locationText}`, 
+        icon: 'success',
+        duration: 2000
+      })
+    } else {
+      uni.hideLoading()
+      uni.showToast({ 
+        title: '定位失败，请检查定位权限', 
+        icon: 'none',
+        duration: 2000
+      })
+    }
+  } catch (error: any) {
+    uni.hideLoading()
+    console.error('❌ 定位失败:', error)
+    uni.showToast({ 
+      title: error.message || '定位失败，请检查定位权限', 
+      icon: 'none',
+      duration: 2000
+    })
   }
 }
 
@@ -974,11 +1334,44 @@ function goToStationDetail(station: Station) {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
   z-index: 50;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.95);
+    background: #F5F5F5;
+  }
 
   .btn-icon {
-    font-size: 40rpx;
+    font-size: 44rpx;
+    z-index: 2;
+    position: relative;
+  }
+
+  .btn-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 96rpx;
+    height: 96rpx;
+    border-radius: 50%;
+    background: rgba(76, 175, 80, 0.2);
+    animation: pulse 2s infinite;
+    z-index: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
   }
 }
 
