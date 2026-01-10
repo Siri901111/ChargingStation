@@ -60,7 +60,7 @@
       </el-col>
     </el-row>
 
-    <!-- 时间选择器 -->
+    <!-- 筛选条件 -->
     <el-card class="filter-card">
       <div class="filter-row">
         <div class="filter-item">
@@ -74,6 +74,14 @@
             :shortcuts="shortcuts"
             @change="handleDateChange"
           />
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">应用端：</span>
+          <el-select v-model="filterAppId" placeholder="选择应用端" clearable @change="handleDateChange" style="width: 150px">
+            <el-option label="全部" value="" />
+            <el-option label="管理端" value="charging-station-admin" />
+            <el-option label="用户端" value="charging-station-user-app" />
+          </el-select>
         </div>
         <div class="filter-item">
           <el-button type="primary" @click="refreshData" :loading="loading">
@@ -286,6 +294,7 @@ const shortcuts = [
 
 const loading = ref(false)
 const trendGroupBy = ref<'hour' | 'day'>('hour')
+const filterAppId = ref('')
 
 const overviewData = reactive<OverviewStats>({
   total: 0,
@@ -328,13 +337,15 @@ const formatNumber = (num: number) => {
 }
 
 const getTimeParams = () => {
+  const params: any = {}
   if (dateRange.value?.[0] && dateRange.value?.[1]) {
-    return {
-      startTime: dateRange.value[0].getTime(),
-      endTime: dateRange.value[1].getTime()
-    }
+    params.startTime = dateRange.value[0].getTime()
+    params.endTime = dateRange.value[1].getTime()
   }
-  return {}
+  if (filterAppId.value) {
+    params.appId = filterAppId.value
+  }
+  return params
 }
 
 const loadOverviewData = async () => {

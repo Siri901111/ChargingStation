@@ -270,9 +270,9 @@ export class Reporter {
     if (this.platformAdapter.onVisibilityChange) {
       const unsubscribe = this.platformAdapter.onVisibilityChange((hidden) => {
         if (hidden) {
-          handlePageHide();
-        }
-      });
+        handlePageHide();
+      }
+    });
       this.pageHideUnsubscribers.push(unsubscribe);
     }
   }

@@ -55,7 +55,7 @@
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-row :gutter="20">
-        <el-col :span="8">
+        <el-col :span="6">
           <el-date-picker
             v-model="dateRange"
             type="datetimerange"
@@ -64,21 +64,31 @@
             end-placeholder="结束时间"
             :shortcuts="shortcuts"
             @change="handleSearch"
+            style="width: 100%"
           />
         </el-col>
         <el-col :span="4">
-          <el-select v-model="filterParams.type" placeholder="性能类型" clearable @change="handleSearch">
+          <el-select v-model="filterParams.appId" placeholder="应用端" clearable @change="handleSearch" style="width: 100%">
+            <el-option label="全部" value="" />
+            <el-option label="管理端" value="charging-station-admin" />
+            <el-option label="用户端" value="charging-station-user-app" />
+          </el-select>
+        </el-col>
+        <el-col :span="4">
+          <el-select v-model="filterParams.type" placeholder="性能类型" clearable @change="handleSearch" style="width: 100%">
             <el-option label="全部" value="" />
             <el-option label="性能指标" value="performance" />
             <el-option label="资源加载" value="resource_timing" />
             <el-option label="长任务" value="long_task" />
           </el-select>
         </el-col>
-        <el-col :span="4">
-          <el-button type="primary" @click="handleSearch" :loading="loading">
+        <el-col :span="5">
+          <el-button type="primary" @click="handleSearch" :loading="loading" style="width: 100%">
             <el-icon><Search /></el-icon>查询
           </el-button>
-          <el-button @click="handleReset">重置</el-button>
+        </el-col>
+        <el-col :span="5">
+          <el-button @click="handleReset" style="width: 100%">重置</el-button>
         </el-col>
       </el-row>
     </el-card>
@@ -170,9 +180,28 @@
           <template #default="{ row }">
             <div class="expand-content">
               <el-descriptions :column="3" border size="small">
-                <el-descriptions-item label="页面URL">{{ row.page_url }}</el-descriptions-item>
-                <el-descriptions-item label="页面标题">{{ row.page_title }}</el-descriptions-item>
+                <el-descriptions-item label="页面路径" :span="2">
+                  <div>{{ row.page_path || row.page_url || '-' }}</div>
+                  <div v-if="row.page_title && row.page_title !== row.page_path" style="color: #909399; margin-top: 4px;">
+                    {{ row.page_title }}
+                  </div>
+                </el-descriptions-item>
                 <el-descriptions-item label="上报时间">{{ formatTime(row.timestamp) }}</el-descriptions-item>
+                <el-descriptions-item label="应用端">
+                  <el-tag :type="getAppTagType(row.app_id)" size="small" effect="dark">
+                    {{ getAppName(row.app_id) }}
+                  </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="平台信息">
+                  <div>
+                    <el-tag v-if="row.platform" size="small" type="info" style="margin-right: 4px">{{ row.platform }}</el-tag>
+                    <el-tag v-if="row.env" size="small" type="warning">{{ row.env }}</el-tag>
+                    <span v-if="!row.platform && !row.env">-</span>
+                  </div>
+                </el-descriptions-item>
+                <el-descriptions-item label="用户">
+                  <div>{{ row.user_name || '匿名' }}</div>
+                </el-descriptions-item>
                 <el-descriptions-item label="设备信息" :span="3">
                   <pre>{{ JSON.stringify(row.device_info, null, 2) }}</pre>
                 </el-descriptions-item>
@@ -188,7 +217,33 @@
             <el-tag size="small" :type="getTypeTagType(row.type)">{{ getTypeName(row.type) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="page_url" label="页面" min-width="200" show-overflow-tooltip />
+        <el-table-column label="应用端" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag 
+              :type="getAppTagType(row.app_id)" 
+              size="small"
+              effect="dark"
+            >
+              {{ getAppName(row.app_id) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="页面" min-width="200" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div class="page-info">
+              <div class="page-path">{{ getPageName(row.page_path || row.page_url) }}</div>
+              <div v-if="row.page_title && row.page_title !== row.page_path" class="page-title">{{ row.page_title }}</div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="平台/环境" width="120">
+          <template #default="{ row }">
+            <div>
+              <el-tag v-if="row.platform" size="small" type="info">{{ row.platform }}</el-tag>
+              <el-tag v-if="row.env" size="small" type="warning" style="margin-left: 4px; margin-top: 2px;">{{ row.env }}</el-tag>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="FCP" width="100">
           <template #default="{ row }">
             <span :style="{ color: getMetricColor(getDataValue(row.data, 'firstContentfulPaint'), 1800, 3000) }">
@@ -239,7 +294,10 @@ const loading = ref(false)
 const tableData = ref<MonitorDataItem[]>([])
 const total = ref(0)
 const pageInfo = reactive({ page: 1, pageSize: 20 })
-const filterParams = reactive({ type: '' })
+const filterParams = reactive({ 
+  type: '', 
+  appId: ''  // 应用端筛选
+})
 
 const dateRange = ref<[Date, Date]>([new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()])
 
@@ -268,7 +326,11 @@ const getTimeParams = () => {
 
 const loadPerformanceMetrics = async () => {
   try {
-    const res = await getPerformanceMetrics(getTimeParams())
+    const params: any = {
+      ...getTimeParams(),
+      appId: filterParams.appId || undefined
+    }
+    const res = await getPerformanceMetrics(params)
     if (res.code === 200 && res.data) Object.assign(performanceData, res.data)
   } catch (error) { console.error('加载性能指标失败:', error) }
 }
@@ -276,7 +338,15 @@ const loadPerformanceMetrics = async () => {
 const loadPerformanceData = async () => {
   loading.value = true
   try {
-    const params = { ...getTimeParams(), page: pageInfo.page, pageSize: pageInfo.pageSize, type: filterParams.type || undefined }
+    const params: any = { 
+      ...getTimeParams(), 
+      page: pageInfo.page, 
+      pageSize: pageInfo.pageSize, 
+      type: filterParams.type || undefined,
+      appId: filterParams.appId || undefined,
+      sortBy: 'created_at',
+      sortOrder: 'desc'
+    }
     const res = await getPerformanceList(params)
     if (res.code === 200 && res.data) {
       tableData.value = res.data.list
@@ -289,11 +359,13 @@ const loadPerformanceData = async () => {
 const loadTrendData = async () => {
   try {
     const timeParams = getTimeParams()
-    const params = {
+    const params: any = {
       startTime: timeParams.startTime || Date.now() - 24 * 60 * 60 * 1000,
       endTime: timeParams.endTime || Date.now(),
       groupBy: 'hour' as const,
-      category: 'performance'
+      category: 'performance',
+      appId: filterParams.appId || undefined,
+      type: filterParams.type || undefined
     }
     const res = await getTrend(params)
     if (res.code === 200 && res.data) updateTrendChart(res.data)
@@ -356,6 +428,20 @@ const getTypeTagType = (type: string) => {
   const map: Record<string, string> = { performance: 'primary', resource_timing: 'success', long_task: 'warning' }
   return map[type] || 'info'
 }
+const getPageName = (urlOrPath: string) => {
+  if (!urlOrPath) return '-'
+  // 如果是路径，直接返回
+  if (urlOrPath.startsWith('/')) {
+    return urlOrPath
+  }
+  // 如果是URL，提取路径
+  try { 
+    const url = new URL(urlOrPath)
+    return url.pathname || urlOrPath
+  } catch { 
+    return urlOrPath 
+  }
+}
 const getTypeName = (type: string) => {
   const map: Record<string, string> = { performance: '性能指标', resource_timing: '资源加载', long_task: '长任务', first_contentful_paint: 'FCP', largest_contentful_paint: 'LCP' }
   return map[type] || type
@@ -370,8 +456,25 @@ const formatTime = (timestamp: number) => new Date(timestamp).toLocaleString('zh
 const handleSearch = () => { pageInfo.page = 1; loadPerformanceData(); loadPerformanceMetrics(); loadTrendData() }
 const handleReset = () => {
   filterParams.type = ''
+  filterParams.appId = ''
   dateRange.value = [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()]
   handleSearch()
+}
+
+// 获取应用名称
+const getAppName = (appId: string) => {
+  if (!appId) return '未知'
+  if (appId === 'charging-station-admin') return '管理端'
+  if (appId === 'charging-station-user-app') return '用户端'
+  return appId
+}
+
+// 获取应用标签类型
+const getAppTagType = (appId: string) => {
+  if (!appId) return 'info'
+  if (appId === 'charging-station-admin') return 'primary'
+  if (appId === 'charging-station-user-app') return 'success'
+  return 'info'
 }
 const handleSizeChange = (size: number) => { pageInfo.pageSize = size; loadPerformanceData() }
 const handleCurrentChange = (page: number) => { pageInfo.page = page; loadPerformanceData() }
@@ -443,6 +546,18 @@ onBeforeUnmount(() => {
     .card-header { display: flex; justify-content: space-between; align-items: center; .sample-count { font-size: 14px; color: rgba(0, 0, 0, 0.45); } }
     .expand-content { padding: 20px; background: #f0f2f5; pre { background: #ffffff; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow: auto; } }
     .pagination { margin-top: 20px; justify-content: flex-end; }
+    .page-info {
+      .page-path {
+        color: #303133;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+      .page-title {
+        color: #909399;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+    }
   }
 }
 </style>

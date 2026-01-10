@@ -51,7 +51,7 @@
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-row :gutter="20">
-        <el-col :span="8">
+        <el-col :span="6">
           <el-date-picker
             v-model="dateRange"
             type="datetimerange"
@@ -60,10 +60,18 @@
             end-placeholder="结束时间"
             :shortcuts="shortcuts"
             @change="handleSearch"
+            style="width: 100%"
           />
         </el-col>
         <el-col :span="3">
-          <el-select v-model="filterParams.method" placeholder="请求方法" clearable @change="handleSearch">
+          <el-select v-model="filterParams.appId" placeholder="应用端" clearable @change="handleSearch" style="width: 100%">
+            <el-option label="全部" value="" />
+            <el-option label="管理端" value="charging-station-admin" />
+            <el-option label="用户端" value="charging-station-user-app" />
+          </el-select>
+        </el-col>
+        <el-col :span="3">
+          <el-select v-model="filterParams.method" placeholder="请求方法" clearable @change="handleSearch" style="width: 100%">
             <el-option label="全部" value="" />
             <el-option label="GET" value="GET" />
             <el-option label="POST" value="POST" />
@@ -72,22 +80,26 @@
           </el-select>
         </el-col>
         <el-col :span="3">
-          <el-select v-model="filterParams.status" placeholder="状态码" clearable @change="handleSearch">
+          <el-select v-model="filterParams.status" placeholder="状态码" clearable @change="handleSearch" style="width: 100%">
             <el-option label="全部" value="" />
-            <el-option label="2xx 成功" value="2xx" />
-            <el-option label="3xx 重定向" value="3xx" />
-            <el-option label="4xx 客户端错误" value="4xx" />
-            <el-option label="5xx 服务端错误" value="5xx" />
+            <el-option label="2xx" value="2xx" />
+            <el-option label="3xx" value="3xx" />
+            <el-option label="4xx" value="4xx" />
+            <el-option label="5xx" value="5xx" />
           </el-select>
         </el-col>
-        <el-col :span="4">
-          <el-input v-model="filterParams.url" placeholder="搜索URL" clearable @keyup.enter="handleSearch" />
+        <el-col :span="5">
+          <el-input v-model="filterParams.keyword" placeholder="搜索URL/关键词" clearable @keyup.enter="handleSearch" @clear="handleSearch" style="width: 100%">
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
         </el-col>
-        <el-col :span="4">
-          <el-button type="primary" @click="handleSearch" :loading="loading">
-            <el-icon><Search /></el-icon>查询
-          </el-button>
-          <el-button @click="handleReset">重置</el-button>
+        <el-col :span="2">
+          <el-button type="primary" @click="handleSearch" :loading="loading" style="width: 100%">查询</el-button>
+        </el-col>
+        <el-col :span="2">
+          <el-button @click="handleReset" style="width: 100%">重置</el-button>
         </el-col>
       </el-row>
     </el-card>
@@ -151,6 +163,18 @@
                     {{ getDataValue(row.data, 'status') }}
                   </el-tag>
                 </el-descriptions-item>
+                <el-descriptions-item label="应用端">
+                  <el-tag :type="getAppTagType(row.app_id)" size="small" effect="dark">
+                    {{ getAppName(row.app_id) }}
+                  </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="平台信息">
+                  <div>
+                    <el-tag v-if="row.platform" size="small" type="info" style="margin-right: 4px">{{ row.platform }}</el-tag>
+                    <el-tag v-if="row.env" size="small" type="warning">{{ row.env }}</el-tag>
+                    <span v-if="!row.platform && !row.env">-</span>
+                  </div>
+                </el-descriptions-item>
                 <el-descriptions-item label="请求URL" :span="2">{{ getDataValue(row.data, 'url') }}</el-descriptions-item>
                 <el-descriptions-item label="耗时">{{ getDataValue(row.data, 'duration') }}ms</el-descriptions-item>
                 <el-descriptions-item label="发生时间">{{ formatTime(row.timestamp) }}</el-descriptions-item>
@@ -164,6 +188,26 @@
                   <pre>{{ JSON.stringify(getDataValue(row.data, 'response'), null, 2) || '-' }}</pre>
                 </el-descriptions-item>
               </el-descriptions>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="应用端" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag 
+              :type="getAppTagType(row.app_id)" 
+              size="small"
+              effect="dark"
+            >
+              {{ getAppName(row.app_id) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="平台/环境" width="120">
+          <template #default="{ row }">
+            <div>
+              <el-tag v-if="row.platform" size="small" type="info">{{ row.platform }}</el-tag>
+              <el-tag v-if="row.env" size="small" type="warning" style="margin-left: 4px; margin-top: 2px;">{{ row.env }}</el-tag>
+              <span v-if="!row.platform && !row.env">-</span>
             </div>
           </template>
         </el-table-column>
@@ -228,7 +272,14 @@ const tableData = ref<MonitorDataItem[]>([])
 const slowRequests = ref<any[]>([])
 const total = ref(0)
 const pageInfo = reactive({ page: 1, pageSize: 20 })
-const filterParams = reactive({ method: '', status: '', url: '' })
+const filterParams = reactive({ 
+  method: '', 
+  status: '', 
+  keyword: '',  // 关键词搜索（URL等）
+  appId: '',  // 应用端筛选
+  platform: '',  // 平台筛选
+  env: ''  // 环境筛选
+})
 
 const dateRange = ref<[Date, Date]>([new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()])
 
@@ -269,13 +320,43 @@ const formatSize = (bytes: number) => {
 const loadNetworkList = async () => {
   loading.value = true
   try {
-    const params = { ...getTimeParams(), page: pageInfo.page, pageSize: pageInfo.pageSize }
+    // 构建筛选条件
+    const params: any = { 
+      ...getTimeParams(), 
+      page: pageInfo.page, 
+      pageSize: pageInfo.pageSize,
+      appId: filterParams.appId || undefined,
+      keyword: filterParams.keyword || undefined
+    }
+    
     const res = await getNetworkList(params)
     if (res.code === 200 && res.data) {
-      tableData.value = res.data.list
-      total.value = res.data.total
-      calculateStats(res.data.list)
-      updateSlowRequests(res.data.list)
+      let filteredList = res.data.list
+      
+      // 前端筛选：请求方法和状态码（因为后端不支持这些筛选）
+      if (filterParams.method) {
+        filteredList = filteredList.filter((item: MonitorDataItem) => {
+          const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data
+          return data?.method === filterParams.method
+        })
+      }
+      
+      if (filterParams.status) {
+        filteredList = filteredList.filter((item: MonitorDataItem) => {
+          const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data
+          const status = data?.status || 0
+          if (filterParams.status === '2xx') return status >= 200 && status < 300
+          if (filterParams.status === '3xx') return status >= 300 && status < 400
+          if (filterParams.status === '4xx') return status >= 400 && status < 500
+          if (filterParams.status === '5xx') return status >= 500
+          return false
+        })
+      }
+      
+      tableData.value = filteredList
+      total.value = filteredList.length  // 注意：前端筛选后总数会变化
+      calculateStats(filteredList)
+      updateSlowRequests(filteredList)
     }
   } catch (error) { console.error('加载网络请求失败:', error) }
   finally { loading.value = false }
@@ -310,11 +391,12 @@ const updateSlowRequests = (list: MonitorDataItem[]) => {
 const loadTrendData = async () => {
   try {
     const timeParams = getTimeParams()
-    const params = {
+    const params: any = {
       startTime: timeParams.startTime || Date.now() - 24 * 60 * 60 * 1000,
       endTime: timeParams.endTime || Date.now(),
       groupBy: 'hour' as const,
-      category: 'network'
+      category: 'network',
+      appId: filterParams.appId || undefined
     }
     const res = await getTrend(params)
     if (res.code === 200 && res.data) updateTrendChart(res.data)
@@ -413,9 +495,26 @@ const handleSearch = () => { pageInfo.page = 1; loadNetworkList(); loadTrendData
 const handleReset = () => {
   filterParams.method = ''
   filterParams.status = ''
-  filterParams.url = ''
+  filterParams.keyword = ''
+  filterParams.appId = ''
   dateRange.value = [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()]
   handleSearch()
+}
+
+// 获取应用名称
+const getAppName = (appId: string) => {
+  if (!appId) return '未知'
+  if (appId === 'charging-station-admin') return '管理端'
+  if (appId === 'charging-station-user-app') return '用户端'
+  return appId
+}
+
+// 获取应用标签类型
+const getAppTagType = (appId: string) => {
+  if (!appId) return 'info'
+  if (appId === 'charging-station-admin') return 'primary'
+  if (appId === 'charging-station-user-app') return 'success'
+  return 'info'
 }
 const handleSizeChange = (size: number) => { pageInfo.pageSize = size; loadNetworkList() }
 const handleCurrentChange = (page: number) => { pageInfo.page = page; loadNetworkList() }

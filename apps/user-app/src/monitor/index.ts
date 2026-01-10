@@ -51,16 +51,20 @@ export function initMonitor(options?: {
     enableLongTask: true,
     longTaskThreshold: 50,
     // 添加额外的全局数据
-    extra: {
-      platform: 'uniapp',
+    extra: (() => {
+      let env = 'unknown'
       // #ifdef H5
-      env: 'h5',
+      env = 'h5'
       // #endif
       // #ifdef MP-WEIXIN
-      env: 'mp-weixin',
+      env = 'mp-weixin'
       // #endif
-      version: '1.0.0',
-    },
+      return {
+        platform: 'uniapp',
+        env,
+        version: '1.0.0',
+      }
+    })(),
   })
 
   // 监听路由变化（UniApp 路由监听）
@@ -90,6 +94,17 @@ export function getMonitor(): Monitor | null {
 export function setMonitorUserId(userId: string) {
   if (monitorInstance) {
     monitorInstance.setUserId(userId)
+    
+    // 尝试从用户 store 获取用户信息
+    try {
+      // #ifdef H5
+      // 在 H5 环境中，可以从 store 获取用户信息
+      // #endif
+      // 在 UniApp 中，用户信息会通过 setExtra 单独设置
+    } catch {
+      // 忽略错误
+    }
+    
     // 同时更新额外信息
     monitorInstance.setExtra({
       userId,

@@ -46,7 +46,22 @@ export async function reportData(req: Request, res: Response) {
  */
 export async function getDataList(req: Request, res: Response) {
   try {
-    const { page, pageSize, category, type, appId, startTime, endTime } = req.query;
+    const { 
+      page, 
+      pageSize, 
+      category, 
+      type, 
+      appId, 
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime, 
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
 
     const result = await monitorDataService.getMonitorDataList({
       page: page ? parseInt(page as string) : 1,
@@ -54,8 +69,15 @@ export async function getDataList(req: Request, res: Response) {
       category: category as string,
       type: type as string,
       appId: appId as string,
+      platform: platform as string,
+      env: env as string,
+      pagePath: pagePath as string,
+      userName: userName as string,
+      keyword: keyword as string,
       startTime: startTime ? parseInt(startTime as string) : undefined,
       endTime: endTime ? parseInt(endTime as string) : undefined,
+      sortBy: sortBy as string,
+      sortOrder: sortOrder as 'asc' | 'desc',
     });
 
     res.json({
@@ -77,14 +99,34 @@ export async function getDataList(req: Request, res: Response) {
  */
 export async function getErrors(req: Request, res: Response) {
   try {
-    const { page, pageSize, type, startTime, endTime } = req.query;
+    const { 
+      page, 
+      pageSize, 
+      type, 
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime, 
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
 
     const result = await monitorDataService.getErrorList({
       page: page ? parseInt(page as string) : 1,
       pageSize: pageSize ? parseInt(pageSize as string) : 20,
       type: type as string,
+      platform: platform as string,
+      env: env as string,
+      pagePath: pagePath as string,
+      userName: userName as string,
+      keyword: keyword as string,
       startTime: startTime ? parseInt(startTime as string) : undefined,
       endTime: endTime ? parseInt(endTime as string) : undefined,
+      sortBy: sortBy as string,
+      sortOrder: sortOrder as 'asc' | 'desc',
     });
 
     res.json({
@@ -106,14 +148,34 @@ export async function getErrors(req: Request, res: Response) {
  */
 export async function getPerformance(req: Request, res: Response) {
   try {
-    const { page, pageSize, type, startTime, endTime } = req.query;
+    const { 
+      page, 
+      pageSize, 
+      type, 
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime, 
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
 
     const result = await monitorDataService.getPerformanceList({
       page: page ? parseInt(page as string) : 1,
       pageSize: pageSize ? parseInt(pageSize as string) : 20,
       type: type as string,
+      platform: platform as string,
+      env: env as string,
+      pagePath: pagePath as string,
+      userName: userName as string,
+      keyword: keyword as string,
       startTime: startTime ? parseInt(startTime as string) : undefined,
       endTime: endTime ? parseInt(endTime as string) : undefined,
+      sortBy: sortBy as string,
+      sortOrder: sortOrder as 'asc' | 'desc',
     });
 
     res.json({
@@ -135,14 +197,34 @@ export async function getPerformance(req: Request, res: Response) {
  */
 export async function getBehaviors(req: Request, res: Response) {
   try {
-    const { page, pageSize, type, startTime, endTime } = req.query;
+    const { 
+      page, 
+      pageSize, 
+      type, 
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime, 
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
 
     const result = await monitorDataService.getBehaviorList({
       page: page ? parseInt(page as string) : 1,
       pageSize: pageSize ? parseInt(pageSize as string) : 20,
       type: type as string,
+      platform: platform as string,
+      env: env as string,
+      pagePath: pagePath as string,
+      userName: userName as string,
+      keyword: keyword as string,
       startTime: startTime ? parseInt(startTime as string) : undefined,
       endTime: endTime ? parseInt(endTime as string) : undefined,
+      sortBy: sortBy as string,
+      sortOrder: sortOrder as 'asc' | 'desc',
     });
 
     res.json({
@@ -164,13 +246,32 @@ export async function getBehaviors(req: Request, res: Response) {
  */
 export async function getNetworks(req: Request, res: Response) {
   try {
-    const { page, pageSize, startTime, endTime } = req.query;
+    const { 
+      page, 
+      pageSize, 
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime, 
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
 
     const result = await monitorDataService.getNetworkList({
       page: page ? parseInt(page as string) : 1,
       pageSize: pageSize ? parseInt(pageSize as string) : 20,
+      platform: platform as string,
+      env: env as string,
+      pagePath: pagePath as string,
+      userName: userName as string,
+      keyword: keyword as string,
       startTime: startTime ? parseInt(startTime as string) : undefined,
       endTime: endTime ? parseInt(endTime as string) : undefined,
+      sortBy: sortBy as string,
+      sortOrder: sortOrder as 'asc' | 'desc',
     });
 
     res.json({
@@ -219,7 +320,7 @@ export async function getOverview(req: Request, res: Response) {
  */
 export async function getTrend(req: Request, res: Response) {
   try {
-    const { startTime, endTime, groupBy, category, appId } = req.query;
+    const { startTime, endTime, groupBy, category, appId, type } = req.query;
 
     if (!startTime || !endTime) {
       return res.status(400).json({
@@ -234,6 +335,7 @@ export async function getTrend(req: Request, res: Response) {
       groupBy: (groupBy as 'hour' | 'day') || 'hour',
       category: category as string,
       appId: appId as string,
+      type: type as string,
     });
 
     res.json({
@@ -255,12 +357,13 @@ export async function getTrend(req: Request, res: Response) {
  */
 export async function getPerformanceMetrics(req: Request, res: Response) {
   try {
-    const { startTime, endTime, appId } = req.query;
+    const { startTime, endTime, appId, type } = req.query;
 
     const result = await monitorDataService.getPerformanceMetrics({
       startTime: startTime ? parseInt(startTime as string) : undefined,
       endTime: endTime ? parseInt(endTime as string) : undefined,
       appId: appId as string,
+      type: type as string,
     });
 
     res.json({
@@ -282,12 +385,13 @@ export async function getPerformanceMetrics(req: Request, res: Response) {
  */
 export async function getErrorStats(req: Request, res: Response) {
   try {
-    const { startTime, endTime, appId } = req.query;
+    const { startTime, endTime, appId, type } = req.query;
 
     const result = await monitorDataService.getErrorStats({
       startTime: startTime ? parseInt(startTime as string) : undefined,
       endTime: endTime ? parseInt(endTime as string) : undefined,
       appId: appId as string,
+      type: type as string,
     });
 
     res.json({
@@ -309,12 +413,13 @@ export async function getErrorStats(req: Request, res: Response) {
  */
 export async function getBehaviorStats(req: Request, res: Response) {
   try {
-    const { startTime, endTime, appId } = req.query;
+    const { startTime, endTime, appId, type } = req.query;
 
     const result = await monitorDataService.getBehaviorStats({
       startTime: startTime ? parseInt(startTime as string) : undefined,
       endTime: endTime ? parseInt(endTime as string) : undefined,
       appId: appId as string,
+      type: type as string,
     });
 
     res.json({

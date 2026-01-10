@@ -60,10 +60,18 @@
             end-placeholder="结束时间"
             :shortcuts="shortcuts"
             @change="handleSearch"
+            style="width: 100%"
           />
         </el-col>
-        <el-col :span="4">
-          <el-select v-model="filterParams.type" placeholder="行为类型" clearable @change="handleSearch">
+        <el-col :span="3">
+          <el-select v-model="filterParams.appId" placeholder="应用端" clearable @change="handleSearch" style="width: 100%">
+            <el-option label="全部" value="" />
+            <el-option label="管理端" value="charging-station-admin" />
+            <el-option label="用户端" value="charging-station-user-app" />
+          </el-select>
+        </el-col>
+        <el-col :span="3">
+          <el-select v-model="filterParams.type" placeholder="行为类型" clearable @change="handleSearch" style="width: 100%">
             <el-option label="全部" value="" />
             <el-option label="页面访问" value="page_view" />
             <el-option label="页面离开" value="page_leave" />
@@ -72,23 +80,25 @@
             <el-option label="自定义事件" value="custom_event" />
           </el-select>
         </el-col>
-        <el-col :span="5">
+        <el-col :span="4">
           <el-input
             v-model="filterParams.userName"
-            placeholder="输入用户名搜索追踪"
+            placeholder="输入用户名追踪"
             clearable
             @keyup.enter="handleUserTracking"
+            @clear="handleSearch"
+            style="width: 100%"
           >
             <template #prefix>
-              <el-icon><Search /></el-icon>
+              <el-icon><Aim /></el-icon>
             </template>
           </el-input>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="8">
           <el-button type="primary" @click="handleSearch" :loading="loading">
             <el-icon><Search /></el-icon>查询
           </el-button>
-          <el-button type="success" @click="handleUserTracking" :loading="trackingLoading" :disabled="!filterParams.userName">
+          <el-button type="success" @click="handleUserTracking" :loading="trackingLoading" :disabled="!filterParams.userName?.trim()">
             <el-icon><Aim /></el-icon>追踪用户
           </el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -228,7 +238,12 @@
       <template #header>
         <span>{{ isTrackingMode ? `${trackingResult?.userInfo?.name || '用户'} 的行为数据详情` : '行为数据详情' }}</span>
       </template>
-      <el-table :data="tableData" v-loading="loading || trackingLoading" stripe>
+      <el-table 
+        :data="tableData" 
+        v-loading="loading || trackingLoading" 
+        stripe
+        @sort-change="handleSortChange"
+      >
         <el-table-column type="expand">
           <template #default="{ row }">
             <div class="expand-content">
@@ -237,9 +252,32 @@
                   <el-tag :type="getBehaviorTagType(row.type)" size="small">{{ getTypeName(row.type) }}</el-tag>
                 </el-descriptions-item>
                 <el-descriptions-item label="发生时间">{{ formatTime(row.timestamp) }}</el-descriptions-item>
-                <el-descriptions-item label="页面URL" :span="2">{{ row.page_url }}</el-descriptions-item>
-                <el-descriptions-item label="页面标题" :span="2">{{ row.page_title }}</el-descriptions-item>
-                <el-descriptions-item label="用户ID">{{ row.user_id || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="页面路径" :span="2">
+                  <div>{{ row.page_path || row.page_url || '-' }}</div>
+                  <div v-if="row.page_title && row.page_title !== row.page_path" style="color: #909399; margin-top: 4px;">
+                    {{ row.page_title }}
+                  </div>
+                </el-descriptions-item>
+                <el-descriptions-item label="应用端">
+                  <el-tag :type="getAppTagType(row.app_id)" size="small" effect="dark">
+                    {{ getAppName(row.app_id) }}
+                  </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="平台信息">
+                  <div>
+                    <el-tag v-if="row.platform" size="small" type="info" style="margin-right: 4px">{{ row.platform }}</el-tag>
+                    <el-tag v-if="row.env" size="small" type="warning">{{ row.env }}</el-tag>
+                    <span v-if="!row.platform && !row.env">-</span>
+                  </div>
+                </el-descriptions-item>
+                <el-descriptions-item label="用户信息">
+                  <div>
+                    <div>{{ row.user_name || '匿名' }}</div>
+                    <div v-if="row.user_id" style="color: #909399; font-size: 12px; margin-top: 4px;">
+                      ID: {{ row.user_id }}
+                    </div>
+                  </div>
+                </el-descriptions-item>
                 <el-descriptions-item label="会话信息">{{ row.session_info?.sessionId || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="行为数据" :span="2">
                   <pre>{{ JSON.stringify(row.data, null, 2) }}</pre>
@@ -264,13 +302,34 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="page_url" label="页面" width="200" show-overflow-tooltip>
-          <template #default="{ row }">{{ getPageName(row.page_url) }}</template>
-        </el-table-column>
-        <el-table-column prop="user_id" label="用户" width="120">
+        <el-table-column label="应用端" width="100" align="center">
           <template #default="{ row }">
+            <el-tag 
+              :type="getAppTagType(row.app_id)" 
+              size="small"
+              effect="dark"
+            >
+              {{ getAppName(row.app_id) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="页面" width="250" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div class="page-info">
+              <div class="page-path">{{ getPageName(row.page_path || row.page_url) }}</div>
+              <div v-if="row.page_title && row.page_title !== row.page_path" class="page-title">{{ row.page_title }}</div>
+              <div v-if="row.platform || row.env" class="page-env">
+                <el-tag v-if="row.platform" size="small" type="info">{{ row.platform }}</el-tag>
+                <el-tag v-if="row.env" size="small" type="warning" style="margin-left: 4px">{{ row.env }}</el-tag>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="用户" width="140">
+          <template #default="{ row }">
+            <div class="user-info">
             <el-tag
-              v-if="row.user_name"
+                v-if="row.user_name && row.user_name !== '匿名'"
               size="small"
               type="info"
               class="clickable-user"
@@ -279,9 +338,17 @@
               {{ row.user_name }}
             </el-tag>
             <span v-else class="text-gray">匿名</span>
+              <div v-if="row.user_id && row.user_id !== row.user_name" class="user-id">ID: {{ row.user_id.slice(0, 8) }}</div>
+            </div>
           </template>
         </el-table-column>
-        <el-table-column prop="timestamp" label="时间" width="180">
+        <el-table-column 
+          prop="timestamp" 
+          label="时间" 
+          width="180"
+          sortable="custom"
+          :default-sort="{ prop: 'timestamp', order: 'descending' }"
+        >
           <template #default="{ row }">{{ formatTime(row.timestamp) }}</template>
         </el-table-column>
       </el-table>
@@ -306,6 +373,7 @@ import { ref, reactive, onMounted, onBeforeUnmount, markRaw } from 'vue'
 import * as echarts from 'echarts'
 import { getBehaviorList, getBehaviorStats, getTrend, getUserTracking, type MonitorDataItem, type BehaviorStats, type UserTrackingResult } from '@/api/monitor'
 import { View, User, Pointer, Switch, Position, Link, Search, Aim, Close } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 const loading = ref(false)
 const trackingLoading = ref(false)
@@ -315,7 +383,12 @@ const tableData = ref<MonitorDataItem[]>([])
 const behaviorPath = ref<MonitorDataItem[]>([])
 const total = ref(0)
 const pageInfo = reactive({ page: 1, pageSize: 20 })
-const filterParams = reactive({ type: '', userName: '' })
+const filterParams = reactive({ 
+  type: '', 
+  userName: '', 
+  appId: ''  // 应用端筛选
+})
+const sortParams = reactive({ sortBy: 'created_at', sortOrder: 'desc' as 'asc' | 'desc' })
 
 const dateRange = ref<[Date, Date]>([new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()])
 
@@ -348,7 +421,12 @@ const formatNumber = (num: number) => {
 
 const loadBehaviorStats = async () => {
   try {
-    const res = await getBehaviorStats(getTimeParams())
+    const params: any = {
+      ...getTimeParams(),
+      appId: filterParams.appId || undefined,
+      type: filterParams.type || undefined
+    }
+    const res = await getBehaviorStats(params)
     if (res.code === 200 && res.data) {
       Object.assign(behaviorStats, res.data)
       updatePageChart()
@@ -358,9 +436,23 @@ const loadBehaviorStats = async () => {
 }
 
 const loadBehaviorList = async () => {
+  // 追踪模式的数据在 handleUserTracking 中处理，不在这里加载
+  if (isTrackingMode.value) {
+    return
+  }
+  
   loading.value = true
   try {
-    const params = { ...getTimeParams(), page: pageInfo.page, pageSize: pageInfo.pageSize, type: filterParams.type || undefined }
+    const params: any = { 
+      ...getTimeParams(), 
+      page: pageInfo.page, 
+      pageSize: pageInfo.pageSize, 
+      type: filterParams.type || undefined,
+      appId: filterParams.appId || undefined,
+      keyword: filterParams.userName || undefined,  // 用户名也可作为关键词搜索
+      sortBy: sortParams.sortBy,
+      sortOrder: sortParams.sortOrder
+    }
     const res = await getBehaviorList(params)
     if (res.code === 200 && res.data) {
       tableData.value = res.data.list
@@ -374,11 +466,13 @@ const loadBehaviorList = async () => {
 const loadTrendData = async () => {
   try {
     const timeParams = getTimeParams()
-    const params = {
+    const params: any = {
       startTime: timeParams.startTime || Date.now() - 24 * 60 * 60 * 1000,
       endTime: timeParams.endTime || Date.now(),
       groupBy: 'hour' as const,
-      category: 'behavior'
+      category: 'behavior',
+      appId: filterParams.appId || undefined,
+      type: filterParams.type || undefined
     }
     const res = await getTrend(params)
     if (res.code === 200 && res.data) updateTrendChart(res.data)
@@ -475,9 +569,19 @@ const getBehaviorIcon = (type: string) => {
   }
   return map[type] || View
 }
-const getPageName = (url: string) => {
-  if (!url) return '-'
-  try { return new URL(url).pathname || url } catch { return url }
+const getPageName = (urlOrPath: string) => {
+  if (!urlOrPath) return '-'
+  // 如果是路径，直接返回
+  if (urlOrPath.startsWith('/')) {
+    return urlOrPath
+  }
+  // 如果是URL，提取路径
+  try { 
+    const url = new URL(urlOrPath)
+    return url.pathname || urlOrPath
+  } catch { 
+    return urlOrPath 
+  }
 }
 const getPathContent = (item: MonitorDataItem) => {
   const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data
@@ -486,6 +590,23 @@ const getPathContent = (item: MonitorDataItem) => {
   if (item.type === 'route_change') return `${data?.from || ''} → ${data?.to || ''}`
   return item.page_title || '用户行为'
 }
+
+// 获取应用名称
+const getAppName = (appId: string) => {
+  if (!appId) return '未知'
+  if (appId === 'charging-station-admin') return '管理端'
+  if (appId === 'charging-station-user-app') return '用户端'
+  return appId
+}
+
+// 获取应用标签类型
+const getAppTagType = (appId: string) => {
+  if (!appId) return 'info'
+  if (appId === 'charging-station-admin') return 'primary'
+  if (appId === 'charging-station-user-app') return 'success'
+  return 'info'
+}
+
 const formatTime = (timestamp: number | null | undefined) => {
   if (!timestamp) return '-'
   return new Date(timestamp).toLocaleString('zh-CN')
@@ -497,28 +618,40 @@ const getPercentage = (count: number, total: number) => {
   return Math.round((count / total) * 100)
 }
 
-// 用户追踪相关方法
+// 用户追踪相关方法（独立功能，不影响其他筛选条件）
 const handleUserTracking = async () => {
-  if (!filterParams.userName.trim()) return
+  const userName = filterParams.userName?.trim()
+  if (!userName) {
+    ElMessage.warning('请输入用户名')
+    return
+  }
 
   trackingLoading.value = true
   isTrackingMode.value = true
 
   try {
     const params = {
-      userName: filterParams.userName.trim(),
+      userName: userName,
       page: pageInfo.page,
       pageSize: pageInfo.pageSize,
-      ...getTimeParams()
+      ...getTimeParams(),
+      // 用户追踪时也可以应用其他筛选条件
+      category: 'behavior',
+      appId: filterParams.appId || undefined,
+      type: filterParams.type || undefined
     }
     const res = await getUserTracking(params)
     if (res.code === 200 && res.data) {
       trackingResult.value = res.data
       tableData.value = res.data.list
       total.value = res.data.total
+      behaviorPath.value = res.data.list.slice(0, 10)
+    } else {
+      ElMessage.error(res.message || '用户追踪失败')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('用户追踪失败:', error)
+    ElMessage.error(error.message || '用户追踪失败')
   } finally {
     trackingLoading.value = false
   }
@@ -529,7 +662,11 @@ const exitTrackingMode = () => {
   isTrackingMode.value = false
   trackingResult.value = null
   filterParams.userName = ''
-  handleSearch()
+  // 退出追踪模式后，重新加载普通查询数据
+  pageInfo.page = 1
+  loadBehaviorList()
+  loadBehaviorStats()
+  loadTrendData()
 }
 
 // 点击用户名追踪
@@ -538,22 +675,26 @@ const handleTrackUser = (userName: string) => {
   handleUserTracking()
 }
 
+// 普通查询（退出追踪模式，使用筛选条件查询）
 const handleSearch = () => {
-  if (isTrackingMode.value && filterParams.userName) {
-    pageInfo.page = 1
-    handleUserTracking()
-  } else {
+  // 如果清空了用户名或退出追踪模式，则退出追踪模式
+  if (isTrackingMode.value && !filterParams.userName?.trim()) {
     isTrackingMode.value = false
     trackingResult.value = null
-    pageInfo.page = 1
-    loadBehaviorList()
-    loadBehaviorStats()
-    loadTrendData()
   }
+  
+  // 重置分页并加载数据
+  pageInfo.page = 1
+  loadBehaviorList()
+  loadBehaviorStats()
+  loadTrendData()
 }
 const handleReset = () => {
   filterParams.type = ''
   filterParams.userName = ''
+  filterParams.appId = ''
+  sortParams.sortBy = 'created_at'
+  sortParams.sortOrder = 'desc'
   isTrackingMode.value = false
   trackingResult.value = null
   dateRange.value = [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()]
@@ -562,6 +703,19 @@ const handleReset = () => {
   loadBehaviorStats()
   loadTrendData()
 }
+
+// 表格排序处理
+const handleSortChange = ({ prop, order }: { prop: string; order: string | null }) => {
+  if (order) {
+    sortParams.sortBy = prop
+    sortParams.sortOrder = order === 'ascending' ? 'asc' : 'desc'
+  } else {
+    sortParams.sortBy = 'created_at'
+    sortParams.sortOrder = 'desc'
+  }
+  loadBehaviorList()
+}
+
 const handleSizeChange = (size: number) => {
   pageInfo.pageSize = size
   if (isTrackingMode.value) {
@@ -769,6 +923,28 @@ onBeforeUnmount(() => {
         background: #67c23a;
         color: #fff;
         border-color: #67c23a;
+      }
+    }
+    .page-info {
+      .page-path {
+        color: #303133;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+      .page-title {
+        color: #909399;
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      .page-env {
+        margin-top: 4px;
+      }
+    }
+    .user-info {
+      .user-id {
+        color: #909399;
+        font-size: 11px;
+        margin-top: 4px;
       }
     }
     .pagination { margin-top: 20px; justify-content: flex-end; }

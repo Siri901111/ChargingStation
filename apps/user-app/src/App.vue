@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/modules/user'
-import { initMonitor, setMonitorUserId } from '@/monitor'
+import { initMonitor, setMonitorUserId, getMonitor } from '@/monitor'
 import config from '@/config'
 
 onLaunch(() => {
@@ -22,6 +22,17 @@ onLaunch(() => {
   setTimeout(() => {
     if (userStore.userInfo?.id) {
       setMonitorUserId(String(userStore.userInfo.id))
+      
+      // 设置用户额外信息（包含用户名称，用于监控展示）
+      const monitor = getMonitor()
+      if (monitor && userStore.userInfo) {
+        monitor.setExtra({
+          userId: String(userStore.userInfo.id),
+          userName: userStore.userInfo.name || userStore.userInfo.phone || `用户${userStore.userInfo.id}`,
+          name: userStore.userInfo.name,
+          phone: userStore.userInfo.phone,
+        })
+      }
     }
   }, 0)
 })

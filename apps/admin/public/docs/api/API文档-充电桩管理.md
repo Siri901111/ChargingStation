@@ -2,7 +2,7 @@
 
 ## 接口总览
 
-充电桩管理模块包含 **11个接口**：
+充电桩管理模块包含 **10个接口**：
 
 | 序号 | 接口路径 | 方法 | 功能说明 | 需要认证 |
 |------|---------|------|----------|----------|
@@ -16,7 +16,6 @@
 | 8 | `/api/piles/:id/maintenance` | GET | 获取充电桩维保记录 | ✅ |
 | 9 | `/api/piles/:id/maintenance` | POST | 创建维保记录 | ✅ |
 | 10 | `/api/piles/:id/maintenance/:maintenanceId` | PUT | 更新维保记录 | ✅ |
-| 11 | `/api/piles/:id/qrcode` | GET | 生成充电桩二维码 | ✅ |
 
 ---
 
@@ -43,8 +42,6 @@ token: <token>
   data: any;           // 响应数据
 }
 ```
-
-**注意**：`GET /api/piles/:id/qrcode` 接口返回的是PNG图片，不是JSON格式，响应头为 `Content-Type: image/png`。
 
 ---
 
@@ -645,167 +642,6 @@ Content-Type: application/json
 
 ---
 
-## 11. 生成充电桩二维码
-
-### 接口信息
-
-- **URL**: `/api/piles/:id/qrcode`
-- **Method**: `GET`
-- **需要认证**: 是
-- **响应类型**: `image/png`
-- **说明**: 为指定充电桩生成二维码图片，二维码内容格式为 `PILE_{pileId}`，用于用户扫码充电
-
-### 路径参数
-
-| 参数名 | 类型 | 说明 |
-|--------|------|------|
-| id | number | 充电桩ID |
-
-### 请求参数（Query）
-
-| 参数名 | 类型 | 必填 | 说明 | 默认值 |
-|--------|------|------|------|--------|
-| token | string | 否 | 认证令牌（URL参数形式，备用） | - |
-
-### 请求示例
-
-```
-GET /api/piles/1/qrcode?token=xxx
-Authorization: Bearer <token>
-```
-
-或
-
-```
-GET /api/piles/1/qrcode
-Authorization: Bearer <token>
-```
-
-### 响应说明
-
-**成功响应 (200)**:
-
-- **Content-Type**: `image/png`
-- **Content-Disposition**: `attachment; filename="pile_{id}_qrcode.png"`
-- **响应体**: PNG格式的二维码图片二进制数据（Buffer）
-
-**二维码内容格式**:
-- 格式：`PILE_{pileId}`
-- 示例：`PILE_1`、`PILE_123`
-
-**二维码规格**:
-- 尺寸：300x300 像素
-- 格式：PNG
-- 纠错级别：M（中等）
-- 边距：2
-- 前景色：#000000（黑色）
-- 背景色：#FFFFFF（白色）
-
-### 错误响应
-
-#### 充电桩不存在 (404)
-
-```json
-{
-  "code": 404,
-  "message": "充电桩不存在",
-  "data": null
-}
-```
-
-#### 参数错误 (400)
-
-```json
-{
-  "code": 400,
-  "message": "充电桩ID无效",
-  "data": null
-}
-```
-
-#### 服务器错误 (500)
-
-```json
-{
-  "code": 500,
-  "message": "生成二维码失败",
-  "data": null
-}
-```
-
-### 使用说明
-
-1. **生成二维码**: 调用接口获取二维码图片
-2. **下载二维码**: 前端可以通过 `<img>` 标签显示，或通过 `download` 属性下载
-3. **打印二维码**: 将二维码图片打印后粘贴到充电桩上
-4. **用户扫码**: 用户使用移动端应用扫描二维码，识别格式为 `PILE_{pileId}`
-5. **扫码充电**: 移动端识别二维码后，自动跳转到扫码充电页面并开始充电流程
-
-### 前端集成示例
-
-#### 显示二维码
-
-```typescript
-// 获取二维码URL
-const qrCodeUrl = generatePileQRCodeApi(pileId);
-
-// 在img标签中显示
-<img :src="qrCodeUrl" alt="充电桩二维码" />
-```
-
-#### 下载二维码
-
-```typescript
-// 下载二维码文件
-await downloadPileQRCode(pileId);
-```
-
-#### 打印二维码
-
-```typescript
-// 打开新窗口打印
-const printWindow = window.open('', '_blank');
-printWindow.document.write(`
-  <html>
-    <head><title>充电桩二维码</title></head>
-    <body>
-      <img src="${qrCodeUrl}" alt="充电桩二维码" />
-    </body>
-  </html>
-`);
-printWindow.print();
-```
-
-### 业务场景
-
-1. **管理端生成**: 管理员在充电桩管理页面点击"生成二维码"按钮
-2. **预览下载**: 弹出对话框显示二维码预览，支持下载和打印
-3. **现场粘贴**: 将下载的二维码打印后粘贴到对应充电桩上
-4. **用户扫码**: 用户到达充电站后，使用手机扫描充电桩上的二维码
-5. **自动识别**: 应用识别二维码内容（`PILE_{pileId}`），自动获取充电桩信息
-6. **开始充电**: 用户确认后开始充电流程
-
-### 注意事项
-
-1. **二维码格式**: 二维码内容必须严格按照 `PILE_{pileId}` 格式生成
-2. **充电桩ID**: 必须是有效的充电桩ID，充电桩必须存在于数据库中
-3. **认证要求**: 生成二维码需要管理员权限（已登录且认证通过）
-4. **图片格式**: 返回的是PNG格式的二进制数据，不是JSON格式
-5. **缓存控制**: 建议在URL中添加时间戳参数防止缓存（前端处理）
-6. **错误处理**: 如果充电桩不存在或生成失败，会返回JSON格式的错误信息
-
-### 二维码内容解析规则（移动端）
-
-移动端扫码后，支持以下格式的二维码内容识别：
-
-1. **格式1（推荐）**: `PILE_123` → 解析得到 `pileId = 123`
-2. **格式2**: `123`（纯数字） → 直接作为 `pileId`
-3. **格式3**: `{"pileId": 123}` 或 `{"id": 123}`（JSON格式） → 解析JSON获取ID
-
-移动端扫码接口会根据上述规则自动识别充电桩ID。
-
----
-
 ## 充电桩状态说明
 
 | 状态值 | 状态名称 | 说明 |
@@ -884,14 +720,6 @@ printWindow.print();
 - 支持记录维保类型、人员、时间、内容、费用等信息
 - 可以设置下次维保时间，便于维保计划管理
 
-### 5. 二维码生成逻辑
-
-- 为每个充电桩生成唯一的二维码
-- 二维码内容格式：`PILE_{pileId}`
-- 使用 `qrcode` 库生成PNG格式图片
-- 尺寸：300x300像素，中等纠错级别
-- 生成的二维码用于粘贴到充电桩上，供用户扫码充电
-
 ---
 
 ## 错误响应
@@ -936,7 +764,6 @@ printWindow.print();
 4. **类型限制**: 充电桩类型必须为"快充"或"慢充"
 5. **状态范围**: 充电桩状态必须在1-6之间
 6. **维保必填**: 创建维保记录时，维保类型、维保人员和维保时间为必填项
-7. **二维码格式**: 二维码内容格式为 `PILE_{pileId}`，必须严格按照此格式生成
 
 ---
 
@@ -954,7 +781,6 @@ printWindow.print();
 8. **维保记录**: 使用 `GET /api/piles/:id/maintenance` 接口
 9. **创建维保**: 使用 `POST /api/piles/:id/maintenance` 接口
 10. **更新维保**: 使用 `PUT /api/piles/:id/maintenance/:maintenanceId` 接口
-11. **生成二维码**: 使用 `GET /api/piles/:id/qrcode` 接口
 
 ### 数据展示建议
 
@@ -963,39 +789,3 @@ printWindow.print();
 - **实时数据**: 电压、电流、功率、温度等实时数据显示
 - **进度显示**: 充电中时显示充电进度百分比
 - **记录展示**: 使用时间线组件展示使用记录和维保记录
-- **二维码管理**: 在充电桩卡片上提供"生成二维码"按钮，方便生成和下载二维码
-
-### 二维码功能集成
-
-#### 页面位置
-
-在充电桩监控页面（`apps/admin/src/views/chargingstation/Fault.vue`）中，每个充电桩卡片的操作区域添加"生成二维码"按钮。
-
-#### 功能实现
-
-1. **点击按钮**: 调用 `openQRCodeDialog(pileId)` 函数
-2. **显示对话框**: 弹出二维码预览对话框
-3. **加载二维码**: 使用 `generatePileQRCodeApi(pileId)` 获取二维码URL
-4. **预览显示**: 在对话框中显示二维码图片
-5. **下载功能**: 点击"下载二维码"按钮，调用 `downloadPileQRCode(pileId)` 函数
-6. **打印功能**: 点击"打印二维码"按钮，打开新窗口打印二维码
-
-#### 实现文件
-
-- **后端服务**: `apps/server/src/services/pileService.ts` - `generatePileQRCodeService` 函数
-- **后端控制器**: `apps/server/src/controllers/pileController.ts` - `generatePileQRCodeController` 函数
-- **后端路由**: `apps/server/src/routes/pileRoutes.ts` - `/api/piles/:id/qrcode` 路由
-- **前端API**: `apps/admin/src/api/pile.ts` - `generatePileQRCodeApi` 和 `downloadPileQRCode` 函数
-- **前端页面**: `apps/admin/src/views/chargingstation/Fault.vue` - 二维码对话框和相关逻辑
-
----
-
-## 更新日志
-
-### 2024-11-20
-
-- **新增**: 添加第11个接口 - 生成充电桩二维码（`GET /api/piles/:id/qrcode`）
-- **功能**: 支持为充电桩生成二维码，二维码内容格式为 `PILE_{pileId}`
-- **用途**: 二维码用于粘贴到充电桩上，供用户扫码充电
-- **前端**: 在充电桩监控页面添加"生成二维码"按钮和预览对话框
-- **文档**: 更新API文档，添加二维码生成接口的详细说明

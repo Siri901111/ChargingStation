@@ -43,7 +43,7 @@
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-row :gutter="20">
-        <el-col :span="8">
+        <el-col :span="6">
           <el-date-picker
             v-model="dateRange"
             type="datetimerange"
@@ -52,10 +52,18 @@
             end-placeholder="结束时间"
             :shortcuts="shortcuts"
             @change="handleSearch"
+            style="width: 100%"
           />
         </el-col>
-        <el-col :span="4">
-          <el-select v-model="filterParams.type" placeholder="错误类型" clearable @change="handleSearch">
+        <el-col :span="3">
+          <el-select v-model="filterParams.appId" placeholder="应用端" clearable @change="handleSearch" style="width: 100%">
+            <el-option label="全部" value="" />
+            <el-option label="管理端" value="charging-station-admin" />
+            <el-option label="用户端" value="charging-station-user-app" />
+          </el-select>
+        </el-col>
+        <el-col :span="3">
+          <el-select v-model="filterParams.type" placeholder="错误类型" clearable @change="handleSearch" style="width: 100%">
             <el-option label="全部" value="" />
             <el-option label="JS错误" value="js_error" />
             <el-option label="Promise错误" value="promise_error" />
@@ -64,14 +72,27 @@
             <el-option label="Vue错误" value="vue_error" />
           </el-select>
         </el-col>
-        <el-col :span="4">
-          <el-input v-model="filterParams.keyword" placeholder="搜索错误信息" clearable @keyup.enter="handleSearch" />
+        <el-col :span="6">
+          <el-input 
+            v-model="filterParams.keyword" 
+            placeholder="搜索关键词（错误信息/页面/用户）" 
+            clearable 
+            @keyup.enter="handleSearch"
+            @clear="handleSearch"
+            style="width: 100%"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
         </el-col>
-        <el-col :span="4">
-          <el-button type="primary" @click="handleSearch" :loading="loading">
+        <el-col :span="3">
+          <el-button type="primary" @click="handleSearch" :loading="loading" style="width: 100%">
             <el-icon><Search /></el-icon>查询
           </el-button>
-          <el-button @click="handleReset">重置</el-button>
+        </el-col>
+        <el-col :span="3">
+          <el-button @click="handleReset" style="width: 100%">重置</el-button>
         </el-col>
       </el-row>
     </el-card>
@@ -115,7 +136,13 @@
           </el-button>
         </div>
       </template>
-      <el-table :data="tableData" v-loading="loading" stripe @selection-change="handleSelectionChange">
+      <el-table 
+        :data="tableData" 
+        v-loading="loading" 
+        stripe 
+        @selection-change="handleSelectionChange"
+        @sort-change="handleSortChange"
+      >
         <el-table-column type="selection" width="50" />
         <el-table-column type="expand">
           <template #default="{ row }">
@@ -125,7 +152,27 @@
                   <el-tag :type="getErrorTagType(row.type)" size="small">{{ getTypeName(row.type) }}</el-tag>
                 </el-descriptions-item>
                 <el-descriptions-item label="发生时间">{{ formatTime(row.timestamp) }}</el-descriptions-item>
-                <el-descriptions-item label="页面URL" :span="2">{{ row.page_url }}</el-descriptions-item>
+                <el-descriptions-item label="页面路径" :span="2">
+                  <div>{{ row.page_path || row.page_url || '-' }}</div>
+                  <div v-if="row.page_title && row.page_title !== row.page_path" style="color: #909399; margin-top: 4px;">
+                    {{ row.page_title }}
+                  </div>
+                </el-descriptions-item>
+                <el-descriptions-item label="应用端">
+                  <el-tag :type="getAppTagType(row.app_id)" size="small" effect="dark">
+                    {{ getAppName(row.app_id) }}
+                  </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="平台信息">
+                  <div>
+                    <el-tag v-if="row.platform" size="small" type="info" style="margin-right: 4px">{{ row.platform }}</el-tag>
+                    <el-tag v-if="row.env" size="small" type="warning">{{ row.env }}</el-tag>
+                    <span v-if="!row.platform && !row.env">-</span>
+                  </div>
+                </el-descriptions-item>
+                <el-descriptions-item label="用户">
+                  <div>{{ row.user_name || '匿名' }}</div>
+                </el-descriptions-item>
                 <el-descriptions-item label="错误信息" :span="2">
                   <div class="error-message">{{ getDataValue(row.data, 'message') }}</div>
                 </el-descriptions-item>
@@ -152,15 +199,45 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="page_url" label="页面" width="200" show-overflow-tooltip>
-          <template #default="{ row }">{{ getPageName(row.page_url) }}</template>
+        <el-table-column label="应用端" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag 
+              :type="getAppTagType(row.app_id)" 
+              size="small"
+              effect="dark"
+            >
+              {{ getAppName(row.app_id) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="页面" width="200" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div class="page-info">
+              <div class="page-path">{{ getPageName(row.page_path || row.page_url) }}</div>
+              <div v-if="row.platform || row.env" class="page-env" style="margin-top: 4px;">
+                <el-tag v-if="row.platform" size="small" type="info">{{ row.platform }}</el-tag>
+                <el-tag v-if="row.env" size="small" type="warning" style="margin-left: 4px">{{ row.env }}</el-tag>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="用户" width="120">
+          <template #default="{ row }">
+            <span>{{ row.user_name || '匿名' }}</span>
+          </template>
         </el-table-column>
         <el-table-column label="发生次数" width="100" align="center">
           <template #default>
             <el-tag type="info" size="small">1</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="timestamp" label="时间" width="180">
+        <el-table-column 
+          prop="timestamp" 
+          label="时间" 
+          width="180"
+          sortable="custom"
+          :default-sort="{ prop: 'timestamp', order: 'descending' }"
+        >
           <template #default="{ row }">{{ formatTime(row.timestamp) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="160" fixed="right">
@@ -306,7 +383,12 @@ const tableData = ref<MonitorDataItem[]>([])
 const total = ref(0)
 const selectedRows = ref<MonitorDataItem[]>([])
 const pageInfo = reactive({ page: 1, pageSize: 20 })
-const filterParams = reactive({ type: '', keyword: '' })
+const filterParams = reactive({ 
+  type: '', 
+  keyword: '', 
+  appId: ''  // 应用端筛选
+})
+const sortParams = reactive({ sortBy: 'created_at', sortOrder: 'desc' as 'asc' | 'desc' })
 
 // 行为回放相关
 const replayDialogVisible = ref(false)
@@ -341,7 +423,11 @@ const getTimeParams = () => {
 
 const loadErrorStats = async () => {
   try {
-    const res = await getErrorStats(getTimeParams())
+    const params: any = {
+      ...getTimeParams(),
+      appId: filterParams.appId || undefined
+    }
+    const res = await getErrorStats(params)
     if (res.code === 200 && res.data) {
       Object.assign(errorStats, res.data)
       updateTypeChart()
@@ -352,7 +438,16 @@ const loadErrorStats = async () => {
 const loadErrorList = async () => {
   loading.value = true
   try {
-    const params = { ...getTimeParams(), page: pageInfo.page, pageSize: pageInfo.pageSize, type: filterParams.type || undefined }
+    const params: any = { 
+      ...getTimeParams(), 
+      page: pageInfo.page, 
+      pageSize: pageInfo.pageSize, 
+      type: filterParams.type || undefined,
+      keyword: filterParams.keyword || undefined,
+      appId: filterParams.appId || undefined,
+      sortBy: sortParams.sortBy,
+      sortOrder: sortParams.sortOrder
+    }
     const res = await getErrorList(params)
     if (res.code === 200 && res.data) {
       tableData.value = res.data.list
@@ -365,11 +460,13 @@ const loadErrorList = async () => {
 const loadTrendData = async () => {
   try {
     const timeParams = getTimeParams()
-    const params = {
+    const params: any = {
       startTime: timeParams.startTime || Date.now() - 24 * 60 * 60 * 1000,
       endTime: timeParams.endTime || Date.now(),
       groupBy: 'hour' as const,
-      category: 'error'
+      category: 'error',
+      appId: filterParams.appId || undefined,
+      type: filterParams.type || undefined
     }
     const res = await getTrend(params)
     if (res.code === 200 && res.data) updateTrendChart(res.data)
@@ -446,12 +543,35 @@ const getErrorTagType = (type: string) => {
   }
   return map[type] || 'info'
 }
-const getPageName = (url: string) => {
-  if (!url) return '-'
+const getPageName = (urlOrPath: string) => {
+  if (!urlOrPath) return '-'
+  // 如果是路径，直接返回
+  if (urlOrPath.startsWith('/')) {
+    return urlOrPath
+  }
+  // 如果是URL，提取路径
   try {
-    const urlObj = new URL(url)
-    return urlObj.pathname || url
-  } catch { return url }
+    const urlObj = new URL(urlOrPath)
+    return urlObj.pathname || urlOrPath
+  } catch { 
+    return urlOrPath 
+  }
+}
+
+// 获取应用名称
+const getAppName = (appId: string) => {
+  if (!appId) return '未知'
+  if (appId === 'charging-station-admin') return '管理端'
+  if (appId === 'charging-station-user-app') return '用户端'
+  return appId
+}
+
+// 获取应用标签类型
+const getAppTagType = (appId: string) => {
+  if (!appId) return 'info'
+  if (appId === 'charging-station-admin') return 'primary'
+  if (appId === 'charging-station-user-app') return 'success'
+  return 'info'
 }
 const getDataValue = (data: any, key: string) => {
   if (!data) return null
@@ -464,9 +584,25 @@ const handleSearch = () => { pageInfo.page = 1; loadErrorList(); loadErrorStats(
 const handleReset = () => {
   filterParams.type = ''
   filterParams.keyword = ''
+  filterParams.appId = ''
+  sortParams.sortBy = 'created_at'
+  sortParams.sortOrder = 'desc'
   dateRange.value = [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()]
   handleSearch()
 }
+
+// 表格排序处理
+const handleSortChange = ({ prop, order }: { prop: string; order: string | null }) => {
+  if (order) {
+    sortParams.sortBy = prop
+    sortParams.sortOrder = order === 'ascending' ? 'asc' : 'desc'
+  } else {
+    sortParams.sortBy = 'created_at'
+    sortParams.sortOrder = 'desc'
+  }
+  loadErrorList()
+}
+
 const handleSizeChange = (size: number) => { pageInfo.pageSize = size; loadErrorList() }
 const handleCurrentChange = (page: number) => { pageInfo.page = page; loadErrorList() }
 const handleSelectionChange = (rows: MonitorDataItem[]) => { selectedRows.value = rows }
@@ -702,7 +838,37 @@ onBeforeUnmount(() => {
       pre { background: #ffffff; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 150px; overflow: auto; color: rgba(0, 0, 0, 0.88); }
     }
 
-    .pagination { margin-top: 20px; justify-content: flex-end; }
+    .pagination { 
+      margin-top: 20px; 
+      justify-content: flex-end; 
+    }
+    
+    .page-info {
+      .page-path {
+        color: #303133;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+      .page-title {
+        color: #909399;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      .page-env {
+        margin-top: 4px;
+      }
+    }
+    
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      
+      .user-id {
+        color: #909399;
+        font-size: 12px;
+      }
+    }
   }
 
   // 行为回放对话框样式

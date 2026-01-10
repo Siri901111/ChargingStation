@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { loginApi } from "@/api/user";
-import { setMonitorUserId } from "@/monitor";
+import { setMonitorUserId, getMonitor } from "@/monitor";
 
 interface LoginParams {
     username: string;
@@ -33,8 +33,18 @@ export const useUserStore = defineStore("user", {
                 sessionStorage.setItem("userId", String(id))
                 sessionStorage.setItem("menu", JSON.stringify(menulist))
 
-                // 设置监控SDK的用户ID
+                // 设置监控SDK的用户ID和用户名称
                 setMonitorUserId(String(id));
+                
+                // 设置监控SDK的用户名称（从 username 获取，这是 admin 端的用户名）
+                const monitor = getMonitor();
+                if (monitor) {
+                    monitor.setExtra({
+                        userId: String(id),
+                        userName: username, // admin 端的用户名
+                        name: username,
+                    });
+                }
             } catch (error) {
 
             }

@@ -53,10 +53,30 @@ MonitorData.init(
       type: DataTypes.STRING(1000),
       comment: '页面URL'
     },
+    // 页面路径（规范化后的路径，用于展示）
+    page_path: {
+      type: DataTypes.STRING(500),
+      comment: '页面路径（规范化后的路径）'
+    },
     // 页面标题
     page_title: {
       type: DataTypes.STRING(200),
       comment: '页面标题'
+    },
+    // 用户显示名称（从extra、session_info等提取）
+    user_display_name: {
+      type: DataTypes.STRING(100),
+      comment: '用户显示名称（从extra等提取）'
+    },
+    // 平台类型（web、uniapp等）
+    platform: {
+      type: DataTypes.STRING(20),
+      comment: '平台类型（web、uniapp等）'
+    },
+    // 环境标识（h5、mp-weixin等）
+    env: {
+      type: DataTypes.STRING(20),
+      comment: '环境标识（h5、mp-weixin等）'
     },
     // 设备信息 (JSON)
     device_info: {
@@ -111,6 +131,9 @@ MonitorData.init(
       { fields: ['timestamp'] },
       { fields: ['created_at'] },
       { fields: ['user_id'] },
+      { fields: ['page_path'] },
+      { fields: ['platform'] },
+      { fields: ['user_display_name'] },
     ]
   }
 );

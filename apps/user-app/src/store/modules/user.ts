@@ -6,7 +6,7 @@ import { ref, computed } from 'vue'
 import { STORAGE_KEYS, PAGE_PATH } from '@/constants'
 import { setStorage, getStorage, removeStorage } from '@/utils/storage'
 import { userApi } from '@/api/user'
-import { setMonitorUserId, trackEvent } from '@/monitor'
+import { setMonitorUserId, trackEvent, getMonitor } from '@/monitor'
 
 export interface UserInfo {
   id: number
@@ -64,6 +64,18 @@ export const useUserStore = defineStore('user', () => {
     // 设置监控SDK用户ID
     if (info.id) {
       setMonitorUserId(String(info.id))
+      
+      // 设置监控额外信息（包含用户名称）
+      const monitor = getMonitor()
+      if (monitor) {
+        monitor.setExtra({
+          userId: String(info.id),
+          userName: info.name || info.phone || `用户${info.id}`,
+          name: info.name,
+          phone: info.phone,
+        })
+      }
+      
       // 上报登录事件
       trackEvent('user_login', {
         userId: info.id,

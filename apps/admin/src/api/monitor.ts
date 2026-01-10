@@ -8,12 +8,16 @@ export interface MonitorDataItem {
   report_id: string;
   app_id: string;
   user_id?: string;
-  user_name?: string;  // 用户名称（关联查询）
+  user_name?: string;  // 用户名称（优先级：user_display_name > user.name > user_id > 匿名）
+  user_display_name?: string;  // 用户显示名称（从extra等提取）
   type: string;
   category: string;
   timestamp: number;
   page_url?: string;
+  page_path?: string;  // 页面路径（规范化后的路径）
   page_title?: string;
+  platform?: string;  // 平台类型（web、uniapp等）
+  env?: string;  // 环境标识（h5、mp-weixin等）
   device_info?: any;
   environment_info?: any;
   session_info?: any;
@@ -78,8 +82,15 @@ export interface QueryParams {
   category?: string;
   type?: string;
   appId?: string;
+  platform?: string;  // 平台筛选（web、uniapp等）
+  env?: string;  // 环境筛选（h5、mp-weixin等）
+  pagePath?: string;  // 页面路径筛选
+  userName?: string;  // 用户名筛选
+  keyword?: string;  // 关键词搜索
   startTime?: number;
   endTime?: number;
+  sortBy?: string;  // 排序字段
+  sortOrder?: 'asc' | 'desc';  // 排序方向
 }
 
 // 获取监控数据列表

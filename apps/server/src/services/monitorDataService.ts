@@ -3,10 +3,15 @@ import { Op, fn, col, literal } from 'sequelize';
 import sequelize from '../config/db.js';
 
 // 设置 MonitorData 与 User 的关联关系
+// 注意：user_id 是 STRING 类型，User.id 是 BIGINT 类型，需要类型转换
 MonitorData.belongsTo(User, {
   foreignKey: 'user_id',
   targetKey: 'id',
-  as: 'user'
+  as: 'user',
+  // 使用 Sequelize 的 where 条件来处理类型转换
+  scope: {
+    // 在查询时会自动处理类型转换
+  }
 });
 
 /**
@@ -56,7 +61,14 @@ function getCategory(type: string): string {
  * 批量保存监控数据
  */
 export async function saveMonitorData(dataList: any[], clientInfo: { ip?: string; userAgent?: string }) {
-  const records = dataList.map(item => ({
+  const { platform, env } = extractPlatformInfo(dataList[0] || {});
+  
+  const records = dataList.map(item => {
+    const pagePath = extractPagePath(item);
+    const userDisplayName = extractUserDisplayName(item);
+    const platformInfo = extractPlatformInfo(item);
+    
+    return {
     report_id: item.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     app_id: item.appId || 'unknown',
     user_id: item.userId || null,
@@ -64,7 +76,11 @@ export async function saveMonitorData(dataList: any[], clientInfo: { ip?: string
     category: getCategory(item.type),
     timestamp: item.timestamp || Date.now(),
     page_url: item.pageUrl || null,
-    page_title: item.pageTitle || null,
+      page_path: pagePath,
+      page_title: item.pageTitle || item.data?.pageTitle || null,
+      user_display_name: userDisplayName,
+      platform: platformInfo.platform || platform || null,
+      env: platformInfo.env || env || null,
     device_info: item.deviceInfo || null,
     environment_info: item.environmentInfo || null,
     session_info: item.sessionInfo || null,
@@ -72,9 +88,71 @@ export async function saveMonitorData(dataList: any[], clientInfo: { ip?: string
     extra: item.extra || null,
     ip_address: clientInfo.ip || null,
     user_agent: clientInfo.userAgent || null,
-  }));
+    };
+  });
 
   return MonitorData.bulkCreate(records);
+}
+
+/**
+ * 提取页面路径（规范化处理）
+ */
+function extractPagePath(item: any): string | null {
+  // 优先从 extra 中获取 routePath
+  if (item.extra?.routePath) {
+    return item.extra.routePath;
+  }
+  if (item.extra?.toRoute) {
+    return item.extra.toRoute;
+  }
+  // 从 data 中获取 path
+  if (item.data?.path) {
+    return item.data.path;
+  }
+  if (item.data?.to) {
+    return item.data.to;
+  }
+  // 从 pageUrl 中提取路径
+  if (item.pageUrl) {
+    try {
+      const url = new URL(item.pageUrl);
+      return url.pathname || '/';
+    } catch {
+      return item.pageUrl;
+    }
+  }
+  return null;
+}
+
+/**
+ * 提取用户显示名称
+ */
+function extractUserDisplayName(item: any): string | null {
+  // 从 extra 中获取用户名称
+  if (item.extra?.userName) {
+    return item.extra.userName;
+  }
+  if (item.extra?.name) {
+    return item.extra.name;
+  }
+  // 从 sessionInfo 中获取
+  if (item.sessionInfo?.userId) {
+    return `用户${item.sessionInfo.userId.slice(0, 8)}`;
+  }
+  // 如果有 userId，显示部分ID
+  if (item.userId) {
+    return `用户${item.userId.slice(0, 8)}`;
+  }
+  return null;
+}
+
+/**
+ * 提取平台信息
+ */
+function extractPlatformInfo(item: any): { platform: string | null; env: string | null } {
+  const platform = item.extra?.platform || null;
+  const env = item.extra?.env || null;
+  return { platform, env };
 }
 
 /**
@@ -94,10 +172,32 @@ export async function getMonitorDataList(params: {
   category?: string;
   type?: string;
   appId?: string;
+  platform?: string;
+  env?: string;
+  pagePath?: string;
+  userName?: string;
+  keyword?: string;
   startTime?: number;
   endTime?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }) {
-  const { page = 1, pageSize = 20, category, type, appId, startTime, endTime } = params;
+  const { 
+    page = 1, 
+    pageSize = 20, 
+    category, 
+    type, 
+    appId, 
+    platform,
+    env,
+    pagePath,
+    userName,
+    keyword,
+    startTime, 
+    endTime,
+    sortBy = 'created_at',
+    sortOrder = 'desc'
+  } = params;
 
   const where: any = {};
 
@@ -109,6 +209,31 @@ export async function getMonitorDataList(params: {
   }
   if (appId) {
     where.app_id = appId;
+  }
+  if (platform) {
+    where.platform = platform;
+  }
+  if (env) {
+    where.env = env;
+  }
+  if (pagePath) {
+    where.page_path = {
+      [Op.like]: `%${pagePath}%`
+    };
+  }
+  if (userName) {
+    where.user_display_name = {
+      [Op.like]: `%${userName}%`
+    };
+  }
+  if (keyword) {
+    // 关键词搜索：搜索错误信息、页面路径、用户名称等
+    where[Op.or] = [
+      { page_path: { [Op.like]: `%${keyword}%` } },
+      { page_title: { [Op.like]: `%${keyword}%` } },
+      { user_display_name: { [Op.like]: `%${keyword}%` } },
+      { type: { [Op.like]: `%${keyword}%` } }
+    ];
   }
   if (startTime && endTime) {
     where.timestamp = {
@@ -124,24 +249,114 @@ export async function getMonitorDataList(params: {
     };
   }
 
+  // 构建排序规则
+  const order: any[] = [];
+  if (sortBy) {
+    const validSortFields = [
+      'created_at', 'timestamp', 'type', 'category', 
+      'page_path', 'user_display_name', 'platform', 'env'
+    ];
+    if (validSortFields.includes(sortBy)) {
+      order.push([sortBy, sortOrder === 'asc' ? 'ASC' : 'DESC']);
+    } else {
+      order.push(['created_at', 'DESC']);
+    }
+  } else {
+    order.push(['created_at', 'DESC']);
+  }
+
+  // 注意：user_id 是字符串类型，User.id 是 BIGINT 类型
+  // 需要先查询监控数据，然后手动关联查询用户信息
   const { count, rows } = await MonitorData.findAndCountAll({
     where,
-    order: [['created_at', 'DESC']],
+    order,
     limit: pageSize,
-    offset: (page - 1) * pageSize,
-    include: [{
-      model: User,
-      as: 'user',
-      attributes: ['id', 'name', 'account'],
-      required: false
-    }]
+    offset: (page - 1) * pageSize
   });
 
-  // 处理返回数据，添加 user_name 字段
+  // 收集所有需要查询的用户ID（数字字符串类型的）
+  const userIds: number[] = [];
+  const userIdMap = new Map<string, any>(); // 存储 user_id -> row 的映射
+  
+  rows.forEach((row: any) => {
+    const item = row.toJSON();
+    if (item.user_id) {
+      const userId = parseInt(item.user_id, 10);
+      if (!isNaN(userId)) {
+        if (!userIds.includes(userId)) {
+          userIds.push(userId);
+        }
+        userIdMap.set(item.user_id, row);
+      }
+    }
+  });
+
+  // 批量查询用户信息
+  const users: any[] = [];
+  if (userIds.length > 0) {
+    const userRows = await User.findAll({
+      where: {
+        id: {
+          [Op.in]: userIds
+        }
+      },
+      attributes: ['id', 'name', 'account']
+    });
+    users.push(...userRows);
+  }
+
+  // 创建 user_id -> user 的映射
+  const userMap = new Map<number, any>();
+  users.forEach((user: any) => {
+    userMap.set(Number(user.id), user);
+  });
+
+  // 处理返回数据，增强用户信息和页面信息
   const list = rows.map((row: any) => {
     const item = row.toJSON();
-    item.user_name = item.user?.name || null;
-    delete item.user;
+    
+    // 用户信息显示优先级：
+    // 1. user_display_name（已保存的真实姓名，从 extra.userName 等字段提取）
+    // 2. 从 User 表查询的用户名称（通过 user_id 匹配）
+    // 3. user_id（显示为"用户1"等格式）
+    // 4. 匿名
+    if (item.user_display_name && item.user_display_name.trim()) {
+      // 优先使用已保存的用户显示名称（这是最准确的）
+      item.user_name = item.user_display_name.trim();
+    } else if (item.user_id) {
+      // 尝试从 User 表查询用户名称
+      const userId = parseInt(item.user_id, 10);
+      if (!isNaN(userId) && userMap.has(userId)) {
+        const user = userMap.get(userId);
+        if (user && user.name && user.name.trim()) {
+          item.user_name = user.name.trim();
+        } else {
+          // 如果 User 表中没有名称，使用 user_id 格式化
+          const userIdStr = String(item.user_id);
+          item.user_name = userIdStr.length > 8 ? `用户${userIdStr.slice(0, 8)}` : `用户${userIdStr}`;
+        }
+      } else {
+        // user_id 不是数字字符串或查询失败，使用 user_id 格式化
+        const userIdStr = String(item.user_id);
+        item.user_name = userIdStr.length > 8 ? `用户${userIdStr.slice(0, 8)}` : `用户${userIdStr}`;
+      }
+    } else {
+      item.user_name = '匿名';
+    }
+    
+    // 页面信息：优先使用 page_path，其次从 page_url 提取，最后使用 page_title
+    if (!item.page_path && item.page_url) {
+      try {
+        const url = new URL(item.page_url);
+        item.page_path = url.pathname || '/';
+      } catch {
+        item.page_path = item.page_url;
+      }
+    }
+    if (!item.page_path) {
+      item.page_path = item.page_title || '/';
+    }
+    
     return item;
   });
 
@@ -161,8 +376,14 @@ export async function getErrorList(params: {
   page?: number;
   pageSize?: number;
   type?: string;
+  appId?: string;
+  platform?: string;
+  env?: string;
+  keyword?: string;
   startTime?: number;
   endTime?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }) {
   return getMonitorDataList({
     ...params,
@@ -177,8 +398,11 @@ export async function getPerformanceList(params: {
   page?: number;
   pageSize?: number;
   type?: string;
+  appId?: string;
   startTime?: number;
   endTime?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }) {
   return getMonitorDataList({
     ...params,
@@ -193,8 +417,12 @@ export async function getBehaviorList(params: {
   page?: number;
   pageSize?: number;
   type?: string;
+  appId?: string;
+  keyword?: string;
   startTime?: number;
   endTime?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }) {
   return getMonitorDataList({
     ...params,
@@ -208,8 +436,12 @@ export async function getBehaviorList(params: {
 export async function getNetworkList(params: {
   page?: number;
   pageSize?: number;
+  appId?: string;
+  keyword?: string;
   startTime?: number;
   endTime?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }) {
   return getMonitorDataList({
     ...params,
@@ -320,8 +552,9 @@ export async function getTrendData(params: {
   groupBy?: 'hour' | 'day';
   category?: string;
   appId?: string;
+  type?: string;
 }) {
-  const { startTime, endTime, groupBy = 'hour', category, appId } = params;
+  const { startTime, endTime, groupBy = 'hour', category, appId, type } = params;
 
   const where: any = {
     timestamp: {
@@ -334,6 +567,9 @@ export async function getTrendData(params: {
   }
   if (appId) {
     where.app_id = appId;
+  }
+  if (type) {
+    where.type = type;
   }
 
   const dateFormat = groupBy === 'hour'
@@ -364,12 +600,17 @@ export async function getPerformanceMetrics(params: {
   startTime?: number;
   endTime?: number;
   appId?: string;
+  type?: string;
 }) {
-  const { startTime, endTime, appId } = params;
+  const { startTime, endTime, appId, type } = params;
 
   const where: any = {
     type: 'performance'
   };
+  
+  if (type) {
+    where.type = type;
+  }
 
   if (appId) {
     where.app_id = appId;
@@ -432,12 +673,17 @@ export async function getErrorStats(params: {
   startTime?: number;
   endTime?: number;
   appId?: string;
+  type?: string;
 }) {
-  const { startTime, endTime, appId } = params;
+  const { startTime, endTime, appId, type } = params;
 
   const where: any = {
     category: 'error'
   };
+  
+  if (type) {
+    where.type = type;
+  }
 
   if (appId) {
     where.app_id = appId;
@@ -495,8 +741,9 @@ export async function getBehaviorStats(params: {
   startTime?: number;
   endTime?: number;
   appId?: string;
+  type?: string;
 }) {
-  const { startTime, endTime, appId } = params;
+  const { startTime, endTime, appId, type } = params;
 
   const where: any = {
     category: 'behavior'
@@ -505,15 +752,19 @@ export async function getBehaviorStats(params: {
   if (appId) {
     where.app_id = appId;
   }
+  if (type) {
+    where.type = type;
+  }
   if (startTime && endTime) {
     where.timestamp = {
       [Op.between]: [startTime, endTime]
     };
   }
 
-  // 页面访问排行
+  // 页面访问排行（如果指定了type，则使用指定的type，否则使用page_view）
+  const pageViewWhere = type ? where : { ...where, type: 'page_view' }
   const pageViewStats = await MonitorData.findAll({
-    where: { ...where, type: 'page_view' },
+    where: pageViewWhere,
     attributes: [
       'page_url',
       [fn('COUNT', col('id')), 'count']
@@ -524,12 +775,12 @@ export async function getBehaviorStats(params: {
     raw: true
   }) as any[];
 
-  // 总PV
+  // 总PV（如果指定了type，则使用指定的type，否则使用page_view）
   const pv = await MonitorData.count({
-    where: { ...where, type: 'page_view' }
+    where: pageViewWhere
   });
 
-  // 总UV
+  // 总UV（使用原始where条件，包含type筛选）
   const uvResult = await MonitorData.findAll({
     where,
     attributes: [[fn('COUNT', fn('DISTINCT', col('user_id'))), 'uv']],
@@ -537,14 +788,14 @@ export async function getBehaviorStats(params: {
   }) as any[];
   const uv = uvResult[0]?.uv || 0;
 
-  // 点击事件数
-  const clickCount = await MonitorData.count({
-    where: { ...where, type: 'click' }
+  // 点击事件数（如果指定了type，则只在type为click时统计，否则统计所有click）
+  const clickCount = type && type !== 'click' ? 0 : await MonitorData.count({
+    where: type ? where : { ...where, type: 'click' }
   });
 
-  // 路由切换数
-  const routeChangeCount = await MonitorData.count({
-    where: { ...where, type: 'route_change' }
+  // 路由切换数（如果指定了type，则只在type为route_change时统计，否则统计所有route_change）
+  const routeChangeCount = type && type !== 'route_change' ? 0 : await MonitorData.count({
+    where: type ? where : { ...where, type: 'route_change' }
   });
 
   return {
