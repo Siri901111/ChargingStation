@@ -13,6 +13,7 @@ import {
   recharge,
   verifyToken,
 } from '../services/mobileUserService.js';
+import ChargingUser from '../models/ChargingUser.js';
 import {
   getNearbyStations,
   searchStations,
@@ -46,6 +47,7 @@ import {
   testRecharge,
   initAllTestData,
 } from '../utils/initTestData.js';
+import { getMyMemberCardService, purchaseRechargeMemberService } from '../services/mobileMemberCardService.js';
 
 const router = express.Router();
 
@@ -64,11 +66,17 @@ function authMiddleware(req: express.Request, res: express.Response, next: expre
   const token = authHeader.substring(7);
   const decoded = verifyToken(token);
 
-  if (!decoded) {
+  if (!decoded || !decoded.userId) {
     return res.status(401).json({ code: 401, message: '登录已过期，请重新登录' });
   }
 
-  (req as any).userId = decoded.userId;
+  // 确保 userId 是数字类型
+  const userId = Number(decoded.userId);
+  if (isNaN(userId) || userId <= 0) {
+    return res.status(401).json({ code: 401, message: '无效的用户ID' });
+  }
+
+  (req as any).userId = userId;
   (req as any).phone = decoded.phone;
   next();
 }
@@ -82,9 +90,12 @@ function optionalAuth(req: express.Request, res: express.Response, next: express
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     const decoded = verifyToken(token);
-    if (decoded) {
-      (req as any).userId = decoded.userId;
-      (req as any).phone = decoded.phone;
+    if (decoded && decoded.userId) {
+      const userId = Number(decoded.userId);
+      if (!isNaN(userId) && userId > 0) {
+        (req as any).userId = userId;
+        (req as any).phone = decoded.phone;
+      }
     }
   }
 
@@ -279,7 +290,10 @@ router.get('/wallet/records', authMiddleware, async (req, res) => {
  */
 router.post('/wallet/recharge', authMiddleware, async (req, res) => {
   try {
-    const userId = (req as any).userId;
+    const userId = Number((req as any).userId);
+    if (isNaN(userId) || userId <= 0) {
+      return res.json(error('无效的用户ID'));
+    }
     const { amount, packageId, payType } = req.body;
 
     // 开发环境直接充值成功
@@ -450,7 +464,10 @@ router.delete('/station/favorite/:id', authMiddleware, async (req, res) => {
 router.get('/station/favorites', authMiddleware, async (req, res) => {
   try {
     const userId = (req as any).userId;
-    const result = await getFavoriteStations(userId);
+    if (!userId || isNaN(Number(userId)) || Number(userId) <= 0) {
+      return res.json(error('无效的用户ID'));
+    }
+    const result = await getFavoriteStations(Number(userId));
     res.json(success(result));
   } catch (err: any) {
     res.json(error(err.message));
@@ -698,6 +715,81 @@ router.post('/test/init-all', async (req, res) => {
 
     await initAllTestData();
     res.json(success({ message: '所有测试数据初始化完成' }));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+// ==================== 会员卡相关 ====================
+
+/**
+ * 获取我的会员卡详情
+ */
+router.get('/member/card', authMiddleware, async (req, res) => {
+  try {
+    const userId = Number((req as any).userId);
+    if (isNaN(userId) || userId <= 0) {
+      return res.json(error('无效的用户ID'));
+    }
+    const result = await getMyMemberCardService(userId);
+    res.json(success(result));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 购买充值会员（年卡198元）
+ */
+router.post('/member/purchase-recharge-member', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    if (!userId || isNaN(Number(userId)) || Number(userId) <= 0) {
+      return res.json(error('无效的用户ID'));
+    }
+    
+    // 开发环境直接购买成功，生产环境需要对接支付接口
+    if (process.env.NODE_ENV === 'development') {
+      const result = await purchaseRechargeMemberService(Number(userId));
+      res.json(success(result));
+      return;
+    }
+
+    // 生产环境应该返回支付信息，这里简化处理
+    const result = await purchaseRechargeMemberService(Number(userId));
+    res.json(success({
+      ...result,
+      payInfo: {
+        // 支付信息（需要对接实际支付接口）
+      },
+    }));
+  } catch (err: any) {
+    res.json(error(err.message));
+  }
+});
+
+/**
+ * 上传头像（base64格式）
+ */
+router.post('/user/upload-avatar', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const { avatar } = req.body;
+    
+    if (!avatar) {
+      return res.json(error('头像数据不能为空'));
+    }
+    
+    // 简单处理：如果是base64数据URL，直接保存
+    // 如果是URL，也直接保存
+    const updateData: any = { avatar };
+    updateData.updated_at = new Date();
+    
+    await ChargingUser.update(updateData, { where: { id: userId } });
+    
+    // 返回更新后的用户信息
+    const result = await getUserInfo(userId);
+    res.json(success(result));
   } catch (err: any) {
     res.json(error(err.message));
   }

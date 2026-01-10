@@ -101,6 +101,16 @@
         <text class="section-title">服务</text>
       </view>
       <view class="list-card">
+        <view class="list-item" @click="goToMemberCard">
+          <view class="item-left">
+            <text class="item-emoji">💳</text>
+            <text class="item-text">会员卡</text>
+          </view>
+          <view class="item-right">
+            <text class="item-hint">查看会员信息</text>
+            <text class="item-arrow">›</text>
+          </view>
+        </view>
         <view class="list-item" @click="goToStatistics">
           <view class="item-left">
             <text class="item-emoji">📊</text>
@@ -216,6 +226,11 @@ function goToWallet() {
 function goToOrders() {
   if (!userStore.checkLoginAndNavigate()) return
   uni.switchTab({ url: PAGE_PATH.ORDER })
+}
+
+function goToMemberCard() {
+  if (!userStore.checkLoginAndNavigate()) return
+  uni.navigateTo({ url: PAGE_PATH.MEMBER_CARD })
 }
 
 function goToStatistics() {

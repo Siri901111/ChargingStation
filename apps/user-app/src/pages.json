@@ -92,6 +92,13 @@
         "navigationBarTitleText": "",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/member-card/index",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "subPackages": [

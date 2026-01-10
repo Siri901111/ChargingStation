@@ -235,9 +235,18 @@ async function handleTestRecharge() {
     uni.hideLoading()
 
     if (res.success) {
+      let content = `支付${res.payAmount || totalAmount.value}元\n实际到账${res.amount}元`
+      if (res.isRechargeMember && res.memberDiscount > 0) {
+        content += `\n会员95折优惠：+${res.memberDiscount.toFixed(2)}元`
+      }
+      if (res.giftAmount > 0) {
+        content += `\n赠送：+${res.giftAmount}元`
+      }
+      content += `\n当前余额：${res.newBalance}元`
+      
       uni.showModal({
         title: '充值成功',
-        content: `充值${res.amount}元，赠送${res.giftAmount}元\n当前余额：${res.newBalance}元`,
+        content: content,
         showCancel: false,
         success: () => {
           uni.navigateBack()

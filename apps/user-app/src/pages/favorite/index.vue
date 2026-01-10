@@ -24,10 +24,10 @@
       </view>
 
       <view v-else-if="stations.length === 0" class="empty">
-        <view class="empty-icon">⭐</view>
+        <view class="icon icon-star icon-3xl empty-icon"></view>
         <text class="empty-title">暂无收藏站点</text>
         <text class="empty-desc">去站点列表收藏喜欢的充电站吧</text>
-        <view class="empty-action" @click="goToMap">
+        <view class="empty-action touchable" @click="goToMap">
           <text>去收藏</text>
         </view>
       </view>
@@ -42,21 +42,23 @@
         >
           <view class="station-content">
             <view class="station-header">
-              <text class="station-name">{{ station.name }}</text>
+              <view class="station-main">
+                <text class="station-name">{{ station.name }}</text>
+                <text class="station-address truncate">{{ station.address || station.city }}</text>
+              </view>
               <view class="station-actions">
-                <view class="favorite-btn active" @click.stop="handleUnfavorite(station.id)">
-                  <text>⭐</text>
+                <view class="favorite-btn active touchable" @click.stop="handleUnfavorite(station.id)">
+                  <view class="icon icon-star-filled icon-sm"></view>
                 </view>
               </view>
             </view>
-            <text class="station-address truncate">{{ station.address || station.city }}</text>
             <view class="station-footer">
               <view class="station-tags">
                 <view class="tag tag-jade" v-if="station.fastFree > 0">
-                  快充 {{ station.fastFree }}
+                  <text>快充 {{ station.fastFree }}</text>
                 </view>
                 <view class="tag tag-grey" v-if="station.slowFree > 0">
-                  慢充 {{ station.slowFree }}
+                  <text>慢充 {{ station.slowFree }}</text>
                 </view>
               </view>
               <view class="station-price" v-if="station.price">
@@ -100,14 +102,18 @@ onShow(() => {
 
 // 获取收藏列表
 async function fetchFavorites() {
+  if (loading.value) return
   loading.value = true
   try {
-    stations.value = await stationApi.getFavoriteStations()
-  } catch (error) {
+    const list = await stationApi.getFavoriteStations()
+    stations.value = list || []
+  } catch (error: any) {
     console.error('获取收藏列表失败', error)
-    uni.showToast({ title: '获取收藏列表失败', icon: 'none' })
+    uni.showToast({ title: error.message || '获取收藏列表失败', icon: 'none' })
+    stations.value = []
   } finally {
     loading.value = false
+    refreshing.value = false
   }
 }
 
@@ -122,7 +128,8 @@ async function onRefresh() {
 async function handleUnfavorite(stationId: number) {
   uni.showModal({
     title: '确认取消',
-    content: '确定要取消收藏吗？',
+    content: '确定要取消收藏该站点吗？',
+    confirmColor: '#C4554A',
     success: async (res) => {
       if (res.confirm) {
         try {
@@ -130,8 +137,9 @@ async function handleUnfavorite(stationId: number) {
           uni.showToast({ title: '已取消收藏', icon: 'success' })
           // 从列表中移除
           stations.value = stations.value.filter(s => s.id !== stationId)
-        } catch (error) {
-          uni.showToast({ title: '操作失败', icon: 'none' })
+        } catch (error: any) {
+          console.error('取消收藏失败:', error)
+          uni.showToast({ title: error.message || '操作失败', icon: 'none' })
         }
       }
     },
@@ -222,54 +230,63 @@ function goToMap() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 120rpx 40rpx;
+  padding: var(--space-16) var(--space-5);
 }
 
 .empty-icon {
-  font-size: 120rpx;
-  margin-bottom: 32rpx;
-  opacity: 0.3;
+  margin-bottom: var(--space-4);
+  color: var(--ink-15);
+  opacity: 0.4;
 }
 
 .empty-title {
-  font-size: 32rpx;
-  font-weight: 500;
-  color: #666666;
-  margin-bottom: 16rpx;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
 }
 
 .empty-desc {
-  font-size: 26rpx;
-  color: #999999;
-  margin-bottom: 48rpx;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-6);
+  text-align: center;
 }
 
 .empty-action {
-  padding: 20rpx 48rpx;
-  background: #1A1A1A;
-  color: #FFFFFF;
-  border-radius: 48rpx;
-  font-size: 28rpx;
-  font-weight: 500;
+  padding: var(--space-3) var(--space-6);
+  background: var(--ink-90);
+  color: var(--paper);
+  border-radius: var(--radius-full);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  transition: all var(--duration-fast) var(--ease-out);
+  
+  &:active {
+    transform: scale(0.95);
+    background: var(--ink-100);
+  }
 }
 
 .station-list {
-  padding: 24rpx;
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: var(--space-3);
 }
 
 .station-item {
-  background: #FFFFFF;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03);
-  transition: all 0.2s;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+  border: 1rpx solid var(--border-light);
 
   &:active {
     transform: scale(0.98);
-    background: #FAFAFA;
+    background: var(--ink-02);
+    box-shadow: var(--shadow-xs);
   }
 }
 
@@ -297,20 +314,36 @@ function goToMap() {
 
 .station-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  margin-bottom: var(--space-3);
+  gap: var(--space-3);
+}
+
+.station-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .station-name {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1A1A1A;
-  flex: 1;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.station-address {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .station-actions {
   display: flex;
-  gap: 16rpx;
+  gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .favorite-btn {
@@ -319,27 +352,22 @@ function goToMap() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: #F5F5F5;
-  transition: all 0.2s;
+  border-radius: var(--radius-full);
+  background: rgba(184, 153, 111, 0.1);
+  transition: all var(--duration-fast) var(--ease-out);
 
   &.active {
-    background: rgba(255, 215, 0, 0.1);
-
-    text {
-      font-size: 32rpx;
-    }
+    background: rgba(184, 153, 111, 0.2);
   }
 
   &:active {
     transform: scale(0.9);
+    background: rgba(184, 153, 111, 0.3);
   }
-}
-
-.station-address {
-  font-size: 26rpx;
-  color: #999999;
-  line-height: 1.5;
+  
+  .icon {
+    color: var(--gold);
+  }
 }
 
 .truncate {
@@ -352,46 +380,50 @@ function goToMap() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8rpx;
+  padding-top: var(--space-3);
+  border-top: 1rpx solid var(--border-light);
 }
 
 .station-tags {
   display: flex;
-  gap: 12rpx;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 .tag {
-  padding: 8rpx 16rpx;
-  border-radius: 8rpx;
-  font-size: 24rpx;
-  font-weight: 500;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
 
   &.tag-jade {
-    color: #5A8F7B;
+    color: var(--jade);
     background: rgba(90, 143, 123, 0.1);
   }
 
   &.tag-grey {
-    color: #666666;
-    background: #F5F5F5;
+    color: var(--text-secondary);
+    background: var(--ink-05);
   }
 }
 
 .station-price {
   display: flex;
   align-items: baseline;
-  gap: 4rpx;
+  gap: var(--space-1);
+  flex-shrink: 0;
 }
 
 .price-value {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #5A8F7B;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--jade);
+  font-variant-numeric: tabular-nums;
 }
 
 .price-unit {
-  font-size: 24rpx;
-  color: #999999;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
 }
 
 .font-num {

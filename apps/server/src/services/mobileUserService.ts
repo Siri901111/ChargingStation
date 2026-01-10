@@ -260,8 +260,26 @@ export async function recharge(userId: number, amount: number) {
     throw new Error('充值金额必须大于0');
   }
 
-  const currentBalance = parseFloat((user as any).balance) || 0;
-  const newBalance = currentBalance + amount;
+  const userData = user as any;
+  const currentBalance = parseFloat(userData.balance) || 0;
+  
+  // 检查是否是充值会员且未过期，享受95折（支付金额享受95折优惠，实际到账 = 支付金额 / 0.95）
+  let actualAmount = amount;
+  let memberDiscount = 0;
+  let isRechargeMember = false;
+
+  if (userData.card_type === '充值会员' && userData.valid_until) {
+    const validUntil = new Date(userData.valid_until);
+    const now = new Date();
+    if (validUntil > now) {
+      // 充值会员享受95折：实际到账金额 = 支付金额 / 0.95
+      actualAmount = Math.round((amount / 0.95) * 100) / 100; // 保留2位小数
+      memberDiscount = actualAmount - amount;
+      isRechargeMember = true;
+    }
+  }
+
+  const newBalance = currentBalance + actualAmount;
 
   await ChargingUser.update(
     { balance: newBalance },
@@ -270,6 +288,10 @@ export async function recharge(userId: number, amount: number) {
 
   return {
     balance: newBalance,
+    amount: actualAmount, // 实际到账金额
+    payAmount: amount, // 支付金额
+    memberDiscount: isRechargeMember ? memberDiscount : 0,
+    isRechargeMember,
     message: '充值成功',
   };
 }

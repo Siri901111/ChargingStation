@@ -73,4 +73,11 @@ export const userApi = {
   getBalance() {
     return http.get<{ balance: number }>('/user/balance')
   },
+
+  /**
+   * 上传头像
+   */
+  uploadAvatar(avatar: string) {
+    return http.post<UserInfo>('/user/upload-avatar', { avatar })
+  },
 }

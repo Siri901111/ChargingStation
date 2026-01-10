@@ -13,6 +13,7 @@
 | `/user/loginByWechat` | POST | 微信登录 | - |
 | `/user/info` | GET | 获取用户信息 | ✅ |
 | `/user/info` | PUT | 更新用户信息 | ✅ |
+| `/user/upload-avatar` | POST | 上传头像（base64） | ✅ |
 | `/user/balance` | GET | 获取余额 | ✅ |
 | `/user/recharge` | POST | 充值 | ✅ |
 
@@ -39,6 +40,66 @@
 | `/station/favorite` | POST | 收藏站点 | ✅ |
 | `/station/favorite/:id` | DELETE | 取消收藏 | ✅ |
 | `/station/favorites` | GET | 获取收藏列表 | ✅ |
+
+### 会员卡模块
+
+| 接口 | 方法 | 说明 | 认证 |
+|------|------|------|------|
+| `/member/card` | GET | 获取我的会员卡详情 | ✅ |
+
+#### 获取我的会员卡详情
+
+```
+GET /api/mobile/member/card
+```
+
+**请求头**：需要 Token
+
+**响应示例**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "memberCardNumber": "M202401010001",
+    "cardType": "普通卡",
+    "issueDate": "2024/01/15",
+    "holderName": "张三",
+    "holderPhone": "19282249442",
+    "cardBalance": "500.00",
+    "validUntil": "2025/01/15",
+    "status": 1,
+    "transactionRecords": [
+      {
+        "transactionDate": "2024/11/20",
+        "transactionAmount": "150.00",
+        "transactionType": "充电扣款",
+        "orderNo": "ORD20241120143025"
+      }
+    ]
+  }
+}
+```
+
+**字段说明**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| memberCardNumber | string | 会员卡号 |
+| cardType | string | 卡类型：普通卡、VIP卡、季卡 |
+| issueDate | string | 开卡日期（YYYY/MM/DD） |
+| holderName | string | 持卡人姓名 |
+| holderPhone | string | 持卡人手机号 |
+| cardBalance | string | 卡余额（保留2位小数） |
+| validUntil | string | 有效期至（YYYY/MM/DD），空表示永久有效 |
+| status | number | 状态：1正常，0禁用 |
+| transactionRecords | array | 消费记录列表（按时间倒序） |
+| transactionRecords[].transactionDate | string | 消费日期 |
+| transactionRecords[].transactionAmount | string | 消费金额 |
+| transactionRecords[].transactionType | string | 消费类型：充电扣款、服务费扣款、停车费扣款、其他 |
+| transactionRecords[].orderNo | string | 订单号（可选） |
+
+---
 
 ### 充电模块
 

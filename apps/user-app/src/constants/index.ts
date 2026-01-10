@@ -68,6 +68,7 @@ export const PAGE_PATH = {
   WALLET: '/pages/wallet/index',
   RECHARGE: '/pages/wallet/recharge',
   FAVORITE: '/pages/favorite/index',
+  MEMBER_CARD: '/pages/member-card/index',
   LOGIN: '/pages-sub/auth/login',
   SETTINGS: '/pages-sub/settings/index',
   PROFILE: '/pages-sub/settings/profile',

@@ -384,8 +384,26 @@ export async function testRecharge(userId: number, amount: number, giftAmount: n
     throw new Error('用户不存在');
   }
 
-  const currentBalance = parseFloat((user as any).balance) || 0;
-  const totalAdd = amount + giftAmount;
+  const userData = user as any;
+  const currentBalance = parseFloat(userData.balance) || 0;
+  
+  // 检查是否是充值会员且未过期，享受95折（支付95元到账100元，即实际到账 = 支付金额 / 0.95）
+  let actualAmount = amount;
+  let memberDiscount = 0;
+  let isRechargeMember = false;
+
+  if (userData.card_type === '充值会员' && userData.valid_until) {
+    const validUntil = new Date(userData.valid_until);
+    const now = new Date();
+    if (validUntil > now) {
+      // 充值会员享受95折：实际到账金额 = 支付金额 / 0.95
+      actualAmount = Math.round((amount / 0.95) * 100) / 100; // 保留2位小数
+      memberDiscount = actualAmount - amount;
+      isRechargeMember = true;
+    }
+  }
+
+  const totalAdd = actualAmount + giftAmount;
   const newBalance = currentBalance + totalAdd;
 
   await ChargingUser.update(
@@ -393,13 +411,16 @@ export async function testRecharge(userId: number, amount: number, giftAmount: n
     { where: { id: userId } }
   );
 
-  console.log(`💰 充值成功: 用户${userId} 充值${amount}元 赠送${giftAmount}元 新余额${newBalance}元`);
+  console.log(`💰 充值成功: 用户${userId} 支付${amount}元 ${isRechargeMember ? `(充值会员95折，实际到账${actualAmount}元)` : ''} 赠送${giftAmount}元 新余额${newBalance}元`);
 
   return {
     success: true,
     message: '充值成功',
-    amount,
+    amount: actualAmount, // 实际到账金额
+    payAmount: amount, // 支付金额
     giftAmount,
+    memberDiscount: isRechargeMember ? memberDiscount : 0,
+    isRechargeMember,
     totalAdd,
     newBalance,
   };

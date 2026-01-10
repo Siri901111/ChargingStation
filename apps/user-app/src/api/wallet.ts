@@ -56,8 +56,11 @@ export const walletApi = {
     return http.post<{
       success: boolean
       message: string
-      amount: number
+      amount: number // 实际到账金额
+      payAmount: number // 支付金额
       giftAmount: number
+      memberDiscount: number // 会员折扣金额
+      isRechargeMember: boolean // 是否为充值会员
       totalAdd: number
       newBalance: number
     }>('/test/recharge', params)

@@ -25,7 +25,7 @@
         </view>
       </view>
 
-      <view class="form-item" @click="showGenderPicker = true">
+      <view class="form-item" @click="handleSelectGender">
         <text class="form-label">性别</text>
         <view class="form-value">
           <text>{{ genderText }}</text>
@@ -33,13 +33,15 @@
         </view>
       </view>
 
-      <view class="form-item" @click="showDatePicker = true">
-        <text class="form-label">生日</text>
-        <view class="form-value">
-          <text>{{ formData.birthday || '未设置' }}</text>
-          <text class="arrow">›</text>
+      <picker mode="date" :value="formData.birthday || '2000-01-01'" :end="today" @change="handleDateChange">
+        <view class="form-item touchable">
+          <text class="form-label">生日</text>
+          <view class="form-value">
+            <text>{{ formData.birthday ? formatBirthday(formData.birthday) : '未设置' }}</text>
+            <text class="arrow">›</text>
+          </view>
         </view>
-      </view>
+      </picker>
 
       <view class="form-item">
         <text class="form-label">手机号</text>
@@ -48,10 +50,11 @@
         </view>
       </view>
 
-      <view class="form-item">
-        <text class="form-label">会员卡号</text>
+      <view class="form-item" @click="goToMemberCard">
+        <text class="form-label">会员卡</text>
         <view class="form-value">
-          <text>{{ userStore.userInfo?.memberCardNo || '-' }}</text>
+          <text>{{ userStore.userInfo?.cardType || '普通会员' }}</text>
+          <text class="arrow">›</text>
         </view>
       </view>
     </view>
@@ -85,17 +88,6 @@
       </view>
     </view>
 
-    <!-- 日期选择器 -->
-    <picker
-      v-if="showDatePicker"
-      mode="date"
-      :value="formData.birthday || '2000-01-01'"
-      :end="today"
-      @change="handleDateChange"
-      @cancel="showDatePicker = false"
-    >
-      <view></view>
-    </picker>
 
     <!-- 昵称编辑弹窗 -->
     <view v-if="showNameEditor" class="picker-mask" @click="showNameEditor = false">
@@ -124,7 +116,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '@/store/modules/user'
+import { userApi } from '@/api/user'
 import { maskPhone } from '@/utils'
+import { PAGE_PATH } from '@/constants'
 
 const userStore = useUserStore()
 
@@ -150,7 +144,6 @@ const originalData = ref({
 // 状态
 const saving = ref(false)
 const showGenderPicker = ref(false)
-const showDatePicker = ref(false)
 const showNameEditor = ref(false)
 const tempGender = ref(0)
 const tempName = ref('')
@@ -182,7 +175,14 @@ const hasChanges = computed(() => {
 })
 
 // 初始化
-onMounted(() => {
+onMounted(async () => {
+  // 先获取最新用户信息
+  try {
+    await userStore.fetchUserInfo()
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+  }
+  
   const info = userStore.userInfo
   if (info) {
     formData.value = {
@@ -194,6 +194,13 @@ onMounted(() => {
     originalData.value = { ...formData.value }
   }
 })
+
+// 选择性别
+function handleSelectGender() {
+  tempGender.value = formData.value.gender
+  showGenderPicker.value = true
+}
+
 
 // 编辑昵称
 function handleEditName() {
@@ -213,25 +220,99 @@ function confirmGender() {
   showGenderPicker.value = false
 }
 
+// 格式化生日显示
+function formatBirthday(dateStr: string): string {
+  if (!dateStr) return ''
+  try {
+    // 处理YYYY-MM-DD格式
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return dateStr
+    return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`
+  } catch {
+    return dateStr
+  }
+}
+
 // 选择日期
 function handleDateChange(e: any) {
-  formData.value.birthday = e.detail.value
-  showDatePicker.value = false
+  if (e.detail?.value) {
+    formData.value.birthday = e.detail.value
+  }
 }
 
 // 更换头像
-function handleChangeAvatar() {
+async function handleChangeAvatar() {
   uni.chooseImage({
     count: 1,
     sizeType: ['compressed'],
     sourceType: ['album', 'camera'],
-    success: (res) => {
-      // 这里应该上传图片到服务器获取URL
-      // 暂时使用本地路径演示
-      formData.value.avatar = res.tempFilePaths[0]
-      uni.showToast({ title: '头像已更新', icon: 'success' })
+    success: async (res) => {
+      try {
+        uni.showLoading({ title: '处理中...' })
+        const filePath = res.tempFilePaths[0]
+        
+        // 压缩图片（如果太大）
+        const compressRes = await new Promise<UniApp.CompressImageSuccessData>((resolve, reject) => {
+          uni.compressImage({
+            src: filePath,
+            quality: 80,
+            success: resolve,
+            fail: reject,
+          })
+        }).catch(() => ({ tempFilePath: filePath }))
+        
+        // #ifdef H5
+        // H5平台：将图片转换为base64
+        const fs = uni.getFileSystemManager()
+        const base64 = await new Promise<string>((resolve, reject) => {
+          fs.readFile({
+            filePath: compressRes.tempFilePath,
+            encoding: 'base64',
+            success: (fileRes: any) => {
+              resolve('data:image/jpeg;base64,' + fileRes.data)
+            },
+            fail: reject,
+          })
+        })
+        
+        // 上传头像
+        try {
+          const updatedUser = await userApi.uploadAvatar(base64)
+          formData.value.avatar = updatedUser.avatar || base64
+          userStore.setUserInfo(updatedUser)
+          uni.showToast({ title: '头像上传成功', icon: 'success' })
+        } catch (error: any) {
+          // 如果上传失败，仍然保存base64到本地显示
+          formData.value.avatar = base64
+          console.error('上传头像失败:', error)
+          uni.showToast({ title: '头像已保存（上传失败）', icon: 'none' })
+        }
+        // #endif
+        
+        // #ifndef H5
+        // 其他平台：直接使用临时路径（实际应该上传到服务器）
+        // 在小程序等平台，可以使用uni.uploadFile上传
+        formData.value.avatar = compressRes.tempFilePath
+        uni.showToast({ title: '头像已选择', icon: 'success' })
+        // #endif
+        
+        uni.hideLoading()
+      } catch (error: any) {
+        uni.hideLoading()
+        console.error('处理图片失败:', error)
+        uni.showToast({ title: error.message || '图片处理失败', icon: 'none' })
+      }
+    },
+    fail: () => {
+      uni.showToast({ title: '选择图片失败', icon: 'none' })
     },
   })
+}
+
+// 跳转会员卡
+function goToMemberCard() {
+  if (!userStore.checkLoginAndNavigate()) return
+  uni.navigateTo({ url: PAGE_PATH.MEMBER_CARD })
 }
 
 // 保存修改
@@ -240,18 +321,37 @@ async function handleSave() {
 
   saving.value = true
   try {
-    await userStore.updateUserInfo({
+    // 如果头像已更改且是base64，先上传头像
+    let avatarUrl = formData.value.avatar
+    if (formData.value.avatar !== originalData.value.avatar && formData.value.avatar.startsWith('data:image')) {
+      try {
+        const updatedUser = await userApi.uploadAvatar(formData.value.avatar)
+        avatarUrl = updatedUser.avatar || formData.value.avatar
+        userStore.setUserInfo(updatedUser)
+      } catch (error) {
+        console.error('上传头像失败，使用原头像:', error)
+        // 如果上传失败，仍然保存其他信息
+      }
+    }
+    
+    // 更新用户信息
+    const updatedInfo = await userStore.updateUserInfo({
       name: formData.value.name,
-      avatar: formData.value.avatar,
+      avatar: avatarUrl,
       gender: formData.value.gender,
       birthday: formData.value.birthday,
     })
+    
     originalData.value = { ...formData.value }
+    originalData.value.avatar = avatarUrl
+    formData.value.avatar = updatedInfo.avatar || avatarUrl
+    
     uni.showToast({ title: '保存成功', icon: 'success' })
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
   } catch (error: any) {
+    console.error('保存失败:', error)
     uni.showToast({ title: error.message || '保存失败', icon: 'none' })
   } finally {
     saving.value = false
@@ -446,6 +546,20 @@ async function handleSave() {
 .check-icon {
   color: #5A8F7B;
   font-weight: 600;
+}
+
+.picker-body {
+  padding: 32rpx;
+  min-height: 200rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.picker-value {
+  font-size: 32rpx;
+  color: #1A1A1A;
+  font-weight: 500;
 }
 
 /* 昵称编辑弹窗 */
