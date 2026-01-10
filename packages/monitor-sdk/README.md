@@ -4,6 +4,7 @@
 
 ## 特性
 
+- **多端支持**: 支持 Web、UniApp 等多平台，通过平台适配器实现统一 API
 - **错误监控**: JS运行时错误、Promise未捕获错误、资源加载错误、Vue组件错误
 - **性能监控**: Navigation Timing API Level 2、Web Vitals (FCP, LCP, FID, CLS, INP)、长任务监控
 - **用户行为监控**: 行为栈追踪、页面访问、点击事件、路由变化、滚动深度
@@ -13,6 +14,7 @@
 - **插件化架构**: 灵活的插件系统，可自由扩展
 - **TypeScript支持**: 完整的类型定义
 - **Vue 3支持**: 专门的Vue错误处理插件
+- **平台适配器**: 参考大厂规范的平台适配器模式，支持通过配置切换不同平台
 
 ## 安装
 
@@ -97,12 +99,62 @@ app.use(router);
 app.mount('#app');
 ```
 
+### UniApp 集成
+
+```typescript
+import { createMonitor } from '@charging/monitor-sdk';
+
+// 在 App.vue 或 main.js 中初始化
+const monitor = createMonitor({
+  appId: 'your-app-id',
+  reportUrl: 'https://api.example.com/monitor/report',
+  platform: 'uniapp', // 指定平台类型（可选，会自动检测）
+  debug: true,
+  userId: 'user-123',
+});
+
+// 设置用户ID（登录后）
+monitor.setUserId('user-456');
+
+// 手动上报自定义事件
+monitor.trackEvent('button_click', {
+  buttonName: 'submit',
+  page: 'checkout',
+});
+
+// 在页面卸载时销毁（可选）
+// App.onHide 或页面 onUnload 中调用
+monitor.destroy();
+```
+
+### 平台自动检测
+
+SDK 会自动检测运行平台，你也可以手动指定：
+
+```typescript
+import { createMonitor } from '@charging/monitor-sdk';
+
+// 自动检测平台（默认）
+const monitor1 = createMonitor({
+  appId: 'app-id',
+  reportUrl: '/api/monitor/report',
+});
+
+// 手动指定平台
+const monitor2 = createMonitor({
+  appId: 'app-id',
+  reportUrl: '/api/monitor/report',
+  platform: 'uniapp', // 'web' | 'uniapp' | 'mini-program'
+});
+```
+
 ## 配置选项
 
 | 选项 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `appId` | string | (必填) | 应用唯一标识 |
 | `reportUrl` | string | (必填) | 数据上报地址 |
+| `platform` | `'web' \| 'uniapp' \| 'mini-program'` | `自动检测` | 平台类型，不指定则自动检测 |
 | `userId` | string | `''` | 用户ID |
 | `enableError` | boolean | `true` | 是否开启错误监控 |
 | `enablePerformance` | boolean | `true` | 是否开启性能监控 |
@@ -268,6 +320,39 @@ Content-Type: application/json
 | `/api/monitor/error-stats` | GET | 获取错误统计 |
 | `/api/monitor/behavior-stats` | GET | 获取行为统计 |
 
+## 平台适配器架构
+
+SDK 采用平台适配器模式，参考大厂规范（如阿里云 ARMS、腾讯 RUM）设计，通过统一的接口适配不同平台：
+
+### 支持的平台
+
+- **Web**: 浏览器环境（H5、PC Web）
+- **UniApp**: UniApp 框架（支持小程序、H5、App）
+
+### 平台适配器能力
+
+每个平台适配器提供以下能力：
+
+- **存储**: `localStorage` / `sessionStorage` 适配
+- **网络请求**: `fetch` / `uni.request` 适配
+- **页面信息**: 获取当前页面 URL、标题等
+- **事件监听**: 全局错误、Promise 错误、页面隐藏等
+- **设备信息**: 获取设备类型、系统版本等
+- **定时器**: `setTimeout` / `setInterval` 适配
+
+### 扩展新的平台
+
+如果需要支持新的平台，可以实现 `PlatformAdapter` 接口：
+
+```typescript
+import type { PlatformAdapter } from '@charging/monitor-sdk';
+
+class MyPlatformAdapter implements PlatformAdapter {
+  platform = 'my-platform' as const;
+  // 实现接口...
+}
+```
+
 ## 目录结构
 
 ```
@@ -277,6 +362,11 @@ monitor-sdk/
 │   │   ├── monitor.ts     # 监控核心类
 │   │   ├── reporter.ts    # 数据上报器（优先级队列、限流）
 │   │   └── index.ts
+│   ├── platform/          # 平台适配器模块
+│   │   ├── types.ts       # 平台适配器接口定义
+│   │   ├── web.ts         # Web 平台适配器
+│   │   ├── uniapp.ts      # UniApp 平台适配器
+│   │   └── index.ts       # 平台适配器工厂
 │   ├── plugins/           # 插件模块
 │   │   ├── error.ts       # 错误监控插件
 │   │   ├── performance.ts # 性能监控插件（Web Vitals）

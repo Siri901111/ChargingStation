@@ -3,6 +3,7 @@
  * 支持优先级队列、限流、数据压缩
  */
 import type { ReportData, RateLimitConfig } from '../types';
+import type { PlatformAdapter } from '../platform';
 import { log, warn, error, RateLimiter } from '../utils';
 
 interface QueueItem {
@@ -15,28 +16,32 @@ interface QueueItem {
 export class Reporter {
   private reportUrl: string;
   private debug: boolean;
+  private platformAdapter: PlatformAdapter;
   private highPriorityQueue: QueueItem[] = [];
   private normalQueue: QueueItem[] = [];
   private lowPriorityQueue: QueueItem[] = [];
   private maxCache: number;
   private reportInterval: number;
-  private timer: ReturnType<typeof setInterval> | null = null;
+  private timer: number | null = null;
   private isDestroyed = false;
   private rateLimiter: RateLimiter;
   private maxRetry = 3;
+  private pageHideUnsubscribers: Array<() => void> = [];
 
   constructor(
     reportUrl: string,
     maxCache: number = 20,
     reportInterval: number = 5000,
     debug: boolean = false,
-    rateLimitConfig?: RateLimitConfig
+    rateLimitConfig?: RateLimitConfig,
+    platformAdapter?: PlatformAdapter
   ) {
     this.reportUrl = reportUrl;
     this.maxCache = maxCache;
     this.reportInterval = reportInterval;
     this.debug = debug;
     this.rateLimiter = new RateLimiter(rateLimitConfig);
+    this.platformAdapter = platformAdapter!;
 
     this.startTimer();
     this.bindPageHideEvent();
@@ -149,48 +154,52 @@ export class Reporter {
     if (items.length === 0) return;
 
     const data = items.map((item) => item.data);
+    const dataString = JSON.stringify(data);
 
     log(this.debug, `上报 ${data.length} 条数据到 ${this.reportUrl}`);
 
-    // 优先使用 sendBeacon
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-      const success = navigator.sendBeacon(this.reportUrl, blob);
+    // 优先使用 sendBeacon（如果平台支持）
+    if (this.platformAdapter.sendBeacon) {
+      const blob = typeof Blob !== 'undefined' 
+        ? new Blob([dataString], { type: 'application/json' })
+        : dataString;
+      
+      const success = this.platformAdapter.sendBeacon(this.reportUrl, blob);
 
       if (success) {
         log(this.debug, 'sendBeacon 上报成功');
         return;
       }
-      warn(this.debug, 'sendBeacon 上报失败，降级使用 fetch');
+      warn(this.debug, 'sendBeacon 上报失败，降级使用 request');
     }
 
-    // 降级使用 fetch
-    this.sendByFetch(items);
+    // 降级使用平台适配器的 request
+    this.sendByRequest(items);
   }
 
   /**
-   * 使用 fetch 发送数据
+   * 使用平台适配器的 request 发送数据
    */
-  private sendByFetch(items: QueueItem[]): void {
+  private sendByRequest(items: QueueItem[]): void {
     const data = items.map((item) => item.data);
 
-    fetch(this.reportUrl, {
+    this.platformAdapter.request({
+      url: this.reportUrl,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
-      keepalive: true,
+      data,
     })
       .then((response) => {
-        if (response.ok) {
-          log(this.debug, 'fetch 上报成功');
+        if (response.success) {
+          log(this.debug, 'request 上报成功');
         } else {
-          throw new Error(`HTTP ${response.status}`);
+          throw new Error(response.error || `HTTP ${response.status}`);
         }
       })
       .catch((err) => {
-        error(this.debug, 'fetch 上报失败:', err);
+        error(this.debug, 'request 上报失败:', err);
         // 重试机制
         this.handleRetry(items);
       });
@@ -229,7 +238,7 @@ export class Reporter {
   private startTimer(): void {
     if (this.timer) return;
 
-    this.timer = setInterval(() => {
+    this.timer = this.platformAdapter.setInterval(() => {
       this.flush();
     }, this.reportInterval);
   }
@@ -239,7 +248,7 @@ export class Reporter {
    */
   private stopTimer(): void {
     if (this.timer) {
-      clearInterval(this.timer);
+      this.platformAdapter.clearInterval(this.timer);
       this.timer = null;
     }
   }
@@ -252,14 +261,20 @@ export class Reporter {
       this.flushImmediate();
     };
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        handlePageHide();
-      }
-    });
+    // 使用平台适配器的事件监听
+    if (this.platformAdapter.onPageHide) {
+      const unsubscribe = this.platformAdapter.onPageHide(handlePageHide);
+      this.pageHideUnsubscribers.push(unsubscribe);
+    }
 
-    window.addEventListener('pagehide', handlePageHide);
-    window.addEventListener('beforeunload', handlePageHide);
+    if (this.platformAdapter.onVisibilityChange) {
+      const unsubscribe = this.platformAdapter.onVisibilityChange((hidden) => {
+        if (hidden) {
+          handlePageHide();
+        }
+      });
+      this.pageHideUnsubscribers.push(unsubscribe);
+    }
   }
 
   /**
@@ -304,6 +319,13 @@ export class Reporter {
   destroy(): void {
     this.isDestroyed = true;
     this.stopTimer();
+    
+    // 取消所有事件监听
+    this.pageHideUnsubscribers.forEach((unsubscribe) => {
+      unsubscribe();
+    });
+    this.pageHideUnsubscribers = [];
+    
     this.flushImmediate();
   }
 }

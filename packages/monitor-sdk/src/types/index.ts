@@ -2,12 +2,17 @@
  * 前端监控SDK类型定义
  */
 
+// 平台类型
+export type Platform = 'web' | 'uniapp' | 'mini-program';
+
 // SDK配置选项
 export interface MonitorOptions {
   // 应用唯一标识
   appId: string;
   // 上报地址
   reportUrl: string;
+  // 平台类型（可选，默认自动检测）
+  platform?: Platform;
   // 用户ID（可选）
   userId?: string;
   // 是否开启错误监控，默认true
@@ -530,4 +535,6 @@ export interface MonitorCore {
   addBehavior(record: Omit<BehaviorRecord, 'timestamp'>): void;
   // 获取来源信息
   getReferrerInfo(): ReferrerInfo;
+  // 获取平台适配器（可选，用于插件访问平台能力）
+  getPlatformAdapter?(): any;
 }

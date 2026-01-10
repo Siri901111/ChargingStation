@@ -16,16 +16,14 @@ import type {
 } from '../types';
 import { ReportType } from '../types';
 import { Reporter } from './reporter';
+import { createPlatformAdapter, type PlatformAdapter } from '../platform';
 import {
   generateId,
   getTimestamp,
-  getPageUrl,
-  getPageTitle,
   deepMerge,
   log,
   getDeviceInfo,
   getEnvironmentInfo,
-  getOrCreateSession,
   getReferrerInfo,
 } from '../utils';
 import {
@@ -47,6 +45,7 @@ const defaultRateLimitConfig: RateLimitConfig = {
 const defaultOptions: Required<MonitorOptions> = {
   appId: '',
   reportUrl: '',
+  platform: undefined as any, // 平台会自动检测，所以这里是 undefined
   userId: '',
   enableError: true,
   enablePerformance: true,
@@ -71,6 +70,7 @@ export class Monitor implements MonitorCore {
   private reporter: Reporter;
   private plugins: MonitorPlugin[] = [];
   private isDestroyed = false;
+  private platformAdapter: PlatformAdapter;
 
   // 缓存信息
   private deviceInfo: DeviceInfo | null = null;
@@ -90,8 +90,20 @@ export class Monitor implements MonitorCore {
       throw new Error('[Monitor SDK] reportUrl is required');
     }
 
-    // 合并配置
-    this.options = deepMerge(defaultOptions, options);
+    // 合并配置（platform 需要特殊处理，因为可能是 undefined）
+    const mergedOptions = deepMerge(defaultOptions, options);
+    // 如果用户没有指定 platform，保持为 undefined（会在创建适配器时自动检测）
+    if (options.platform !== undefined) {
+      mergedOptions.platform = options.platform;
+    }
+    this.options = mergedOptions as Required<MonitorOptions>;
+
+    // 初始化平台适配器
+    this.platformAdapter = createPlatformAdapter(this.options.platform);
+
+    if (!this.platformAdapter.isAvailable()) {
+      log(this.options.debug, '警告: 平台适配器不可用，某些功能可能无法正常工作');
+    }
 
     // 初始化基础信息
     this.initBaseInfo();
@@ -102,7 +114,8 @@ export class Monitor implements MonitorCore {
       this.options.maxCache,
       this.options.reportInterval,
       this.options.debug,
-      this.options.rateLimit
+      this.options.rateLimit,
+      this.platformAdapter
     );
 
     // 自动注册默认插件
@@ -111,7 +124,17 @@ export class Monitor implements MonitorCore {
     // 上报会话开始
     this.reportSessionStart();
 
-    log(this.options.debug, '监控SDK已初始化', this.options);
+    log(this.options.debug, '监控SDK已初始化', {
+      ...this.options,
+      platform: this.platformAdapter.platform,
+    });
+  }
+
+  /**
+   * 获取平台适配器
+   */
+  getPlatformAdapter(): PlatformAdapter {
+    return this.platformAdapter;
   }
 
   /**
@@ -120,7 +143,7 @@ export class Monitor implements MonitorCore {
   private initBaseInfo(): void {
     this.deviceInfo = getDeviceInfo();
     this.environmentInfo = getEnvironmentInfo();
-    this.sessionInfo = getOrCreateSession();
+    this.sessionInfo = this.getOrCreateSessionWithAdapter();
     this.referrerInfo = getReferrerInfo();
 
     log(this.options.debug, '设备信息:', this.deviceInfo);
@@ -129,15 +152,130 @@ export class Monitor implements MonitorCore {
   }
 
   /**
+   * 使用平台适配器获取或创建会话
+   */
+  private getOrCreateSessionWithAdapter(): SessionInfo {
+    const SESSION_KEY = '__monitor_session__';
+    const VISITOR_KEY = '__monitor_visitor__';
+    const SESSION_TIMEOUT = 30 * 60 * 1000; // 30分钟
+
+    interface StoredSession {
+      sessionId: string;
+      startTime: number;
+      lastActiveTime: number;
+      pageViews: number;
+      visitCount: number;
+    }
+
+    interface StoredVisitor {
+      visitorId: string;
+      firstVisitTime: number;
+      visitCount: number;
+    }
+
+    // 获取或创建访客信息
+    const getOrCreateVisitor = (): StoredVisitor => {
+      try {
+        const stored = this.platformAdapter.storage.local.getItem(VISITOR_KEY);
+        if (stored) {
+          return JSON.parse(stored) as StoredVisitor;
+        }
+      } catch {
+        // 忽略错误
+      }
+
+      const visitor: StoredVisitor = {
+        visitorId: generateId(),
+        firstVisitTime: Date.now(),
+        visitCount: 0,
+      };
+
+      try {
+        this.platformAdapter.storage.local.setItem(VISITOR_KEY, JSON.stringify(visitor));
+      } catch {
+        // 忽略错误
+      }
+
+      return visitor;
+    };
+
+    const visitor = getOrCreateVisitor();
+    const now = Date.now();
+    let isNewSession = false;
+
+    try {
+      const stored = this.platformAdapter.storage.session.getItem(SESSION_KEY);
+      if (stored) {
+        const session = JSON.parse(stored) as StoredSession;
+        // 检查会话是否过期
+        if (now - session.lastActiveTime < SESSION_TIMEOUT) {
+          // 更新最后活跃时间
+          session.lastActiveTime = now;
+          this.platformAdapter.storage.session.setItem(SESSION_KEY, JSON.stringify(session));
+
+          return {
+            sessionId: session.sessionId,
+            visitorId: visitor.visitorId,
+            isNewVisitor: visitor.visitCount === 0,
+            startTime: session.startTime,
+            visitCount: session.visitCount,
+            pageViews: session.pageViews,
+          };
+        }
+        isNewSession = true;
+      } else {
+        isNewSession = true;
+      }
+    } catch {
+      isNewSession = true;
+    }
+
+    // 创建新会话
+    if (isNewSession) {
+      visitor.visitCount++;
+      try {
+        this.platformAdapter.storage.local.setItem(VISITOR_KEY, JSON.stringify(visitor));
+      } catch {
+        // 忽略
+      }
+    }
+
+    const session: StoredSession = {
+      sessionId: generateId(),
+      startTime: now,
+      lastActiveTime: now,
+      pageViews: 0,
+      visitCount: visitor.visitCount,
+    };
+
+    try {
+      this.platformAdapter.storage.session.setItem(SESSION_KEY, JSON.stringify(session));
+    } catch {
+      // 忽略
+    }
+
+    return {
+      sessionId: session.sessionId,
+      visitorId: visitor.visitorId,
+      isNewVisitor: visitor.visitCount === 1,
+      startTime: session.startTime,
+      visitCount: session.visitCount,
+      pageViews: session.pageViews,
+    };
+  }
+
+  /**
    * 上报会话开始
    */
   private reportSessionStart(): void {
     if (Math.random() > this.options.sampleRate) return;
 
+    const pageInfo = this.platformAdapter.getPageInfo();
+
     this.report({
       type: ReportType.SESSION_START,
       referrerInfo: this.referrerInfo,
-      landingPage: window.location.pathname,
+      landingPage: pageInfo.path,
     }, 'high');
   }
 
@@ -190,6 +328,8 @@ export class Monitor implements MonitorCore {
       return;
     }
 
+    const pageInfo = this.platformAdapter.getPageInfo();
+
     // 构建完整的上报数据
     const reportData: ReportData = {
       ...data,
@@ -197,8 +337,8 @@ export class Monitor implements MonitorCore {
       appId: this.options.appId,
       userId: this.options.userId,
       timestamp: getTimestamp(),
-      pageUrl: getPageUrl(),
-      pageTitle: getPageTitle(),
+      pageUrl: pageInfo.url,
+      pageTitle: pageInfo.title,
       deviceInfo: this.getDeviceInfo(),
       environmentInfo: this.getEnvironmentInfo(),
       sessionInfo: this.getSessionInfo(),
@@ -255,7 +395,7 @@ export class Monitor implements MonitorCore {
    */
   getSessionInfo(): SessionInfo {
     if (!this.sessionInfo) {
-      this.sessionInfo = getOrCreateSession();
+      this.sessionInfo = this.getOrCreateSessionWithAdapter();
     }
     return this.sessionInfo;
   }
@@ -308,9 +448,10 @@ export class Monitor implements MonitorCore {
     }
 
     // 添加到行为栈
+    const pageInfo = this.platformAdapter.getPageInfo();
     this.addBehavior({
       type: 'custom',
-      path: window.location.pathname,
+      path: pageInfo.path,
       data: { eventName, ...eventData },
     });
 

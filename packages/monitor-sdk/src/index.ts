@@ -68,6 +68,7 @@ export {
   type MonitorPlugin,
   type MonitorCore,
   type RateLimitConfig,
+  type Platform,
   type DeviceInfo,
   type EnvironmentInfo,
   type ReferrerInfo,
@@ -94,6 +95,14 @@ export {
   type SessionStartData,
   type SessionEndData,
 } from './types';
+
+// 导出平台适配器
+export {
+  createPlatformAdapter,
+  createWebPlatformAdapter,
+  createUniAppPlatformAdapter,
+  type PlatformAdapter,
+} from './platform';
 
 // 默认导出
 import { createMonitor, Monitor } from './core';
