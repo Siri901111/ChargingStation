@@ -267,7 +267,7 @@ const getMenuAndBtnAuthByRole = (pageAuthority: string): { menulist: any[], btnA
           },
           {
             name: '充电桩管理',
-            url: '/chargingstation/fault',
+            url: '/chargingstation/pile-management',
             icon: 'Warning'
           }
         ]

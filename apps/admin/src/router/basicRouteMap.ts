@@ -27,6 +27,11 @@ const routes:RouteRecordRaw[]=[
                 component:()=>import("@/views/chargingstation/Fault.vue")
             },
             {
+                path:"/chargingstation/pile-management",
+                name:"pile-management",
+                component:()=>import("@/views/chargingstation/PileManagement.vue")
+            },
+            {
                 path:"/map",
                 name:"map",
                 component:()=>import("@/views/map/ElectronicMap.vue")
