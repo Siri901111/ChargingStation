@@ -355,7 +355,13 @@ export async function getPileUsageRecordsService(
   try {
     const { rows: orders, count: total } = await Order.findAndCountAll({
       where: {
-        equipment_no: String(pileId),
+        [Op.or]: [
+          { equipment_no: String(pileId) },
+          { equipment_no: `PILE${pileId}` },
+        ],
+        // 只查询已完成的订单（已支付且有支付时间）
+        // status: 3, // 已完成
+        // pay_time: { [Op.ne]: null }, // 必须有支付时间
       },
       include: [
         {

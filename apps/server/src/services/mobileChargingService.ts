@@ -239,9 +239,17 @@ export async function stopCharging(userId: number, orderId: string): Promise<Cha
   // 扣款
   try {
     await deductBalance(userId, parseFloat(totalAmount.toFixed(2)));
+    // 扣款成功，设置支付时间和支付方式
+    await Order.update(
+      {
+        pay_time: new Date(),
+        pay: 'balance',
+      },
+      { where: { order_no: orderId } }
+    );
   } catch (error) {
     console.error('扣款失败:', error);
-    // 扣款失败时将订单标记为待支付
+    // 扣款失败时将订单标记为待支付（不设置支付时间）
     await Order.update(
       { status: 0 },
       { where: { order_no: orderId } }
