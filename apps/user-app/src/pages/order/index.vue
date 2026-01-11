@@ -60,7 +60,7 @@
               </view>
             </view>
             <view class="order-amount">
-              <text class="amount-value">¥{{ order.totalAmount.toFixed(2) }}</text>
+              <text class="amount-value">¥{{ getOrderAmount(order).toFixed(2) }}</text>
             </view>
           </view>
 
@@ -87,11 +87,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { orderApi, type Order } from '@/api/order'
 import { ORDER_STATUS, ORDER_STATUS_TEXT, PAGE_PATH } from '@/constants'
 import { formatDate } from '@/utils'
+import { useChargingStore } from '@/store/modules/charging'
+
+// Store
+const chargingStore = useChargingStore()
 
 // 标签选项
 const tabs = [
@@ -109,16 +113,51 @@ const refreshing = ref(false)
 const finished = ref(false)
 const page = ref(1)
 const pageSize = 10
+let refreshTimer: ReturnType<typeof setInterval> | null = null
+
+// 获取订单金额（充电中的订单使用实时金额）
+function getOrderAmount(order: Order): number {
+  // 如果是充电中的订单，且订单ID匹配，使用实时金额
+  if (order.status === ORDER_STATUS.CHARGING && chargingStore.isCharging && chargingStore.currentOrderId === order.orderNo) {
+    return chargingStore.chargingAmount
+  }
+  return order.totalAmount
+}
 
 // 初始化
 onMounted(() => {
   fetchOrders()
+  // 如果正在充电，启动定时刷新充电中的订单金额
+  if (chargingStore.isCharging) {
+    startRefreshTimer()
+  }
 })
 
 onShow(() => {
   // 刷新订单列表
   onRefresh()
+  // 如果正在充电，启动定时刷新
+  if (chargingStore.isCharging && !refreshTimer) {
+    startRefreshTimer()
+  }
 })
+
+onUnmounted(() => {
+  // 清理定时器
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
+})
+
+// 启动刷新定时器（触发响应式更新）
+function startRefreshTimer() {
+  if (refreshTimer) return
+  // 每5秒触发一次，利用Vue的响应式系统自动更新使用chargingStore.chargingAmount的订单金额
+  refreshTimer = setInterval(() => {
+    // 触发响应式更新（Vue会自动检测到chargingStore.chargingAmount的变化）
+  }, 5000)
+}
 
 // 获取订单列表
 async function fetchOrders(isRefresh = false) {

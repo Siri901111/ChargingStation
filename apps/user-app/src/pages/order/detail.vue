@@ -78,7 +78,7 @@
           </view>
           <view class="info-item total">
             <text class="info-label">合计</text>
-            <text class="info-value primary">¥{{ order.totalAmount.toFixed(2) }}</text>
+            <text class="info-value primary">¥{{ getOrderAmount().toFixed(2) }}</text>
           </view>
         </view>
       </view>
@@ -124,11 +124,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { orderApi, type Order } from '@/api/order'
 import { ORDER_STATUS, ORDER_STATUS_TEXT, PAGE_PATH } from '@/constants'
 import { formatDate, formatDuration, copyToClipboard } from '@/utils'
+import { useChargingStore } from '@/store/modules/charging'
+
+// Store
+const chargingStore = useChargingStore()
 
 // 状态栏高度
 const statusBarHeight = ref(0)
@@ -157,6 +161,23 @@ onMounted(() => {
   }
 })
 
+// 页面显示时刷新订单详情（特别是充电中的订单）
+onShow(() => {
+  if (orderNo.value) {
+    fetchOrderDetail()
+  }
+})
+
+// 获取订单金额（充电中的订单使用实时金额）
+function getOrderAmount(): number {
+  if (!order.value) return 0
+  // 如果是充电中的订单，且订单ID匹配，使用实时金额
+  if (order.value.status === ORDER_STATUS.CHARGING && chargingStore.isCharging && chargingStore.currentOrderId === order.value.orderNo) {
+    return chargingStore.chargingAmount
+  }
+  return order.value.totalAmount
+}
+
 // 获取订单详情
 async function fetchOrderDetail() {
   loading.value = true
@@ -178,8 +199,11 @@ function getStatusClass(status: number): string {
       return 'primary'
     case ORDER_STATUS.COMPLETED:
       return 'success'
-    default:
+    case ORDER_STATUS.CANCELLED:
+    case ORDER_STATUS.REFUNDED:
       return 'gray'
+    default:
+      return ''
   }
 }
 
