@@ -20,7 +20,7 @@ export interface Order {
   totalAmount: number    // 总费用
   payType?: string       // 支付方式
   payTime?: string       // 支付时间
-  status: number         // 0:待支付 1:充电中 2:已完成 3:已取消 4:已退款
+  status: number         // 0:待支付 2:充电中 3:已完成 4:已取消 5:已退款
   createTime: string
 }
 

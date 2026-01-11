@@ -317,7 +317,7 @@ export async function getChargingStatus(userId: number): Promise<ChargingStatus 
     electricity: parseFloat(electricity.toFixed(2)),
     amount: parseFloat(amount.toFixed(2)),
     percent: Math.min(95, Math.floor(duration / 60)), // 模拟电量百分比
-    status: 1, // 充电中
+    status: 2, // 充电中 (与订单状态保持一致)
   };
 }
 

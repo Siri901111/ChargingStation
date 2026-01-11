@@ -10,13 +10,13 @@ export const STORAGE_KEYS = {
   LOCATION: 'last_location',
 } as const
 
-/** 订单状态 */
+/** 订单状态 - 与后端保持一致 */
 export const ORDER_STATUS = {
   PENDING: 0,    // 待支付
-  CHARGING: 1,   // 充电中
-  COMPLETED: 2,  // 已完成
-  CANCELLED: 3,  // 已取消
-  REFUNDED: 4,   // 已退款
+  CHARGING: 2,   // 充电中 (后端使用2)
+  COMPLETED: 3,  // 已完成 (后端使用3)
+  CANCELLED: 4,  // 已取消 (后端使用4)
+  REFUNDED: 5,   // 已退款 (后端使用5)
 } as const
 
 export const ORDER_STATUS_TEXT: Record<number, string> = {

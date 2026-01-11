@@ -5,6 +5,7 @@
       <view class="status-header">
         <view class="back-btn" @click="handleBack">
           <text class="iconfont icon-arrow-left"></text>
+          <text class="back-text">返回</text>
         </view>
         <text class="title">充电中</text>
         <view class="placeholder"></view>
@@ -87,6 +88,11 @@
       <view class="btn btn-danger btn-block" @click="handleStopCharging">
         停止充电
       </view>
+    </view>
+    
+    <!-- 底部导航提示区域（为tabbar预留空间，但不显示tabbar，因为充电页面不在tabBar列表中） -->
+    <view class="bottom-nav-hint safe-area-bottom">
+      <view class="hint-text">充电过程中可返回其他页面，充电状态将在后台保持</view>
     </view>
   </view>
 </template>
@@ -206,13 +212,32 @@ function handleStopCharging() {
 
   .back-btn,
   .placeholder {
-    width: 80rpx;
+    min-width: 80rpx;
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
   }
 
   .back-btn {
+    padding: 8rpx 16rpx;
+    border-radius: 40rpx;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10rpx);
+    transition: background-color 0.3s;
+    
+    &:active {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    
     .iconfont {
-      font-size: 40rpx;
+      font-size: 32rpx;
       color: #FFFFFF;
+    }
+    
+    .back-text {
+      font-size: 28rpx;
+      color: #FFFFFF;
+      font-weight: 500;
     }
   }
 
@@ -310,7 +335,7 @@ function handleStopCharging() {
 .data-area {
   margin-top: -30rpx;
   padding: 0 24rpx;
-  padding-bottom: 180rpx;
+  padding-bottom: 240rpx; // 增加底部空间，为底部操作栏和导航提示预留空间
 }
 
 .data-card {
@@ -402,14 +427,35 @@ function handleStopCharging() {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 100rpx; // 为底部导航提示预留空间
   padding: 24rpx;
   background-color: #FFFFFF;
   box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+  z-index: 10;
 }
 
 .btn-danger {
   background: linear-gradient(135deg, #F44336, #C62828);
   color: #FFFFFF;
+}
+
+.bottom-nav-hint {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100rpx;
+  background-color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1rpx solid #F0F0F0;
+  z-index: 5;
+  
+  .hint-text {
+    font-size: 24rpx;
+    color: #999999;
+    text-align: center;
+  }
 }
 </style>
