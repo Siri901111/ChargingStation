@@ -379,6 +379,8 @@ export async function getErrorList(params: {
   appId?: string;
   platform?: string;
   env?: string;
+  pagePath?: string;
+  userName?: string;
   keyword?: string;
   startTime?: number;
   endTime?: number;
@@ -399,6 +401,11 @@ export async function getPerformanceList(params: {
   pageSize?: number;
   type?: string;
   appId?: string;
+  platform?: string;
+  env?: string;
+  pagePath?: string;
+  userName?: string;
+  keyword?: string;
   startTime?: number;
   endTime?: number;
   sortBy?: string;
@@ -418,6 +425,10 @@ export async function getBehaviorList(params: {
   pageSize?: number;
   type?: string;
   appId?: string;
+  platform?: string;
+  env?: string;
+  pagePath?: string;
+  userName?: string;
   keyword?: string;
   startTime?: number;
   endTime?: number;
@@ -437,6 +448,10 @@ export async function getNetworkList(params: {
   page?: number;
   pageSize?: number;
   appId?: string;
+  platform?: string;
+  env?: string;
+  pagePath?: string;
+  userName?: string;
   keyword?: string;
   startTime?: number;
   endTime?: number;
