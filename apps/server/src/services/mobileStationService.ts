@@ -264,7 +264,7 @@ export async function getStationDetail(stationId: number, userLat?: number, user
   // 如果提供了userId，检查是否收藏
   if (userId) {
     const isFavorite = await checkIsFavorite(userId, stationId);
-    (stationInfo as any).isFavorite = isFavorite;
+    stationInfo.isFavorite = isFavorite;
   }
   
   return stationInfo;
