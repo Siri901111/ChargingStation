@@ -37,6 +37,7 @@ export interface StationInfo {
   price?: number;
   tags?: string[];
   images?: string[];
+  isFavorite?: boolean;
 }
 
 export interface PileInfo {

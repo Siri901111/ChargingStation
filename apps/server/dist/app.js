@@ -108,10 +108,30 @@ MonitorData.init(
       type: DataTypes3.STRING(1e3),
       comment: "\u9875\u9762URL"
     },
+    // 页面路径（规范化后的路径，用于展示）
+    page_path: {
+      type: DataTypes3.STRING(500),
+      comment: "\u9875\u9762\u8DEF\u5F84\uFF08\u89C4\u8303\u5316\u540E\u7684\u8DEF\u5F84\uFF09"
+    },
     // 页面标题
     page_title: {
       type: DataTypes3.STRING(200),
       comment: "\u9875\u9762\u6807\u9898"
+    },
+    // 用户显示名称（从extra、session_info等提取）
+    user_display_name: {
+      type: DataTypes3.STRING(100),
+      comment: "\u7528\u6237\u663E\u793A\u540D\u79F0\uFF08\u4ECEextra\u7B49\u63D0\u53D6\uFF09"
+    },
+    // 平台类型（web、uniapp等）
+    platform: {
+      type: DataTypes3.STRING(20),
+      comment: "\u5E73\u53F0\u7C7B\u578B\uFF08web\u3001uniapp\u7B49\uFF09"
+    },
+    // 环境标识（h5、mp-weixin等）
+    env: {
+      type: DataTypes3.STRING(20),
+      comment: "\u73AF\u5883\u6807\u8BC6\uFF08h5\u3001mp-weixin\u7B49\uFF09"
     },
     // 设备信息 (JSON)
     device_info: {
@@ -165,7 +185,10 @@ MonitorData.init(
       { fields: ["category"] },
       { fields: ["timestamp"] },
       { fields: ["created_at"] },
-      { fields: ["user_id"] }
+      { fields: ["user_id"] },
+      { fields: ["page_path"] },
+      { fields: ["platform"] },
+      { fields: ["user_display_name"] }
     ]
   }
 );
@@ -1215,7 +1238,7 @@ var getMenuAndBtnAuthByRole = (pageAuthority) => {
           },
           {
             name: "\u5145\u7535\u6869\u7BA1\u7406",
-            url: "/chargingstation/fault",
+            url: "/chargingstation/pile-management",
             icon: "Warning"
           }
         ]
@@ -2170,25 +2193,27 @@ async function getRevenueListService(params) {
           order: [["day_date", "DESC"]]
         });
       }
-      const day = revenue ? Number(revenue.electricity || 0) + Number(revenue.parking_fee || 0) + Number(revenue.service_fee || 0) + Number(revenue.member || 0) : 0;
-      const month = revenue ? Number(revenue.month || 0) / 1e4 : 0;
+      const revenueData = revenue;
+      const stationData = station;
+      const day = revenueData ? Number(revenueData.electricity || 0) + Number(revenueData.parking_fee || 0) + Number(revenueData.service_fee || 0) + Number(revenueData.member || 0) : 0;
+      const month = revenueData ? Number(revenueData.month || 0) / 1e4 : 0;
       return {
-        name: station.name,
-        id: String(station.id),
-        city: station.city || "",
-        count: (station.fast || 0) + (station.slow || 0),
+        name: stationData.name,
+        id: String(stationData.id),
+        city: stationData.city || "",
+        count: (stationData.fast || 0) + (stationData.slow || 0),
         // 充电桩总量
         day: Math.round(day * 100) / 100,
         // 单日总收入，保留2位小数
         month: Math.round(month * 100) / 100,
         // 月度总收入（万元），保留2位小数
-        electricity: revenue ? Number(revenue.electricity || 0) : 0,
-        parkingFee: revenue ? Number(revenue.parking_fee || 0) : 0,
-        serviceFee: revenue ? Number(revenue.service_fee || 0) : 0,
-        member: revenue ? Number(revenue.member || 0) : 0,
-        percent: revenue ? Number(revenue.percent || 0) : 0,
+        electricity: revenueData ? Number(revenueData.electricity || 0) : 0,
+        parkingFee: revenueData ? Number(revenueData.parking_fee || 0) : 0,
+        serviceFee: revenueData ? Number(revenueData.service_fee || 0) : 0,
+        member: revenueData ? Number(revenueData.member || 0) : 0,
+        percent: revenueData ? Number(revenueData.percent || 0) : 0,
         // 日增长百分比
-        mpercent: revenue ? Number(revenue.mpercent || 0) : 0
+        mpercent: revenueData ? Number(revenueData.mpercent || 0) : 0
         // 月增长百分比
       };
     })
@@ -3551,23 +3576,24 @@ async function getOrderDetailService(orderNo) {
   if (!order) {
     throw new Error("\u8BA2\u5355\u4E0D\u5B58\u5728");
   }
-  const station = order.station;
-  const user = order.chargingUser;
+  const orderData = order;
+  const station = orderData.station;
+  const user = orderData.chargingUser;
   let chargeDuration = 0;
-  if (order.start_time && order.end_time) {
-    const start = new Date(order.start_time);
-    const end = new Date(order.end_time);
+  if (orderData.start_time && orderData.end_time) {
+    const start = new Date(orderData.start_time);
+    const end = new Date(orderData.end_time);
     chargeDuration = (end.getTime() - start.getTime()) / (1e3 * 60 * 60);
   }
-  const totalMoney = Number(order.money || 0);
+  const totalMoney = Number(orderData.money || 0);
   const electricityFee = totalMoney * 0.85;
   const serviceFee = totalMoney * 0.1;
   const parkingFee = totalMoney * 0.05;
   const chargeAmount = (electricityFee / 0.8).toFixed(2);
   let chargeDevice = "\u5145\u7535\u6869(\u5FEB\u5145)";
-  if (order.equipment_no) {
+  if (orderData.equipment_no) {
     try {
-      const pileMatch = order.equipment_no.match(/PILE(\d+)/);
+      const pileMatch = orderData.equipment_no.match(/PILE(\d+)/);
       if (pileMatch) {
         const pileId = parseInt(pileMatch[1]);
         const pile = await Pile_default.findByPk(pileId);
@@ -3584,18 +3610,18 @@ async function getOrderDetailService(orderNo) {
     tel: "17777777777"
   };
   return {
-    orderNo: order.order_no,
-    equipmentNo: order.equipment_no || "",
-    date: order.date ? new Date(order.date).toLocaleDateString("zh-CN") : "",
-    startTime: order.start_time ? new Date(order.start_time).toLocaleTimeString("zh-CN", {
+    orderNo: orderData.order_no,
+    equipmentNo: orderData.equipment_no || "",
+    date: orderData.date ? new Date(orderData.date).toLocaleDateString("zh-CN") : "",
+    startTime: orderData.start_time ? new Date(orderData.start_time).toLocaleTimeString("zh-CN", {
       hour12: false
     }) : "",
-    endTime: order.end_time ? new Date(order.end_time).toLocaleTimeString("zh-CN", {
+    endTime: orderData.end_time ? new Date(orderData.end_time).toLocaleTimeString("zh-CN", {
       hour12: false
     }) : "",
     money: totalMoney.toFixed(2),
-    pay: order.pay || "",
-    status: order.status,
+    pay: orderData.pay || "",
+    status: orderData.status,
     stationName: station?.name || "",
     city: station?.city || "",
     chargeAmount,
@@ -4406,6 +4432,8 @@ async function getDocumentListController(req, res) {
     }
     if (status && !isNaN(Number(status))) {
       params.status = Number(status);
+    } else if (type === "\u516C\u544A\u7C7B" && publish === "\u5C0F\u7A0B\u5E8F") {
+      params.status = 2;
     }
     if (keyword && typeof keyword === "string") {
       params.keyword = keyword;
@@ -4436,6 +4464,14 @@ async function getDocumentDetailController(req, res) {
       });
     }
     const result = await getDocumentDetailService(Number(id));
+    const userId = req.user?.userId || req.userId;
+    if (!userId && result.status !== 2) {
+      return res.status(403).json({
+        code: 403,
+        message: "\u8BE5\u516C\u544A\u5C1A\u672A\u53D1\u5E03",
+        data: null
+      });
+    }
     return res.json({
       code: 200,
       message: "\u83B7\u53D6\u6587\u7AE0\u8BE6\u60C5\u6210\u529F",
@@ -4537,8 +4573,8 @@ async function publishDocumentController(req, res) {
 var router9 = Router9();
 router9.get("/document", authMiddleware, getDocumentTypeListController);
 router9.post("/document", authMiddleware, createDocumentController);
-router9.get("/document/list", authMiddleware, getDocumentListController);
-router9.get("/document/:id", authMiddleware, getDocumentDetailController);
+router9.get("/document/list", getDocumentListController);
+router9.get("/document/:id", getDocumentDetailController);
 router9.put("/document/:id", authMiddleware, updateDocumentController);
 router9.delete("/document/:id", authMiddleware, deleteDocumentController);
 router9.post("/document/:id/publish", authMiddleware, publishDocumentController);
@@ -5384,7 +5420,13 @@ async function getPileUsageRecordsService(pileId, page = 1, pageSize = 10) {
   try {
     const { rows: orders, count: total } = await Order_default.findAndCountAll({
       where: {
-        equipment_no: String(pileId)
+        [Op13.or]: [
+          { equipment_no: String(pileId) },
+          { equipment_no: `PILE${pileId}` }
+        ]
+        // 只查询已完成的订单（已支付且有支付时间）
+        // status: 3, // 已完成
+        // pay_time: { [Op.ne]: null }, // 必须有支付时间
       },
       include: [
         {
@@ -6128,7 +6170,11 @@ import { Op as Op14, fn, col, literal } from "sequelize";
 MonitorData_default.belongsTo(User_default, {
   foreignKey: "user_id",
   targetKey: "id",
-  as: "user"
+  as: "user",
+  // 使用 Sequelize 的 where 条件来处理类型转换
+  scope: {
+    // 在查询时会自动处理类型转换
+  }
 });
 var TYPE_CATEGORY_MAP = {
   // 错误类型
@@ -6166,31 +6212,99 @@ function getCategory(type) {
   return TYPE_CATEGORY_MAP[type] || "behavior";
 }
 async function saveMonitorData(dataList, clientInfo) {
-  const records = dataList.map((item) => ({
-    report_id: item.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    app_id: item.appId || "unknown",
-    user_id: item.userId || null,
-    type: item.type,
-    category: getCategory(item.type),
-    timestamp: item.timestamp || Date.now(),
-    page_url: item.pageUrl || null,
-    page_title: item.pageTitle || null,
-    device_info: item.deviceInfo || null,
-    environment_info: item.environmentInfo || null,
-    session_info: item.sessionInfo || null,
-    data: extractCoreData(item),
-    extra: item.extra || null,
-    ip_address: clientInfo.ip || null,
-    user_agent: clientInfo.userAgent || null
-  }));
+  const { platform, env } = extractPlatformInfo(dataList[0] || {});
+  const records = dataList.map((item) => {
+    const pagePath = extractPagePath(item);
+    const userDisplayName = extractUserDisplayName(item);
+    const platformInfo = extractPlatformInfo(item);
+    return {
+      report_id: item.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      app_id: item.appId || "unknown",
+      user_id: item.userId || null,
+      type: item.type,
+      category: getCategory(item.type),
+      timestamp: item.timestamp || Date.now(),
+      page_url: item.pageUrl || null,
+      page_path: pagePath,
+      page_title: item.pageTitle || item.data?.pageTitle || null,
+      user_display_name: userDisplayName,
+      platform: platformInfo.platform || platform || null,
+      env: platformInfo.env || env || null,
+      device_info: item.deviceInfo || null,
+      environment_info: item.environmentInfo || null,
+      session_info: item.sessionInfo || null,
+      data: extractCoreData(item),
+      extra: item.extra || null,
+      ip_address: clientInfo.ip || null,
+      user_agent: clientInfo.userAgent || null
+    };
+  });
   return MonitorData_default.bulkCreate(records);
+}
+function extractPagePath(item) {
+  if (item.extra?.routePath) {
+    return item.extra.routePath;
+  }
+  if (item.extra?.toRoute) {
+    return item.extra.toRoute;
+  }
+  if (item.data?.path) {
+    return item.data.path;
+  }
+  if (item.data?.to) {
+    return item.data.to;
+  }
+  if (item.pageUrl) {
+    try {
+      const url = new URL(item.pageUrl);
+      return url.pathname || "/";
+    } catch {
+      return item.pageUrl;
+    }
+  }
+  return null;
+}
+function extractUserDisplayName(item) {
+  if (item.extra?.userName) {
+    return item.extra.userName;
+  }
+  if (item.extra?.name) {
+    return item.extra.name;
+  }
+  if (item.sessionInfo?.userId) {
+    return `\u7528\u6237${item.sessionInfo.userId.slice(0, 8)}`;
+  }
+  if (item.userId) {
+    return `\u7528\u6237${item.userId.slice(0, 8)}`;
+  }
+  return null;
+}
+function extractPlatformInfo(item) {
+  const platform = item.extra?.platform || null;
+  const env = item.extra?.env || null;
+  return { platform, env };
 }
 function extractCoreData(item) {
   const { id, appId, userId, timestamp, pageUrl, pageTitle, deviceInfo, environmentInfo, sessionInfo, extra, ...coreData } = item;
   return coreData;
 }
 async function getMonitorDataList(params) {
-  const { page = 1, pageSize = 20, category, type, appId, startTime, endTime } = params;
+  const {
+    page = 1,
+    pageSize = 20,
+    category,
+    type,
+    appId,
+    platform,
+    env,
+    pagePath,
+    userName,
+    keyword,
+    startTime,
+    endTime,
+    sortBy = "created_at",
+    sortOrder = "desc"
+  } = params;
   const where = {};
   if (category) {
     where.category = category;
@@ -6200,6 +6314,30 @@ async function getMonitorDataList(params) {
   }
   if (appId) {
     where.app_id = appId;
+  }
+  if (platform) {
+    where.platform = platform;
+  }
+  if (env) {
+    where.env = env;
+  }
+  if (pagePath) {
+    where.page_path = {
+      [Op14.like]: `%${pagePath}%`
+    };
+  }
+  if (userName) {
+    where.user_display_name = {
+      [Op14.like]: `%${userName}%`
+    };
+  }
+  if (keyword) {
+    where[Op14.or] = [
+      { page_path: { [Op14.like]: `%${keyword}%` } },
+      { page_title: { [Op14.like]: `%${keyword}%` } },
+      { user_display_name: { [Op14.like]: `%${keyword}%` } },
+      { type: { [Op14.like]: `%${keyword}%` } }
+    ];
   }
   if (startTime && endTime) {
     where.timestamp = {
@@ -6214,22 +6352,94 @@ async function getMonitorDataList(params) {
       [Op14.lte]: endTime
     };
   }
+  const order = [];
+  if (sortBy) {
+    const validSortFields = [
+      "created_at",
+      "timestamp",
+      "type",
+      "category",
+      "page_path",
+      "user_display_name",
+      "platform",
+      "env"
+    ];
+    if (validSortFields.includes(sortBy)) {
+      order.push([sortBy, sortOrder === "asc" ? "ASC" : "DESC"]);
+    } else {
+      order.push(["created_at", "DESC"]);
+    }
+  } else {
+    order.push(["created_at", "DESC"]);
+  }
   const { count, rows } = await MonitorData_default.findAndCountAll({
     where,
-    order: [["created_at", "DESC"]],
+    order,
     limit: pageSize,
-    offset: (page - 1) * pageSize,
-    include: [{
-      model: User_default,
-      as: "user",
-      attributes: ["id", "name", "account"],
-      required: false
-    }]
+    offset: (page - 1) * pageSize
+  });
+  const userIds = [];
+  const userIdMap = /* @__PURE__ */ new Map();
+  rows.forEach((row) => {
+    const item = row.toJSON();
+    if (item.user_id) {
+      const userId = parseInt(item.user_id, 10);
+      if (!isNaN(userId)) {
+        if (!userIds.includes(userId)) {
+          userIds.push(userId);
+        }
+        userIdMap.set(item.user_id, row);
+      }
+    }
+  });
+  const users = [];
+  if (userIds.length > 0) {
+    const userRows = await User_default.findAll({
+      where: {
+        id: {
+          [Op14.in]: userIds
+        }
+      },
+      attributes: ["id", "name", "account"]
+    });
+    users.push(...userRows);
+  }
+  const userMap = /* @__PURE__ */ new Map();
+  users.forEach((user) => {
+    userMap.set(Number(user.id), user);
   });
   const list = rows.map((row) => {
     const item = row.toJSON();
-    item.user_name = item.user?.name || null;
-    delete item.user;
+    if (item.user_display_name && item.user_display_name.trim()) {
+      item.user_name = item.user_display_name.trim();
+    } else if (item.user_id) {
+      const userId = parseInt(item.user_id, 10);
+      if (!isNaN(userId) && userMap.has(userId)) {
+        const user = userMap.get(userId);
+        if (user && user.name && user.name.trim()) {
+          item.user_name = user.name.trim();
+        } else {
+          const userIdStr = String(item.user_id);
+          item.user_name = userIdStr.length > 8 ? `\u7528\u6237${userIdStr.slice(0, 8)}` : `\u7528\u6237${userIdStr}`;
+        }
+      } else {
+        const userIdStr = String(item.user_id);
+        item.user_name = userIdStr.length > 8 ? `\u7528\u6237${userIdStr.slice(0, 8)}` : `\u7528\u6237${userIdStr}`;
+      }
+    } else {
+      item.user_name = "\u533F\u540D";
+    }
+    if (!item.page_path && item.page_url) {
+      try {
+        const url = new URL(item.page_url);
+        item.page_path = url.pathname || "/";
+      } catch {
+        item.page_path = item.page_url;
+      }
+    }
+    if (!item.page_path) {
+      item.page_path = item.page_title || "/";
+    }
     return item;
   });
   return {
@@ -6335,7 +6545,7 @@ async function getOverviewStats(params) {
   };
 }
 async function getTrendData(params) {
-  const { startTime, endTime, groupBy = "hour", category, appId } = params;
+  const { startTime, endTime, groupBy = "hour", category, appId, type } = params;
   const where = {
     timestamp: {
       [Op14.between]: [startTime, endTime]
@@ -6346,6 +6556,9 @@ async function getTrendData(params) {
   }
   if (appId) {
     where.app_id = appId;
+  }
+  if (type) {
+    where.type = type;
   }
   const dateFormat = groupBy === "hour" ? "%Y-%m-%d %H:00:00" : "%Y-%m-%d";
   const result = await MonitorData_default.findAll({
@@ -6364,10 +6577,13 @@ async function getTrendData(params) {
   }));
 }
 async function getPerformanceMetrics(params) {
-  const { startTime, endTime, appId } = params;
+  const { startTime, endTime, appId, type } = params;
   const where = {
     type: "performance"
   };
+  if (type) {
+    where.type = type;
+  }
   if (appId) {
     where.app_id = appId;
   }
@@ -6434,10 +6650,13 @@ async function getPerformanceMetrics(params) {
   };
 }
 async function getErrorStats(params) {
-  const { startTime, endTime, appId } = params;
+  const { startTime, endTime, appId, type } = params;
   const where = {
     category: "error"
   };
+  if (type) {
+    where.type = type;
+  }
   if (appId) {
     where.app_id = appId;
   }
@@ -6481,20 +6700,24 @@ async function getErrorStats(params) {
   };
 }
 async function getBehaviorStats(params) {
-  const { startTime, endTime, appId } = params;
+  const { startTime, endTime, appId, type } = params;
   const where = {
     category: "behavior"
   };
   if (appId) {
     where.app_id = appId;
   }
+  if (type) {
+    where.type = type;
+  }
   if (startTime && endTime) {
     where.timestamp = {
       [Op14.between]: [startTime, endTime]
     };
   }
+  const pageViewWhere = type ? where : { ...where, type: "page_view" };
   const pageViewStats = await MonitorData_default.findAll({
-    where: { ...where, type: "page_view" },
+    where: pageViewWhere,
     attributes: [
       "page_url",
       [fn("COUNT", col("id")), "count"]
@@ -6505,7 +6728,7 @@ async function getBehaviorStats(params) {
     raw: true
   });
   const pv = await MonitorData_default.count({
-    where: { ...where, type: "page_view" }
+    where: pageViewWhere
   });
   const uvResult = await MonitorData_default.findAll({
     where,
@@ -6513,11 +6736,11 @@ async function getBehaviorStats(params) {
     raw: true
   });
   const uv = uvResult[0]?.uv || 0;
-  const clickCount = await MonitorData_default.count({
-    where: { ...where, type: "click" }
+  const clickCount = type && type !== "click" ? 0 : await MonitorData_default.count({
+    where: type ? where : { ...where, type: "click" }
   });
-  const routeChangeCount = await MonitorData_default.count({
-    where: { ...where, type: "route_change" }
+  const routeChangeCount = type && type !== "route_change" ? 0 : await MonitorData_default.count({
+    where: type ? where : { ...where, type: "route_change" }
   });
   return {
     pv,
@@ -6792,15 +7015,37 @@ async function reportData(req, res) {
 }
 async function getDataList(req, res) {
   try {
-    const { page, pageSize, category, type, appId, startTime, endTime } = req.query;
+    const {
+      page,
+      pageSize,
+      category,
+      type,
+      appId,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime,
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
     const result = await getMonitorDataList({
       page: page ? parseInt(page) : 1,
       pageSize: pageSize ? parseInt(pageSize) : 20,
       category,
       type,
       appId,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
       startTime: startTime ? parseInt(startTime) : void 0,
-      endTime: endTime ? parseInt(endTime) : void 0
+      endTime: endTime ? parseInt(endTime) : void 0,
+      sortBy,
+      sortOrder
     });
     res.json({
       code: 200,
@@ -6817,13 +7062,33 @@ async function getDataList(req, res) {
 }
 async function getErrors(req, res) {
   try {
-    const { page, pageSize, type, startTime, endTime } = req.query;
+    const {
+      page,
+      pageSize,
+      type,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime,
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
     const result = await getErrorList({
       page: page ? parseInt(page) : 1,
       pageSize: pageSize ? parseInt(pageSize) : 20,
       type,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
       startTime: startTime ? parseInt(startTime) : void 0,
-      endTime: endTime ? parseInt(endTime) : void 0
+      endTime: endTime ? parseInt(endTime) : void 0,
+      sortBy,
+      sortOrder
     });
     res.json({
       code: 200,
@@ -6840,13 +7105,33 @@ async function getErrors(req, res) {
 }
 async function getPerformance(req, res) {
   try {
-    const { page, pageSize, type, startTime, endTime } = req.query;
+    const {
+      page,
+      pageSize,
+      type,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime,
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
     const result = await getPerformanceList({
       page: page ? parseInt(page) : 1,
       pageSize: pageSize ? parseInt(pageSize) : 20,
       type,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
       startTime: startTime ? parseInt(startTime) : void 0,
-      endTime: endTime ? parseInt(endTime) : void 0
+      endTime: endTime ? parseInt(endTime) : void 0,
+      sortBy,
+      sortOrder
     });
     res.json({
       code: 200,
@@ -6863,13 +7148,33 @@ async function getPerformance(req, res) {
 }
 async function getBehaviors(req, res) {
   try {
-    const { page, pageSize, type, startTime, endTime } = req.query;
+    const {
+      page,
+      pageSize,
+      type,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime,
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
     const result = await getBehaviorList({
       page: page ? parseInt(page) : 1,
       pageSize: pageSize ? parseInt(pageSize) : 20,
       type,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
       startTime: startTime ? parseInt(startTime) : void 0,
-      endTime: endTime ? parseInt(endTime) : void 0
+      endTime: endTime ? parseInt(endTime) : void 0,
+      sortBy,
+      sortOrder
     });
     res.json({
       code: 200,
@@ -6886,12 +7191,31 @@ async function getBehaviors(req, res) {
 }
 async function getNetworks(req, res) {
   try {
-    const { page, pageSize, startTime, endTime } = req.query;
+    const {
+      page,
+      pageSize,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
+      startTime,
+      endTime,
+      sortBy,
+      sortOrder
+    } = req.query;
     const result = await getNetworkList({
       page: page ? parseInt(page) : 1,
       pageSize: pageSize ? parseInt(pageSize) : 20,
+      platform,
+      env,
+      pagePath,
+      userName,
+      keyword,
       startTime: startTime ? parseInt(startTime) : void 0,
-      endTime: endTime ? parseInt(endTime) : void 0
+      endTime: endTime ? parseInt(endTime) : void 0,
+      sortBy,
+      sortOrder
     });
     res.json({
       code: 200,
@@ -6929,7 +7253,7 @@ async function getOverview(req, res) {
 }
 async function getTrend(req, res) {
   try {
-    const { startTime, endTime, groupBy, category, appId } = req.query;
+    const { startTime, endTime, groupBy, category, appId, type } = req.query;
     if (!startTime || !endTime) {
       return res.status(400).json({
         code: 400,
@@ -6941,7 +7265,8 @@ async function getTrend(req, res) {
       endTime: parseInt(endTime),
       groupBy: groupBy || "hour",
       category,
-      appId
+      appId,
+      type
     });
     res.json({
       code: 200,
@@ -6958,11 +7283,12 @@ async function getTrend(req, res) {
 }
 async function getPerformanceMetrics2(req, res) {
   try {
-    const { startTime, endTime, appId } = req.query;
+    const { startTime, endTime, appId, type } = req.query;
     const result = await getPerformanceMetrics({
       startTime: startTime ? parseInt(startTime) : void 0,
       endTime: endTime ? parseInt(endTime) : void 0,
-      appId
+      appId,
+      type
     });
     res.json({
       code: 200,
@@ -6979,11 +7305,12 @@ async function getPerformanceMetrics2(req, res) {
 }
 async function getErrorStats2(req, res) {
   try {
-    const { startTime, endTime, appId } = req.query;
+    const { startTime, endTime, appId, type } = req.query;
     const result = await getErrorStats({
       startTime: startTime ? parseInt(startTime) : void 0,
       endTime: endTime ? parseInt(endTime) : void 0,
-      appId
+      appId,
+      type
     });
     res.json({
       code: 200,
@@ -7000,11 +7327,12 @@ async function getErrorStats2(req, res) {
 }
 async function getBehaviorStats2(req, res) {
   try {
-    const { startTime, endTime, appId } = req.query;
+    const { startTime, endTime, appId, type } = req.query;
     const result = await getBehaviorStats({
       startTime: startTime ? parseInt(startTime) : void 0,
       endTime: endTime ? parseInt(endTime) : void 0,
-      appId
+      appId,
+      type
     });
     res.json({
       code: 200,
@@ -8700,6 +9028,13 @@ async function stopCharging(userId, orderId) {
   );
   try {
     await deductBalance(userId, parseFloat(totalAmount.toFixed(2)));
+    await Order_default.update(
+      {
+        pay_time: /* @__PURE__ */ new Date(),
+        pay: "balance"
+      },
+      { where: { order_no: orderId } }
+    );
   } catch (error2) {
     console.error("\u6263\u6B3E\u5931\u8D25:", error2);
     await Order_default.update(
@@ -8759,8 +9094,8 @@ async function getChargingStatus(userId) {
     amount: parseFloat(amount.toFixed(2)),
     percent: Math.min(95, Math.floor(duration / 60)),
     // 模拟电量百分比
-    status: 1
-    // 充电中
+    status: 2
+    // 充电中 (与订单状态保持一致)
   };
 }
 async function getChargingHistory(userId, page = 1, pageSize = 10) {
@@ -9685,6 +10020,27 @@ router15.post("/user/upload-avatar", authMiddleware2, async (req, res) => {
     await ChargingUser_default.update(updateData, { where: { id: userId } });
     const result = await getUserInfo(userId);
     res.json(success(result));
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/announcement/list", optionalAuth, async (req, res) => {
+  try {
+    req.query.type = "\u516C\u544A\u7C7B";
+    req.query.status = "2";
+    req.query.publish = "\u5C0F\u7A0B\u5E8F";
+    await getDocumentListController(req, res);
+  } catch (err) {
+    res.json(error(err.message));
+  }
+});
+router15.get("/announcement/:id", optionalAuth, async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (userId && !req.user) {
+      req.user = { userId };
+    }
+    await getDocumentDetailController(req, res);
   } catch (err) {
     res.json(error(err.message));
   }

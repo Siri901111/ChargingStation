@@ -175,20 +175,21 @@ export async function getOrderDetailService(orderNo: string) {
     throw new Error('订单不存在');
   }
 
-  const station = (order as any).station;
-  const user = (order as any).chargingUser;
+  const orderData = order as any;
+  const station = orderData.station;
+  const user = orderData.chargingUser;
 
   // 计算充电时长（小时）
   let chargeDuration = 0;
-  if (order.start_time && order.end_time) {
-    const start = new Date(order.start_time);
-    const end = new Date(order.end_time);
+  if (orderData.start_time && orderData.end_time) {
+    const start = new Date(orderData.start_time);
+    const end = new Date(orderData.end_time);
     chargeDuration = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
   }
 
   // 计算充电量（度）- 根据金额和时长估算
   // 假设平均电价0.8元/度，服务费10%，停车费5%
-  const totalMoney = Number(order.money || 0);
+  const totalMoney = Number(orderData.money || 0);
   const electricityFee = totalMoney * 0.85; // 电费占85%
   const serviceFee = totalMoney * 0.1; // 服务费10%
   const parkingFee = totalMoney * 0.05; // 停车费5%
@@ -196,10 +197,10 @@ export async function getOrderDetailService(orderNo: string) {
 
   // 获取充电桩类型（如果有设备编号）
   let chargeDevice = '充电桩(快充)';
-  if (order.equipment_no) {
+  if (orderData.equipment_no) {
     try {
       // 尝试从设备编号中提取充电桩ID
-      const pileMatch = order.equipment_no.match(/PILE(\d+)/);
+      const pileMatch = orderData.equipment_no.match(/PILE(\d+)/);
       if (pileMatch) {
         const pileId = parseInt(pileMatch[1]);
         const pile = await Pile.findByPk(pileId);
@@ -219,24 +220,24 @@ export async function getOrderDetailService(orderNo: string) {
   };
 
   return {
-    orderNo: order.order_no,
-    equipmentNo: order.equipment_no || '',
-    date: order.date
-      ? new Date(order.date).toLocaleDateString('zh-CN')
+    orderNo: orderData.order_no,
+    equipmentNo: orderData.equipment_no || '',
+    date: orderData.date
+      ? new Date(orderData.date).toLocaleDateString('zh-CN')
       : '',
-    startTime: order.start_time
-      ? new Date(order.start_time).toLocaleTimeString('zh-CN', {
+    startTime: orderData.start_time
+      ? new Date(orderData.start_time).toLocaleTimeString('zh-CN', {
           hour12: false,
         })
       : '',
-    endTime: order.end_time
-      ? new Date(order.end_time).toLocaleTimeString('zh-CN', {
+    endTime: orderData.end_time
+      ? new Date(orderData.end_time).toLocaleTimeString('zh-CN', {
           hour12: false,
         })
       : '',
     money: totalMoney.toFixed(2),
-    pay: order.pay || '',
-    status: order.status,
+    pay: orderData.pay || '',
+    status: orderData.status,
     stationName: station?.name || '',
     city: station?.city || '',
     chargeAmount: chargeAmount, // 充电量（度）

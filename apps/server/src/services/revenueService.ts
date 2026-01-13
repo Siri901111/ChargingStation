@@ -116,30 +116,33 @@ export async function getRevenueListService(params: RevenueListParams) {
         });
       }
 
+      const revenueData = revenue as any;
+      const stationData = station as any;
+
       // 计算单日总收入
-      const day = revenue 
-        ? Number(revenue.electricity || 0) + 
-          Number(revenue.parking_fee || 0) + 
-          Number(revenue.service_fee || 0) + 
-          Number(revenue.member || 0)
+      const day = revenueData 
+        ? Number(revenueData.electricity || 0) + 
+          Number(revenueData.parking_fee || 0) + 
+          Number(revenueData.service_fee || 0) + 
+          Number(revenueData.member || 0)
         : 0;
 
       // 月度总收入（万元）
-      const month = revenue ? Number(revenue.month || 0) / 10000 : 0;
+      const month = revenueData ? Number(revenueData.month || 0) / 10000 : 0;
 
       return {
-        name: station.name,
-        id: String(station.id),
-        city: station.city || '',
-        count: (station.fast || 0) + (station.slow || 0), // 充电桩总量
+        name: stationData.name,
+        id: String(stationData.id),
+        city: stationData.city || '',
+        count: (stationData.fast || 0) + (stationData.slow || 0), // 充电桩总量
         day: Math.round(day * 100) / 100, // 单日总收入，保留2位小数
         month: Math.round(month * 100) / 100, // 月度总收入（万元），保留2位小数
-        electricity: revenue ? Number(revenue.electricity || 0) : 0,
-        parkingFee: revenue ? Number(revenue.parking_fee || 0) : 0,
-        serviceFee: revenue ? Number(revenue.service_fee || 0) : 0,
-        member: revenue ? Number(revenue.member || 0) : 0,
-        percent: revenue ? Number(revenue.percent || 0) : 0, // 日增长百分比
-        mpercent: revenue ? Number(revenue.mpercent || 0) : 0 // 月增长百分比
+        electricity: revenueData ? Number(revenueData.electricity || 0) : 0,
+        parkingFee: revenueData ? Number(revenueData.parking_fee || 0) : 0,
+        serviceFee: revenueData ? Number(revenueData.service_fee || 0) : 0,
+        member: revenueData ? Number(revenueData.member || 0) : 0,
+        percent: revenueData ? Number(revenueData.percent || 0) : 0, // 日增长百分比
+        mpercent: revenueData ? Number(revenueData.mpercent || 0) : 0 // 月增长百分比
       };
     })
   );

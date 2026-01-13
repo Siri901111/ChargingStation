@@ -57,7 +57,7 @@ export async function getMapStatsService() {
     });
 
     // 找出单省份最多充电站
-    const maxProvince = provinceStats.length > 0 ? provinceStats[0] : null;
+    const maxProvince = provinceStats.length > 0 ? (provinceStats[0] as any) : null;
     const maxProvinceName = maxProvince ? maxProvince.city || '未知' : '未知';
     const maxProvinceCount = maxProvince
       ? Number(maxProvince.count)

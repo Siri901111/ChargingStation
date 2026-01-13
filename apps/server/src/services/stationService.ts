@@ -165,7 +165,7 @@ export async function createStationService(params: StationCreateParams) {
   });
 
   return {
-    id: String(station.id),
+    id: String((station as any).id),
     message: '充电站创建成功'
   };
 }
