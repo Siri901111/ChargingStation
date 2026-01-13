@@ -6,6 +6,7 @@ import type { PlatformAdapter, StorageAdapter, RequestOptions, RequestResponse, 
 // UniApp 全局对象类型声明
 declare const uni: any;
 declare const getCurrentPages: () => any[];
+declare function getApp(): any;
 
 /**
  * UniApp LocalStorage 适配器（使用 uni.setStorageSync）
@@ -152,7 +153,7 @@ export class UniAppPlatformAdapter implements PlatformAdapter {
   /**
    * SendBeacon（UniApp 不支持，返回 false）
    */
-  sendBeacon(url: string, data: string | Blob): boolean {
+  sendBeacon(_url: string, _data: string | Blob): boolean {
     // UniApp 不支持 sendBeacon，返回 false 让上报器使用 request
     return false;
   }
@@ -188,7 +189,8 @@ export class UniAppPlatformAdapter implements PlatformAdapter {
 
       // 降级方案：尝试从 uni 获取
       if (typeof uni !== 'undefined') {
-        const systemInfo = uni.getSystemInfoSync();
+        // 获取系统信息（虽然这里不使用，但保持 API 调用的一致性）
+        uni.getSystemInfoSync();
         return {
           url: '',
           title: '',
@@ -348,20 +350,20 @@ export class UniAppPlatformAdapter implements PlatformAdapter {
    */
   setTimeout(callback: () => void, delay: number): number {
     if (typeof setTimeout !== 'undefined') {
-      return setTimeout(callback, delay);
+      return setTimeout(callback, delay) as any as number;
     }
     return 0;
   }
 
   clearTimeout(timerId: number): void {
     if (typeof clearTimeout !== 'undefined') {
-      clearTimeout(timerId);
+      clearTimeout(timerId as any);
     }
   }
 
   setInterval(callback: () => void, delay: number): number {
     if (typeof setInterval !== 'undefined') {
-      return setInterval(callback, delay);
+      return setInterval(callback, delay) as any as number;
     }
     return 0;
   }

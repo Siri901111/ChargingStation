@@ -8,7 +8,8 @@ import { createUniAppPlatformAdapter } from './uniapp';
 // 自动检测平台
 function detectPlatform(): Platform {
   // 检查是否是 UniApp 环境
-  if (typeof uni !== 'undefined') {
+  // 使用类型断言来避免 TypeScript 错误
+  if (typeof (globalThis as any).uni !== 'undefined') {
     return 'uniapp';
   }
 
