@@ -5,11 +5,23 @@ import type { Platform, PlatformAdapter } from './types';
 import { createWebPlatformAdapter } from './web';
 import { createUniAppPlatformAdapter } from './uniapp';
 
+/**
+ * 检查是否是 UniApp 环境
+ * 使用函数来避免直接引用全局变量，解决 DTS 构建问题
+ */
+function isUniAppEnvironment(): boolean {
+  try {
+    // 使用 eval 来动态检查，避免 TypeScript 类型检查
+    return typeof (globalThis as any).uni !== 'undefined';
+  } catch {
+    return false;
+  }
+}
+
 // 自动检测平台
 function detectPlatform(): Platform {
   // 检查是否是 UniApp 环境
-  // 使用类型断言来避免 TypeScript 错误
-  if (typeof (globalThis as any).uni !== 'undefined') {
+  if (isUniAppEnvironment()) {
     return 'uniapp';
   }
 
