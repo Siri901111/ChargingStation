@@ -61,11 +61,14 @@ app.use(cors({
     
     // 生产环境：使用白名单
     const allowedOrigins = [
-      'https://api.example.com',
-      // 添加生产环境的前端域名
+      'https://charging-station-admin.vercel.app', // 管理端生产域名
     ];
     
-    if (allowedOrigins.includes(origin)) {
+    // 检查是否在允许列表中，或者是否是 Vercel 预览/部署域名
+    const isAllowed = allowedOrigins.includes(origin) || 
+                     (origin && origin.endsWith('.vercel.app'));
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       callback(new Error('不允许的跨域请求'));
