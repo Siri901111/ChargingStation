@@ -7,12 +7,13 @@ import { createUniAppPlatformAdapter } from './uniapp';
 
 /**
  * 检查是否是 UniApp 环境
- * 使用函数来避免直接引用全局变量，解决 DTS 构建问题
+ * 使用 Function 构造函数来完全避免 TypeScript 类型检查
  */
 function isUniAppEnvironment(): boolean {
   try {
-    // 使用 eval 来动态检查，避免 TypeScript 类型检查
-    return typeof (globalThis as any).uni !== 'undefined';
+    // 使用 Function 构造函数动态执行，完全避免 TypeScript 类型检查
+    const checkUni = new Function('return typeof uni !== "undefined"');
+    return checkUni();
   } catch {
     return false;
   }
