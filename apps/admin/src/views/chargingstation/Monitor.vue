@@ -101,6 +101,7 @@ import StationForm from "./components/StationForm.vue"
 import {useStationStore}  from "@/store/station"
 import type{RowType} from "@/types/station"
 import { ElMessage } from 'element-plus'
+import { log } from "console"
 const select = ref("name");
 const formParams = reactive({
     input: "",
@@ -134,6 +135,8 @@ const loadData = async () => {
         }
         
         const res = await getStationListApi(params);
+        console.log(params)
+        console.log(res)
         if (res.code === 200 && res.data) {
             tableData.value = res.data.list || [];
             totals.value = res.data.total || 0;
