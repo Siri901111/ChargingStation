@@ -8,7 +8,7 @@
         <!-- 右侧功能区 -->
         <div class="header-right">
             <!-- 语言切换 -->
-            <LocaleSwitcher />
+            <!-- <LocaleSwitcher /> -->
 
             <!-- 消息通知 -->
             <NotificationBell />
@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import HeaderActions from './components/HeaderActions.vue'
-import LocaleSwitcher from './components/LocaleSwitcher.vue'
+// import LocaleSwitcher from './components/LocaleSwitcher.vue'
 import NotificationBell from './components/NotificationBell.vue'
 import DocumentViewer from './components/DocumentViewer.vue'
 import UserMenu from './components/UserMenu.vue'

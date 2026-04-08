@@ -494,7 +494,7 @@ const setChartData3 = async () => {
     const chartOptions = reactive({
         radar: {
             indicator: [
-                { name: '闲置数', max: 200 },
+                { name: '闲置数', max: 800 },
                 { name: '使用数', max: 200 },
                 { name: '故障数', max: 200 },
                 { name: '维修数', max: 200 },

@@ -19,11 +19,11 @@ export interface Location {
 
 // 默认位置：长沙市中心（用于开发测试）
 const DEFAULT_LOCATION: Location = {
-  latitude: 28.1963,
-  longitude: 112.9822,
-  address: '长沙市芙蓉区五一广场',
-  city: '长沙市',
-  district: '芙蓉区',
+  latitude: 39.11198,
+  longitude: 117.35002,
+  address: '天津市中国民航大学',
+  city: '天津市',
+  district: '东丽区',
 }
 
 export const useLocationStore = defineStore('location', () => {
@@ -59,10 +59,10 @@ export const useLocationStore = defineStore('location', () => {
 
     try {
       // 先使用缓存显示
-      const cached = getStorage<Location>(STORAGE_KEYS.LOCATION)
-      if (cached && cached.latitude) {
-        currentLocation.value = cached
-      }
+      // const cached = getStorage<Location>(STORAGE_KEYS.LOCATION)
+      // if (cached && cached.latitude) {
+      //   currentLocation.value = cached
+      // }
 
       // #ifdef H5
       // H5 环境：先获取浏览器定位坐标，再用高德逆地理编码

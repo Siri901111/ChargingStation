@@ -179,7 +179,7 @@ async function updateExistingUsersData() {
     }
 
     if (users.length > 0) {
-      console.log(`✅ 已更新 ${users.length} 个用户的个人信息字段`);
+      // console.log(`已更新 ${users.length} 个用户的个人信息字段`);
     }
   } catch (error) {
     console.error('⚠️  更新用户数据时出错:', error);
@@ -312,7 +312,7 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 // 测试数据库连接
 sequelize.authenticate()
   .then(async () => {
-    console.log('✅ 数据库连接成功！');
+    console.log('数据库连接成功！');
     
     // 同步表结构（如果表不存在则创建，存在则不修改）
     // 注意：如需添加新字段，临时设置 alter: true，同步后改回 alter: false
@@ -341,7 +341,7 @@ sequelize.authenticate()
     }
   })
   .then(async () => {
-    console.log('✅ 数据库表结构同步成功！');
+    // console.log('✅ 数据库表结构同步成功！');
     
     try {
       // 初始化默认角色和管理员账号
@@ -357,20 +357,20 @@ sequelize.authenticate()
       
       if (FORCE_INIT_MOCK) {
         // 强制初始化所有Mock数据（会跳过已存在检查）
-        console.log('🔄 强制初始化Mock数据（FORCE_INIT_MOCK=true）...');
+        // console.log('🔄 强制初始化Mock数据（FORCE_INIT_MOCK=true）...');
         await initMockData();
       } else if (userCount <= 1) {
         // 完全初始化所有Mock数据
         await initMockData();
       } else if (chargingUserCount === 0) {
         // 如果后台用户已存在但充电用户不存在，只初始化充电用户
-        console.log('📦 开始初始化充电用户数据...');
+        // console.log('📦 开始初始化充电用户数据...');
         const { initChargingUsers } = await import('./utils/initMockData.js');
         await initChargingUsers();
-        console.log('✅ 充电用户数据初始化完成');
+        // console.log('充电用户数据初始化完成');
       } else {
-        console.log('ℹ️  数据库已有数据，跳过Mock数据初始化');
-        console.log('💡 提示：如需强制重新初始化，请在 .env 文件中设置 FORCE_INIT_MOCK=true');
+        // console.log('ℹ数据库已有数据，跳过Mock数据初始化');
+        // console.log('提示：如需强制重新初始化，请在 .env 文件中设置 FORCE_INIT_MOCK=true');
       }
 
       // 初始化移动端测试数据（长沙天津充电站 + 测试用户订单）
@@ -389,10 +389,10 @@ sequelize.authenticate()
     // 启动服务器 - 监听所有网络接口，支持局域网访问
     const HOST = process.env.HOST || '0.0.0.0'; // 0.0.0.0 表示监听所有网络接口
     app.listen(PORT, HOST, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
-      console.log(`🌐 局域网访问: http://${getLocalIP()}:${PORT}`);
-      console.log(`📝 API 文档: http://localhost:${PORT}/api`);
-      console.log(`📱 移动端API: http://${getLocalIP()}:${PORT}/api/mobile`);
+      console.log(`Server running at http://localhost:${PORT}`);
+      console.log(`局域网访问: http://${getLocalIP()}:${PORT}`);
+      console.log(`API 文档: http://localhost:${PORT}/api`);
+      console.log(`移动端API: http://${getLocalIP()}:${PORT}/api/mobile`);
     });
   })
   .catch((err: any) => {

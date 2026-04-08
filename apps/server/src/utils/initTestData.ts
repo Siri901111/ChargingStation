@@ -179,7 +179,7 @@ function generateOrderNo(date: Date): string {
  * 初始化长沙和天津充电站数据
  */
 export async function initCityStations() {
-  console.log('📍 开始初始化长沙和天津充电站数据...');
+  // console.log('📍 开始初始化长沙和天津充电站数据...');
 
   const allStations = [...changshStations, ...tianjinStations];
   const createdStations: any[] = [];
@@ -191,7 +191,7 @@ export async function initCityStations() {
     });
 
     if (existing) {
-      console.log(`   - 站点 ${stationData.name} 已存在，跳过`);
+      // console.log(`   - 站点 ${stationData.name} 已存在，跳过`);
       createdStations.push(existing);
       continue;
     }
@@ -214,10 +214,10 @@ export async function initCityStations() {
     // 为每个站点创建充电桩
     await createPilesForStation((station as any).id, fastCount, slowCount);
 
-    console.log(`   ✅ 创建站点: ${stationData.name} (快充${fastCount} 慢充${slowCount})`);
+    // console.log(`   ✅ 创建站点: ${stationData.name} (快充${fastCount} 慢充${slowCount})`);
   }
 
-  console.log(`📍 充电站数据初始化完成，共 ${createdStations.length} 个站点`);
+  // console.log(`📍 充电站数据初始化完成，共 ${createdStations.length} 个站点`);
   return createdStations;
 }
 
@@ -266,7 +266,7 @@ async function createPilesForStation(stationId: number, fastCount: number, slowC
  * 为测试用户创建订单数据
  */
 export async function initTestUserOrders(phone: string = '19282249442') {
-  console.log(`📋 为用户 ${phone} 创建测试订单...`);
+  console.log(`为用户 ${phone} 创建测试订单...`);
 
   // 查找或创建测试用户
   let user = await ChargingUser.findOne({ where: { phone } });
@@ -286,7 +286,7 @@ export async function initTestUserOrders(phone: string = '19282249442') {
       valid_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       status: 1,
     });
-    console.log(`   ✅ 创建测试用户: ${phone}, 余额: 500元`);
+    // console.log(`   ✅ 创建测试用户: ${phone}, 余额: 500元`);
   } else {
     console.log(`   - 测试用户 ${phone} 已存在, 余额: ${(user as any).balance}元`);
   }
@@ -430,7 +430,7 @@ export async function testRecharge(userId: number, amount: number, giftAmount: n
  * 初始化所有测试数据
  */
 export async function initAllTestData() {
-  console.log('🚀 开始初始化所有测试数据...\n');
+  // console.log('🚀 开始初始化所有测试数据...\n');
 
   // 1. 初始化长沙和天津充电站
   await initCityStations();
@@ -438,5 +438,5 @@ export async function initAllTestData() {
   // 2. 为测试用户创建订单
   await initTestUserOrders('19282249442');
 
-  console.log('\n✅ 所有测试数据初始化完成！');
+  // console.log('\n✅ 所有测试数据初始化完成！');
 }

@@ -810,10 +810,10 @@ async function initLocation() {
 // 获取所有站点（地图显示需要）
 async function fetchNearbyStations() {
   try {
-    // 使用当前位置或默认位置（长沙）
+    // 使用当前位置或默认位置（cauc）
     const location = locationStore.currentLocation || {
-      latitude: 28.1963,
-      longitude: 112.9822,
+      latitude: 39.11198,
+      longitude: 117.35002,
     }
     
     // 传一个很大的 radius 来获取所有站点（10000 公里）

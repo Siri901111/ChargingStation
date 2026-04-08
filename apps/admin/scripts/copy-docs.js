@@ -30,15 +30,15 @@ function copyDir(src, dest) {
             copyDir(srcPath, destPath)
         } else {
             fs.copyFileSync(srcPath, destPath)
-            console.log(`已复制: ${entry.name}`)
+            // console.log(`已复制: ${entry.name}`)
         }
     }
 }
 
 if (fs.existsSync(docsSource)) {
-    console.log('正在复制docs文件夹到public目录...')
+    // console.log('正在复制docs文件夹到public目录...')
     copyDir(docsSource, docsTarget)
-    console.log('✅ docs文件夹复制完成！')
+    // console.log('✅ docs文件夹复制完成！')
 } else {
     // 如果docs文件夹不存在，创建目标目录但不报错，避免阻塞启动
     if (!fs.existsSync(docsTarget)) {

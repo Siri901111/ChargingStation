@@ -58,7 +58,7 @@ export async function initDefaultUser() {
       console.log('   账号: admin');
       console.log('   密码: admin123');
     } else {
-      console.log('ℹ️  管理员账号已存在，跳过创建');
+      // console.log('ℹ️  管理员账号已存在，跳过创建');
     }
   } catch (error) {
     console.error('❌ 初始化默认用户失败:', error);

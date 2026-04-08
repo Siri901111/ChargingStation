@@ -19,7 +19,7 @@
         </div>
 
         <!-- 页面缩放 -->
-        <el-popover placement="bottom" :width="200" trigger="click">
+        <!-- <el-popover placement="bottom" :width="200" trigger="click">
             <template #reference>
                 <div class="header-action" :title="t('header.pageZoom')">
                     <el-icon :size="18"><ZoomIn /></el-icon>
@@ -34,7 +34,7 @@
                     <el-button size="small" @click="resetZoom">{{ t('header.resetZoom') }}</el-button>
                 </div>
             </div>
-        </el-popover>
+        </el-popover> -->
 
         <!-- 水印 -->
         <div class="header-action" @click="toggleWatermark" :title="t('header.watermark')">
@@ -118,14 +118,14 @@
         </el-popover> -->
 
         <!-- 导出配置 -->
-        <div class="header-action" @click="handleExportConfig" :title="t('header.exportConfig')">
+        <!-- <div class="header-action" @click="handleExportConfig" :title="t('header.exportConfig')">
             <el-icon :size="18"><Download /></el-icon>
-        </div>
+        </div> -->
 
         <!-- 打印 -->
-        <div class="header-action" @click="handlePrint" :title="t('header.print')">
+        <!-- <div class="header-action" @click="handlePrint" :title="t('header.print')">
             <el-icon :size="18"><Printer /></el-icon>
-        </div>
+        </div> -->
 
         <!-- 复制系统信息 -->
         <!-- <div class="header-action" @click="handleCopySystemInfo" :title="t('header.copySystemInfo')">
@@ -133,7 +133,7 @@
         </div> -->
 
         <!-- 自动保存设置 -->
-        <el-popover placement="bottom" :width="250" trigger="click">
+        <!-- <el-popover placement="bottom" :width="250" trigger="click">
             <template #reference>
                 <div class="header-action" :title="t('header.autoSave')">
                     <el-icon :size="18"><FolderOpened /></el-icon>
@@ -154,7 +154,7 @@
                     {{ t('header.autoSaveInterval') }} ({{ t('common.minutes') }})
                 </div>
             </div>
-        </el-popover>
+        </el-popover> -->
 
         <!-- 通知设置 -->
         <!-- <el-popover placement="bottom" :width="250" trigger="click">
