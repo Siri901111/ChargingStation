@@ -22,8 +22,23 @@ interface CreateAlarmParams {
 
 // 指派报警任务参数
 interface AssignAlarmParams {
-  handler: string;
-  handle_note?: string;
+  basicInfo: {
+    name: string;
+    email: string;
+    tel: string;
+    no: string;
+    urgent: boolean;
+    other: string[];
+    remarks?: string;
+  };
+  approvalInfo: {
+    approvalDept: string;
+    ccDept: string;
+  };
+  responsibleInfo: {
+    person: string;
+    tel: string;
+  };
 }
 
 // 更新报警状态参数
@@ -59,7 +74,7 @@ export function assignAlarmTaskApi(id: number | string, data: AssignAlarmParams)
 
 // 催办报警任务
 export function urgeAlarmTaskApi(id: number | string) {
-  return post(`/api/alarms/${id}/urge`);
+  return post(`/api/alarms/${id}/urge`, {});
 }
 
 // 标记报警任务为处理异常

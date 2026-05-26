@@ -288,6 +288,34 @@ async function addMissingColumnsIfNeeded() {
     }
 
     // 执行所有添加字段的SQL
+    const [alarmResults] = await sequelize.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'alarm'
+    `) as any[];
+
+    const alarmColumns = alarmResults.map((r: any) => r.COLUMN_NAME);
+
+    if (!alarmColumns.includes('status')) {
+      queries.push(`ALTER TABLE alarm ADD COLUMN status TINYINT DEFAULT 1 COMMENT '澶勭悊鐘舵€侊細1寰呮寚娲撅紝2澶勭悊涓紝3宸插鐞嗭紝4澶勭悊寮傚父'`);
+    }
+    if (!alarmColumns.includes('handler')) {
+      queries.push(`ALTER TABLE alarm ADD COLUMN handler VARCHAR(50) NULL COMMENT '澶勭悊浜哄憳'`);
+    }
+    if (!alarmColumns.includes('handle_time')) {
+      queries.push(`ALTER TABLE alarm ADD COLUMN handle_time DATETIME NULL COMMENT '澶勭悊鏃堕棿'`);
+    }
+    if (!alarmColumns.includes('handle_note')) {
+      queries.push(`ALTER TABLE alarm ADD COLUMN handle_note TEXT NULL COMMENT '澶勭悊澶囨敞'`);
+    }
+    if (!alarmColumns.includes('urge_count')) {
+      queries.push(`ALTER TABLE alarm ADD COLUMN urge_count INT DEFAULT 0 COMMENT '鍌姙娆℃暟'`);
+    }
+    if (!alarmColumns.includes('last_urge_time')) {
+      queries.push(`ALTER TABLE alarm ADD COLUMN last_urge_time DATETIME NULL COMMENT '鏈€鍚庡偓鍔炴椂闂?'`);
+    }
+
     for (const query of queries) {
       try {
         await sequelize.query(query);
