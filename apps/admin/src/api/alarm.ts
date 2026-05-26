@@ -74,7 +74,7 @@ export function assignAlarmTaskApi(id: number | string, data: AssignAlarmParams)
 
 // 催办报警任务
 export function urgeAlarmTaskApi(id: number | string) {
-  return post(`/api/alarms/${id}/urge`);
+  return post(`/api/alarms/${id}/urge`, {});
 }
 
 // 标记报警任务为处理异常
