@@ -603,7 +603,7 @@ const handleSortChange = ({ prop, order }: { prop: string; order: string | null 
   loadErrorList()
 }
 
-const handleSizeChange = (size: number) => { pageInfo.pageSize = size; loadErrorList() }
+const handleSizeChange = (size: number) => { pageInfo.pageSize = size; pageInfo.page = 1; loadErrorList() }
 const handleCurrentChange = (page: number) => { pageInfo.page = page; loadErrorList() }
 const handleSelectionChange = (rows: MonitorDataItem[]) => { selectedRows.value = rows }
 

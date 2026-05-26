@@ -1,21 +1,24 @@
 <template>
     <div class="menu-wrapper">
-        <div class="logo">
+        <div class="logo" @click="handleClick">
             <img :src="logo" width="34" height="34" alt="Logo">
-            <h1 class="logo-title">动力港</h1>
+            <h1 class="logo-title" >动力港</h1>
         </div>
-        <el-menu
-            :default-active="currentMenuName"
-            :router="false"
-            class="menu-nav"
-        >
-            <menu-item v-for="item in menuitems" :item="item" :key="item.name" />
-        </el-menu>
+        <el-scrollbar class="menu-scroll">
+            <el-menu
+                :default-active="currentMenuName"
+                :router="false"
+                class="menu-nav"
+                :collapse="false"
+            >
+                <menu-item v-for="item in menuitems" :item="item" :key="item.name" />
+            </el-menu>
+        </el-scrollbar>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed , ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store/auth'
 import MenuItem from "./MenuItem.vue"
@@ -24,7 +27,10 @@ import logo from "@/assets/logo.png"
 const route = useRoute()
 const userStore = useUserStore()
 const menuitems = userStore.menu
-
+const isCollapse = ref(true)
+const handleClick = ()=> {
+    isCollapse.value = !isCollapse.value
+}
 // 根据当前路由路径找到对应的菜单名称
 const currentMenuName = computed(() => {
     const findMenuName = (items: any[], path: string): string => {

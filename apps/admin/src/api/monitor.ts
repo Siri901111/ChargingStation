@@ -95,32 +95,32 @@ export interface QueryParams {
 
 // 获取监控数据列表
 export function getMonitorDataList(params: QueryParams) {
-  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/list`, { params });
+  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/list`, params);
 }
 
 // 获取错误列表
 export function getErrorList(params: QueryParams) {
-  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/errors`, { params });
+  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/errors`, params);
 }
 
 // 获取性能数据列表
 export function getPerformanceList(params: QueryParams) {
-  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/performance`, { params });
+  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/performance`, params);
 }
 
 // 获取行为数据列表
 export function getBehaviorList(params: QueryParams) {
-  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/behaviors`, { params });
+  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/behaviors`, params);
 }
 
 // 获取网络请求列表
 export function getNetworkList(params: QueryParams) {
-  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/networks`, { params });
+  return http.get<PageResult<MonitorDataItem>>(`${BASE_URL}/networks`, params);
 }
 
 // 获取统计概览
 export function getOverview(params?: { startTime?: number; endTime?: number; appId?: string }) {
-  return http.get<OverviewStats>(`${BASE_URL}/overview`, { params });
+  return http.get<OverviewStats>(`${BASE_URL}/overview`, params);
 }
 
 // 获取趋势数据
@@ -131,22 +131,22 @@ export function getTrend(params: {
   category?: string;
   appId?: string;
 }) {
-  return http.get<TrendItem[]>(`${BASE_URL}/trend`, { params });
+  return http.get<TrendItem[]>(`${BASE_URL}/trend`,params)
 }
 
 // 获取性能指标统计
 export function getPerformanceMetrics(params?: { startTime?: number; endTime?: number; appId?: string }) {
-  return http.get<PerformanceMetrics>(`${BASE_URL}/performance-metrics`, { params });
+  return http.get<PerformanceMetrics>(`${BASE_URL}/performance-metrics`, params);
 }
 
 // 获取错误统计
 export function getErrorStats(params?: { startTime?: number; endTime?: number; appId?: string }) {
-  return http.get<ErrorStats>(`${BASE_URL}/error-stats`, { params });
+  return http.get<ErrorStats>(`${BASE_URL}/error-stats`, params);
 }
 
 // 获取用户行为统计
 export function getBehaviorStats(params?: { startTime?: number; endTime?: number; appId?: string }) {
-  return http.get<BehaviorStats>(`${BASE_URL}/behavior-stats`, { params });
+  return http.get<BehaviorStats>(`${BASE_URL}/behavior-stats`, params);
 }
 
 // 用户追踪相关类型
@@ -188,12 +188,12 @@ export function getUserTracking(params: {
   endTime?: number;
   category?: string;
 }) {
-  return http.get<UserTrackingResult>(`${BASE_URL}/user-tracking`, { params });
+  return http.get<UserTrackingResult>(`${BASE_URL}/user-tracking`, params);
 }
 
 // 获取活跃用户列表
 export function getActiveUsers(params?: { startTime?: number; endTime?: number }) {
-  return http.get<ActiveUser[]>(`${BASE_URL}/active-users`, { params });
+  return http.get<ActiveUser[]>(`${BASE_URL}/active-users`, params);
 }
 
 // 错误行为上下文类型
@@ -214,7 +214,7 @@ export interface ErrorBehaviorContext {
 
 // 获取错误发生前的用户行为轨迹（用于错误回放）
 export function getErrorBehaviorContext(params: { errorId: number; seconds?: number }) {
-  return http.get<ErrorBehaviorContext>(`${BASE_URL}/error-context`, { params });
+  return http.get<ErrorBehaviorContext>(`${BASE_URL}/error-context`, params);
 }
 
 // 删除监控数据

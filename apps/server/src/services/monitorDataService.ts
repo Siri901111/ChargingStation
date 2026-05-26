@@ -601,7 +601,6 @@ export async function getTrendData(params: {
     order: [[literal('time'), 'ASC']],
     raw: true
   }) as any[];
-
   return result.map((item: any) => ({
     time: item.time,
     count: parseInt(item.count)

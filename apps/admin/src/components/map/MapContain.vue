@@ -122,7 +122,7 @@ const retryLoad = () => {
 // 初始化地图
 const initMap = () => {
     AMapLoader.load({
-        key: "7066344199d5d8c8bd499c1d4bfc1984", // 申请好的Web端开发者Key，首次调用 load 时必填
+        key: "d49cc724607bd826d732566baa280706", // 申请好的Web端开发者Key，首次调用 load 时必填
         version: "1.4.15", // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
         plugins: [], //需要使用的的插件列表，如比例尺'AMap.Scale'，支持添加多个如：['...','...']
     }).then((AMap) => {

@@ -476,7 +476,7 @@ const getAppTagType = (appId: string) => {
   if (appId === 'charging-station-user-app') return 'success'
   return 'info'
 }
-const handleSizeChange = (size: number) => { pageInfo.pageSize = size; loadPerformanceData() }
+const handleSizeChange = (size: number) => { pageInfo.pageSize = size; pageInfo.page = 1; loadPerformanceData() }
 const handleCurrentChange = (page: number) => { pageInfo.page = page; loadPerformanceData() }
 
 const handleResize = () => { trendChart?.resize(); distributionChart?.resize() }
