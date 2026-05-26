@@ -228,7 +228,7 @@ export async function assignAlarmTaskController(req: Request, res: Response) {
 export async function urgeAlarmTaskController(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const { urgeNote } = req.body;
+    const { urgeNote } = req.body || {};
 
     if (!id) {
       return res.status(400).json({
@@ -266,7 +266,7 @@ export async function urgeAlarmTaskController(req: Request, res: Response) {
 export async function markAlarmExceptionController(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const { exceptionNote } = req.body;
+    const { exceptionNote } = req.body || {};
 
     if (!id) {
       return res.status(400).json({
@@ -298,7 +298,7 @@ export async function markAlarmExceptionController(req: Request, res: Response) 
 export async function completeAlarmTaskController(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const { completionNote } = req.body;
+    const { completionNote } = req.body || {};
 
     if (!id) {
       return res.status(400).json({

@@ -324,8 +324,12 @@ const handleSubmit=async ()=>{
     
     try {
         const res = await assignAlarmTaskApi(currentAlarmId.value, {
-            handler: formData.value.info.person,
-            handle_note: formData.value.basicInfo.remarks || `指派给${formData.value.info.person}，电话：${formData.value.info.tel}`
+            basicInfo: formData.value.basicInfo,
+            approvalInfo: {
+                approvalDept: formData.value.shenpi.a,
+                ccDept: formData.value.shenpi.b
+            },
+            responsibleInfo: formData.value.info
         });
         
         if (res.code === 200) {
