@@ -22,8 +22,23 @@ interface CreateAlarmParams {
 
 // 指派报警任务参数
 interface AssignAlarmParams {
-  handler: string;
-  handle_note?: string;
+  basicInfo: {
+    name: string;
+    email: string;
+    tel: string;
+    no: string;
+    urgent: boolean;
+    other: string[];
+    remarks?: string;
+  };
+  approvalInfo: {
+    approvalDept: string;
+    ccDept: string;
+  };
+  responsibleInfo: {
+    person: string;
+    tel: string;
+  };
 }
 
 // 更新报警状态参数
