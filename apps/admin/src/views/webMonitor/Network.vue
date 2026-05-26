@@ -321,42 +321,53 @@ const loadNetworkList = async () => {
   loading.value = true
   try {
     // 构建筛选条件
-    const params: any = { 
-      ...getTimeParams(), 
-      page: pageInfo.page, 
+    // const params: any = { 
+    //   ...getTimeParams(), 
+    //   page: pageInfo.page, 
+    //   pageSize: pageInfo.pageSize,
+    //   appId: filterParams.appId || undefined,
+    //   keyword: filterParams.keyword || undefined
+    // }
+    const params: any = {
+      ...getTimeParams(),
+      page: pageInfo.page,
       pageSize: pageInfo.pageSize,
+
+      // 搜索条件
       appId: filterParams.appId || undefined,
-      keyword: filterParams.keyword || undefined
+      keyword: filterParams.keyword || undefined,
+      method: filterParams.method || undefined,
+      status: filterParams.status || undefined
     }
-    
     const res = await getNetworkList(params)
     if (res.code === 200 && res.data) {
       let filteredList = res.data.list
       
       // 前端筛选：请求方法和状态码（因为后端不支持这些筛选）
-      if (filterParams.method) {
-        filteredList = filteredList.filter((item: MonitorDataItem) => {
-          const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data
-          return data?.method === filterParams.method
-        })
-      }
+      // if (filterParams.method) {
+      //   filteredList = filteredList.filter((item: MonitorDataItem) => {
+      //     const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data
+      //     return data?.method === filterParams.method
+      //   })
+      // }
       
-      if (filterParams.status) {
-        filteredList = filteredList.filter((item: MonitorDataItem) => {
-          const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data
-          const status = data?.status || 0
-          if (filterParams.status === '2xx') return status >= 200 && status < 300
-          if (filterParams.status === '3xx') return status >= 300 && status < 400
-          if (filterParams.status === '4xx') return status >= 400 && status < 500
-          if (filterParams.status === '5xx') return status >= 500
-          return false
-        })
-      }
+      // if (filterParams.status) {
+      //   filteredList = filteredList.filter((item: MonitorDataItem) => {
+      //     const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data
+      //     const status = data?.status || 0
+      //     if (filterParams.status === '2xx') return status >= 200 && status < 300
+      //     if (filterParams.status === '3xx') return status >= 300 && status < 400
+      //     if (filterParams.status === '4xx') return status >= 400 && status < 500
+      //     if (filterParams.status === '5xx') return status >= 500
+      //     return false
+      //   })
+      // }
       
       tableData.value = filteredList
-      total.value = filteredList.length  // 注意：前端筛选后总数会变化
+      total.value = res.data.total  // 注意：前端筛选后总数会变化
       calculateStats(filteredList)
       updateSlowRequests(filteredList)
+      
     }
   } catch (error) { console.error('加载网络请求失败:', error) }
   finally { loading.value = false }
@@ -516,7 +527,7 @@ const getAppTagType = (appId: string) => {
   if (appId === 'charging-station-user-app') return 'success'
   return 'info'
 }
-const handleSizeChange = (size: number) => { pageInfo.pageSize = size; loadNetworkList() }
+const handleSizeChange = (size: number) => { pageInfo.pageSize = size; pageInfo.page = 1; loadNetworkList() }
 const handleCurrentChange = (page: number) => { pageInfo.page = page; loadNetworkList() }
 
 const handleResize = () => { trendChart?.resize(); statusChart?.resize(); durationChart?.resize() }

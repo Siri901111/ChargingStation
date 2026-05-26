@@ -718,6 +718,7 @@ const handleSortChange = ({ prop, order }: { prop: string; order: string | null 
 
 const handleSizeChange = (size: number) => {
   pageInfo.pageSize = size
+  pageInfo.page = 1
   if (isTrackingMode.value) {
     handleUserTracking()
   } else {
