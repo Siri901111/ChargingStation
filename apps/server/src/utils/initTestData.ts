@@ -8,6 +8,7 @@ import Station from '../models/Station.js';
 import Pile from '../models/Pile.js';
 import Order from '../models/Order.js';
 import ChargingUser from '../models/ChargingUser.js';
+import UserFavorite from '../models/UserFavorite.js';
 
 // 长沙市充电站数据（真实坐标）
 const changshStations = [
@@ -375,6 +376,42 @@ export async function initTestUserOrders(phone: string = '19282249442') {
 }
 
 /**
+ * 为测试用户初始化收藏站点数据
+ */
+export async function initTestUserFavorites(phone: string = '19282249442') {
+  const user = await ChargingUser.findOne({ where: { phone } });
+
+  if (!user) {
+    return;
+  }
+
+  const userId = (user as any).id;
+  const existingCount = await UserFavorite.count({ where: { user_id: userId } });
+  if (existingCount > 0) {
+    return;
+  }
+
+  const stations = await Station.findAll({
+    where: { status: { [Op.ne]: 0 } },
+    order: [['id', 'ASC']],
+    limit: 3,
+  });
+
+  for (const station of stations) {
+    await UserFavorite.findOrCreate({
+      where: {
+        user_id: userId,
+        station_id: (station as any).id,
+      },
+      defaults: {
+        user_id: userId,
+        station_id: (station as any).id,
+      },
+    });
+  }
+}
+
+/**
  * 测试充值 - 给用户增加余额
  */
 export async function testRecharge(userId: number, amount: number, giftAmount: number = 0) {
@@ -437,6 +474,9 @@ export async function initAllTestData() {
 
   // 2. 为测试用户创建订单
   await initTestUserOrders('19282249442');
+
+  // 3. 为测试用户创建收藏
+  await initTestUserFavorites('19282249442');
 
   // console.log('\n✅ 所有测试数据初始化完成！');
 }

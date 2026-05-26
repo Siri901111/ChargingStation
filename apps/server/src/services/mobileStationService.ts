@@ -346,11 +346,16 @@ export async function getHotStations(city?: string, limit: number = 5) {
  * 收藏站点
  */
 export async function favoriteStation(userId: number, stationId: number) {
+  const validStationId = Number(stationId);
+  if (!Number.isInteger(validStationId) || validStationId <= 0) {
+    throw new Error('无效的站点ID');
+  }
+
   // 检查是否已收藏
   const existing = await UserFavorite.findOne({
     where: {
       user_id: userId,
-      station_id: stationId,
+      station_id: validStationId,
     },
   });
 
@@ -359,14 +364,14 @@ export async function favoriteStation(userId: number, stationId: number) {
   }
 
   // 检查站点是否存在
-  const station = await Station.findByPk(stationId);
+  const station = await Station.findByPk(validStationId);
   if (!station) {
     throw new Error('站点不存在');
   }
 
   await UserFavorite.create({
     user_id: userId,
-    station_id: stationId,
+    station_id: validStationId,
   });
 
   return { success: true };
@@ -376,10 +381,15 @@ export async function favoriteStation(userId: number, stationId: number) {
  * 取消收藏
  */
 export async function unfavoriteStation(userId: number, stationId: number) {
+  const validStationId = Number(stationId);
+  if (!Number.isInteger(validStationId) || validStationId <= 0) {
+    throw new Error('无效的站点ID');
+  }
+
   const result = await UserFavorite.destroy({
     where: {
       user_id: userId,
-      station_id: stationId,
+      station_id: validStationId,
     },
   });
 

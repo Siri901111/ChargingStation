@@ -444,6 +444,24 @@ router.get('/station/hot', async (req, res) => {
 });
 
 /**
+ * 获取收藏列表（必须在 /station/:id 之前定义）
+ */
+router.get('/station/favorites', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    // authMiddleware 已经验证了 userId，这里再次确保是有效数字
+    if (typeof userId !== 'number' || isNaN(userId) || userId <= 0) {
+      return res.json(error('无效的用户ID'));
+    }
+    const result = await getFavoriteStations(userId);
+    res.json(success(result));
+  } catch (err: any) {
+    console.error('获取收藏列表失败:', err);
+    res.json(error(err.message || '获取收藏列表失败'));
+  }
+});
+
+/**
  * 获取站点充电桩列表（必须在 /station/:id 之前定义）
  */
 router.get('/station/:id/piles', async (req, res) => {
@@ -511,24 +529,6 @@ router.delete('/station/favorite/:id', authMiddleware, async (req, res) => {
     res.json(success(result));
   } catch (err: any) {
     res.json(error(err.message));
-  }
-});
-
-/**
- * 获取收藏列表
- */
-router.get('/station/favorites', authMiddleware, async (req, res) => {
-  try {
-    const userId = (req as any).userId;
-    // authMiddleware 已经验证了 userId，这里再次确保是有效数字
-    if (typeof userId !== 'number' || isNaN(userId) || userId <= 0) {
-      return res.json(error('无效的用户ID'));
-    }
-    const result = await getFavoriteStations(userId);
-    res.json(success(result));
-  } catch (err: any) {
-    console.error('获取收藏列表失败:', err);
-    res.json(error(err.message || '获取收藏列表失败'));
   }
 });
 
