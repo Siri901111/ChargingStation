@@ -248,8 +248,12 @@ async function fetchNearbyStations() {
 // 下拉刷新
 async function onRefresh() {
   refreshing.value = true
-  await initData()
-  refreshing.value = false
+  try {
+    await initData()
+  } finally {
+    refreshing.value = false
+    uni.stopPullDownRefresh()
+  }
 }
 
 // 点击定位
@@ -378,8 +382,8 @@ function goToStationDetail(id: number) {
 }
 
 .content {
-  margin-top: 20px !important;
   height: 100vh;
+  box-sizing: border-box;
 }
 
 // ==================== 充电中卡片 ====================

@@ -1,6 +1,16 @@
 # Dependencies
 node_modules/
 
+# Build outputs
+dist/
+**/dist/
+
+# Tooling caches
+.turbo/
+
+# Logs
+*.log
+
 # OS files
 .DS_Store
 Thumbs.db

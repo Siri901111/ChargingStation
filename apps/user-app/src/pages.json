@@ -5,7 +5,7 @@
       "style": {
         "navigationBarTitleText": "",
         "navigationStyle": "custom",
-        "enablePullDownRefresh": true
+        "enablePullDownRefresh": false
       }
     },
     {
@@ -38,7 +38,7 @@
         "navigationBarTitleText": "充电订单",
         "navigationBarBackgroundColor": "#FFFFFF",
         "navigationBarTextStyle": "black",
-        "enablePullDownRefresh": true
+        "enablePullDownRefresh": false
       }
     },
     {

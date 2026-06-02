@@ -134,9 +134,8 @@ onMounted(() => {
 })
 
 onShow(() => {
-  // 刷新订单列表
-  onRefresh()
-  // 如果正在充电，启动定时刷新
+  finished.value = false
+  fetchOrders(true)
   if (chargingStore.isCharging && !refreshTimer) {
     startRefreshTimer()
   }
@@ -204,7 +203,12 @@ function handleTabChange(value: number) {
 async function onRefresh() {
   refreshing.value = true
   finished.value = false
-  await fetchOrders(true)
+  try {
+    await fetchOrders(true)
+  } finally {
+    refreshing.value = false
+    uni.stopPullDownRefresh()
+  }
 }
 
 // 加载更多
