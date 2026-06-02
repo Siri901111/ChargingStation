@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   USER_INFO: 'user_info',
   SEARCH_HISTORY: 'search_history',
   LOCATION: 'last_location',
+  PENDING_SCAN_CODE: 'pending_scan_code',
 } as const
 
 /** 订单状态 - 与后端保持一致 */

@@ -209,11 +209,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/modules/user'
 import { useChargingStore } from '@/store/modules/charging'
 import { chargingApi } from '@/api/charging'
-import { PILE_STATUS, PILE_STATUS_TEXT, PAGE_PATH } from '@/constants'
+import { PILE_STATUS, PILE_STATUS_TEXT, PAGE_PATH, STORAGE_KEYS } from '@/constants'
+import { getStorage, removeStorage } from '@/utils/storage'
 
 // Store
 const userStore = useUserStore()
@@ -326,6 +327,10 @@ onLoad((options) => {
   }
 })
 
+onShow(() => {
+  consumePendingScanCode()
+})
+
 onMounted(() => {
   // 获取余额
   if (userStore.isLoggedIn) {
@@ -370,6 +375,14 @@ onBeforeUnmount(() => {
 })
 
 // 处理扫码结果
+function consumePendingScanCode() {
+  const pendingCode = getStorage<string>(STORAGE_KEYS.PENDING_SCAN_CODE)
+  if (!pendingCode) return
+
+  removeStorage(STORAGE_KEYS.PENDING_SCAN_CODE)
+  handleQRCode(pendingCode)
+}
+
 async function handleQRCode(code: string) {
   if (!code || !code.trim()) {
     uni.showToast({

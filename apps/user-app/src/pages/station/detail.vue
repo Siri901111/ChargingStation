@@ -143,8 +143,9 @@ import { ref, computed, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { stationApi, type Station, type Pile } from '@/api/station'
 import { useUserStore } from '@/store/modules/user'
-import { PILE_STATUS, PILE_STATUS_TEXT, PAGE_PATH } from '@/constants'
+import { PILE_STATUS, PILE_STATUS_TEXT, PAGE_PATH, STORAGE_KEYS } from '@/constants'
 import { formatDistance, openNavigation, makePhoneCall } from '@/utils'
+import { setStorage } from '@/utils/storage'
 
 // Store
 const userStore = useUserStore()
@@ -284,9 +285,8 @@ function handleSelectPile(pile: Pile) {
   if (!userStore.checkLoginAndNavigate()) return
 
   // 跳转到扫码页面，传递充电桩信息
-  uni.navigateTo({
-    url: `${PAGE_PATH.SCAN}?pileId=${pile.id}`,
-  })
+  setStorage(STORAGE_KEYS.PENDING_SCAN_CODE, `PILE_${pile.id}`)
+  uni.switchTab({ url: PAGE_PATH.SCAN })
 }
 
 // 扫码充电
@@ -297,9 +297,8 @@ function handleScan() {
   uni.scanCode({
     onlyFromCamera: true,
     success: (res) => {
-      uni.navigateTo({
-        url: `${PAGE_PATH.SCAN}?code=${encodeURIComponent(res.result)}`,
-      })
+      setStorage(STORAGE_KEYS.PENDING_SCAN_CODE, res.result)
+      uni.switchTab({ url: PAGE_PATH.SCAN })
     },
     fail: () => {
       uni.showToast({ title: '扫码失败', icon: 'none' })
@@ -308,7 +307,7 @@ function handleScan() {
   // #endif
 
   // #ifdef H5
-  uni.navigateTo({ url: PAGE_PATH.SCAN })
+  uni.switchTab({ url: PAGE_PATH.SCAN })
   // #endif
 }
 </script>

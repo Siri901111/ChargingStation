@@ -493,6 +493,7 @@ function goToStationDetail(id: number) {
 .quick-section {
   padding: 0 var(--space-4);
   margin-bottom: var(--space-5);
+  margin-top: 20px;
 }
 
 .quick-grid {
