@@ -1,6 +1,19 @@
 import { get, post, put, del } from "@/utils/http";
 import { RowType } from "@/types/station";
 
+export interface StationPayload {
+  name: string;
+  city: string;
+  address?: string;
+  fast: number;
+  slow: number;
+  status: number;
+  person: string;
+  tel: string;
+  longitude?: number;
+  latitude?: number;
+}
+
 // 充电站列表查询参数
 interface StationListParams {
   page?: number;
@@ -30,12 +43,12 @@ export function getStationDetailApi(id: number | string) {
 }
 
 // 创建充电站
-export function createStationApi(data: RowType) {
+export function createStationApi(data: StationPayload) {
   return post("/api/stations", data);
 }
 
 // 更新充电站
-export function updateStationApi(id: number | string, data: RowType) {
+export function updateStationApi(id: number | string, data: StationPayload) {
   return put(`/api/stations/${id}`, data);
 }
 

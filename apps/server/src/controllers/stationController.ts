@@ -83,18 +83,19 @@ export async function getStationByIdController(req: Request, res: Response) {
 // 创建充电站
 export async function createStationController(req: Request, res: Response) {
   try {
-    const { name, city, fast, slow, status, person, tel, longitude, latitude } = req.body;
+    const { name, city, address, fast, slow, status, person, tel, longitude, latitude } = req.body;
 
     const result = await createStationService({
       name,
       city,
+      address,
       fast,
       slow,
       status,
       person,
       tel,
-      longitude,
-      latitude
+      longitude: longitude != null ? Number(longitude) : undefined,
+      latitude: latitude != null ? Number(latitude) : undefined,
     });
 
     return res.status(201).json({
@@ -138,18 +139,19 @@ export async function updateStationController(req: Request, res: Response) {
       });
     }
 
-    const { name, city, fast, slow, status, person, tel, longitude, latitude } = req.body;
+    const { name, city, address, fast, slow, status, person, tel, longitude, latitude } = req.body;
 
     const result = await updateStationService(stationId, {
       name,
       city,
+      address,
       fast,
       slow,
       status,
       person,
       tel,
-      longitude,
-      latitude
+      longitude: longitude != null ? Number(longitude) : undefined,
+      latitude: latitude != null ? Number(latitude) : undefined,
     });
 
     return res.json({

@@ -100,8 +100,8 @@ import { getStationListApi, deleteStationApi } from "@/api/chargingstation"
 import StationForm from "./components/StationForm.vue"
 import {useStationStore}  from "@/store/station"
 import type{RowType} from "@/types/station"
+import { emptyStationForm } from "@/types/station"
 import { ElMessage } from 'element-plus'
-import { log } from "console"
 const select = ref("name");
 const formParams = reactive({
     input: "",
@@ -178,18 +178,7 @@ const edit=(row:RowType)=>{
     visible.value=true;
 }
 const handleAdd=()=>{
-    setRowData({
-        name:"",
-        id:"",
-        city:"",
-        fast:"",
-        slow:"",
-        status:1,
-        now:"",
-        fault:"",
-        person:"",
-        tel:""
-    })
+    setRowData(emptyStationForm())
     visible.value=true
 }
 const handleDelete=async (id:string)=>{

@@ -19,29 +19,49 @@
             <el-card class="mt">
                 <template #header>
                     <div class="card-header">
-                        <h3>新增站点地图</h3>
+                        <h3>新增充电站</h3>
                     </div>
                 </template>
-                <el-form :model="form" style="max-width: 600px;" label-width="85px">
-                    <el-form-item label="站点名称：">
+                <el-form ref="formRef" :model="form" :rules="rules" style="max-width: 600px;" label-width="95px">
+                    <el-form-item label="站点名称" prop="name">
                         <el-input placeholder="请输入站点名称" v-model="form.name"/>
                     </el-form-item>
-                    <el-form-item label="站点地址">
-                        <el-input placeholder="请输入站点地址" v-model="form.region"/>
+                    <el-form-item label="所属城市" prop="city">
+                        <el-input placeholder="请输入所属城市" v-model="form.city"/>
                     </el-form-item>
-                    <el-form-item label="经度：">
-                        <el-input placeholder="请输入经度" v-model="form.location1"/>
+                    <el-form-item label="站点地址" prop="address">
+                        <el-input placeholder="请输入站点地址" v-model="form.address"/>
                     </el-form-item>
-                    <el-form-item label="维度：">
-                        <el-input placeholder="请输入维度" v-model="form.location2"/>
+                    <el-form-item label="经度" prop="longitude">
+                        <el-input placeholder="请输入经度" v-model="form.longitude"/>
                     </el-form-item>
-                    <el-form-item label="立即使用：">
-                        <el-switch v-model="form.now"/>
+                    <el-form-item label="纬度" prop="latitude">
+                        <el-input placeholder="请输入纬度" v-model="form.latitude"/>
+                    </el-form-item>
+                    <el-form-item label="快充数" prop="fast">
+                        <el-input placeholder="请输入快充数" v-model="form.fast"/>
+                    </el-form-item>
+                    <el-form-item label="慢充数" prop="slow">
+                        <el-input placeholder="请输入慢充数" v-model="form.slow"/>
+                    </el-form-item>
+                    <el-form-item label="充电站状态" prop="status">
+                        <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
+                            <el-option label="使用中" :value="2" />
+                            <el-option label="空闲中" :value="3" />
+                            <el-option label="维护中" :value="4" />
+                            <el-option label="待维修" :value="5" />
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="站点负责人" prop="person">
+                        <el-input placeholder="请输入负责人" v-model="form.person"/>
+                    </el-form-item>
+                    <el-form-item label="负责人电话" prop="tel">
+                        <el-input placeholder="请输入电话" v-model="form.tel"/>
                     </el-form-item>
                     <el-form-item label="备注">
-                        <el-input placeholder="请输入备注" type="textarea" v-model="form.remarks"/>
+                        <el-input placeholder="选填" type="textarea" v-model="form.remarks"/>
                     </el-form-item>
-                    <el-form-item >
+                    <el-form-item>
                         <el-button type="primary" @click="handleCreate">创建</el-button>
                         <el-button @click="handleClear">清空</el-button>
                     </el-form-item>
@@ -53,19 +73,44 @@
 <script setup lang="ts">
     import MapContainer from "@/components/map/MapContain.vue"
     import { reactive, ref, onMounted } from "vue"
-    import { getMapStatsApi, createStationFromMapApi } from "@/api/map"
+    import type { FormInstance, FormRules } from "element-plus"
+    import { getMapStatsApi } from "@/api/map"
+    import { createStationApi } from "@/api/chargingstation"
+    import { emptyStationForm } from "@/types/station"
     import { ElMessage } from "element-plus"
     
     const mapContainerRef = ref<InstanceType<typeof MapContainer> | null>(null)
+    const formRef = ref<FormInstance>()
     
-    const form = reactive({
-        name: "",
-        region: "",
-        location1: "",
-        location2: "",
-        now: false,
-        remarks: ""
-    })
+    const form = reactive(emptyStationForm())
+
+    const validateCoordinate = (min: number, max: number, label: string) => {
+        return (_rule: unknown, value: string, callback: (err?: Error) => void) => {
+            if (!value) {
+                callback(new Error(`${label}不能为空`))
+                return
+            }
+            const num = parseFloat(value)
+            if (isNaN(num) || num < min || num > max) {
+                callback(new Error(`${label}格式不正确`))
+                return
+            }
+            callback()
+        }
+    }
+
+    const rules: FormRules = {
+        name: [{ required: true, message: '站点名称不能为空', trigger: 'blur' }],
+        city: [{ required: true, message: '所属城市不能为空', trigger: 'blur' }],
+        address: [{ required: true, message: '站点地址不能为空', trigger: 'blur' }],
+        longitude: [{ validator: validateCoordinate(-180, 180, '经度'), trigger: 'blur' }],
+        latitude: [{ validator: validateCoordinate(-90, 90, '纬度'), trigger: 'blur' }],
+        fast: [{ required: true, message: '快充数不能为空', trigger: 'blur' }],
+        slow: [{ required: true, message: '慢充数不能为空', trigger: 'blur' }],
+        status: [{ required: true, message: '请选择充电站状态', trigger: 'change' }],
+        person: [{ required: true, message: '站点负责人不能为空', trigger: 'blur' }],
+        tel: [{ required: true, message: '负责人电话不能为空', trigger: 'blur' }],
+    }
     
     const stats = ref({
         totalStations: 0,
@@ -81,7 +126,6 @@
     
     const loading = ref<boolean>(false)
     
-    // 加载统计信息
     const loadStats = async () => {
         loading.value = true
         try {
@@ -99,48 +143,28 @@
         }
     }
     
-    // 创建充电站
     const handleCreate = async () => {
-        if (!form.name || !form.region || !form.location1 || !form.location2) {
-            ElMessage.warning('请填写完整的站点信息')
-            return
-        }
-        
-        // 验证经纬度格式
-        const longitude = parseFloat(form.location1)
-        const latitude = parseFloat(form.location2)
-        
-        if (isNaN(longitude) || isNaN(latitude)) {
-            ElMessage.warning('经纬度格式不正确')
-            return
-        }
-        
-        if (longitude < -180 || longitude > 180) {
-            ElMessage.warning('经度范围应在-180到180之间')
-            return
-        }
-        
-        if (latitude < -90 || latitude > 90) {
-            ElMessage.warning('纬度范围应在-90到90之间')
-            return
-        }
-        
+        const valid = await formRef.value?.validate().catch(() => false)
+        if (!valid) return
+
         try {
-            const res = await createStationFromMapApi({
-                name: form.name,
-                region: form.region,
-                longitude: longitude,
-                latitude: latitude,
-                now: form.now,
-                remarks: form.remarks
+            const res = await createStationApi({
+                name: form.name.trim(),
+                city: form.city.trim(),
+                address: form.address.trim(),
+                fast: Number(form.fast),
+                slow: Number(form.slow),
+                status: form.status,
+                person: form.person.trim(),
+                tel: form.tel.trim(),
+                longitude: parseFloat(form.longitude),
+                latitude: parseFloat(form.latitude),
             })
             
-            if (res.code === 200) {
+            if (res.code === 200 || res.code === 201) {
                 ElMessage.success(res.message || '充电站创建成功')
                 handleClear()
-                // 刷新统计信息和地图
                 loadStats()
-                // 触发地图组件刷新
                 mapContainerRef.value?.refreshMap()
             } else {
                 ElMessage.error(res.message || '创建失败')
@@ -151,14 +175,9 @@
         }
     }
     
-    // 清空表单
     const handleClear = () => {
-        form.name = ""
-        form.region = ""
-        form.location1 = ""
-        form.location2 = ""
-        form.now = false
-        form.remarks = ""
+        Object.assign(form, emptyStationForm())
+        formRef.value?.clearValidate()
     }
     
     onMounted(() => {

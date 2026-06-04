@@ -32,14 +32,15 @@ service.interceptors.request.use((config:InternalAxiosRequestConfig)=>{
 service.interceptors.response.use((response:AxiosResponse)=>{
     // 如果响应数据格式正确，直接返回
     if(response.data && typeof response.data === 'object' && 'code' in response.data){
-        if(response.data.code !== 200){
+        const code = response.data.code
+        if(code < 200 || code >= 300){
             ElNotification({
                 title:"Error",
                 message:response.data.message || '请求失败',
                 type: 'error',
             });
             // 如果是401未授权，清除token并跳转到登录页
-            if(response.data.code === 401){
+            if(code === 401){
                 sessionStorage.clear();
                 window.location.href = '/login';
             }

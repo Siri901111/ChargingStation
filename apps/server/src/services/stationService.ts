@@ -14,6 +14,7 @@ export interface StationListParams {
 export interface StationCreateParams {
   name: string;
   city: string;
+  address?: string;
   fast: number;
   slow: number;
   status: number;
@@ -26,6 +27,7 @@ export interface StationCreateParams {
 export interface StationUpdateParams {
   name?: string;
   city?: string;
+  address?: string;
   fast?: number;
   slow?: number;
   status?: number;
@@ -64,7 +66,10 @@ function formatStationData(station: any, stats?: { now: number; fault: number })
   return {
     id: String(station.id),
     name: station.name,
-    city: station.city,
+    city: station.city || '',
+    address: station.address || '',
+    longitude: station.longitude != null ? String(station.longitude) : '',
+    latitude: station.latitude != null ? String(station.latitude) : '',
     fast: String(station.fast || 0),
     slow: String(station.slow || 0),
     status: station.status,
@@ -133,11 +138,15 @@ export async function getStationByIdService(stationId: number) {
 
 // 创建充电站
 export async function createStationService(params: StationCreateParams) {
-  const { name, city, fast, slow, status, person, tel, longitude, latitude } = params;
+  const { name, city, address, fast, slow, status, person, tel, longitude, latitude } = params;
 
   // 验证必填字段
   if (!name || !city || fast === undefined || slow === undefined || !status || !person || !tel) {
     throw new Error('必填字段不能为空');
+  }
+
+  if (longitude === undefined || latitude === undefined || isNaN(longitude) || isNaN(latitude)) {
+    throw new Error('经度和纬度不能为空');
   }
 
   // 检查站点名称是否已存在
@@ -153,13 +162,14 @@ export async function createStationService(params: StationCreateParams) {
   const station = await Station.create({
     name,
     city,
+    address: address || null,
     fast: parseInt(String(fast)),
     slow: parseInt(String(slow)),
     status,
     person,
     tel,
-    longitude: longitude || null,
-    latitude: latitude || null,
+    longitude,
+    latitude,
     now: 0, // 初始值，实际会实时计算
     fault: 0 // 初始值，实际会实时计算
   });
@@ -196,6 +206,7 @@ export async function updateStationService(stationId: number, params: StationUpd
   const updateData: any = {};
   if (params.name !== undefined) updateData.name = params.name;
   if (params.city !== undefined) updateData.city = params.city;
+  if (params.address !== undefined) updateData.address = params.address;
   if (params.fast !== undefined) updateData.fast = parseInt(String(params.fast));
   if (params.slow !== undefined) updateData.slow = parseInt(String(params.slow));
   if (params.status !== undefined) updateData.status = params.status;
