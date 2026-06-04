@@ -41,10 +41,10 @@
 
       <!-- 操作按钮 -->
       <div class="qrcode-actions">
-        <el-button type="primary" @click="handleDownload" :loading="downloading">
+        <!-- <el-button type="primary" @click="handleDownload" :loading="downloading">
           <el-icon><Download /></el-icon>
           下载二维码
-        </el-button>
+        </el-button> -->
         <el-button @click="handlePrint" :disabled="!qrCodeData?.qrCodeImage">
           <el-icon><Printer /></el-icon>
           打印二维码
